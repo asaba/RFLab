@@ -31,18 +31,23 @@ class NotebookDemo(wx.Notebook):
 
         # Create and add the second tab
         self.tabRF = TabPanelSMB(self)
+        self.tabPowerMeter = TabPanelPowerMeter(self)
+        self.tabSAB = TabPanelSAB(self)
+        self.tabIP1CalcSetting = TabPanelIP1CalcSetup(self)
+        self.tabIP1PlotGraph = TabPanelIP1PlotGraph(self)
+        
         self.AddPage(self.tabRF, "Radio Frequency")
  
-        self.tabPowerMeter = TabPanelPowerMeter(self)
+        
         self.AddPage(self.tabPowerMeter, "Power Meter")
         
-        self.tabSAB = TabPanelSAB(self)
+        
         self.AddPage(self.tabSAB, "SwitchAttBox")
         
-        self.tabIP1CalcSetting = TabPanelIP1CalcSetup(self)
+        
         self.AddPage(self.tabIP1CalcSetting, "Calculate IP1")
         
-        self.tabIP1PlotGraph = TabPanelIP1PlotGraph(self)
+        
         self.AddPage(self.tabIP1PlotGraph, "Graph IP1 plot")
  
 ########################################################################
@@ -70,7 +75,7 @@ class IP1CalcFrame(wx.Frame):
         
         self.Bind(wx.EVT_MENU, self.OnLoadSettings, self.fitem)
         self.Bind(wx.EVT_MENU, self.OnSaveSettings, self.fitem2)
-        self.Bind(wx.EVT_MENU, self.OnCheckRunMode, self.runmodeitem)
+        #self.Bind(wx.EVT_MENU, self.OnCheckRunMode, self.runmodeitem)
         
         self.panel = wx.Panel(self)
         self.btn_execute = wx.Button(self.panel, 0, 'Start')
