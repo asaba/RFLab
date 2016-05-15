@@ -14,8 +14,6 @@ from utilitygui import check_value_is_valid_file, check_value_min_max, check_val
 from utility import writelineonfilesettings, return_now_postfix
 
 
-TEST_MODE = False
-
 class NotebookDemo(wx.Notebook):
     """
     Notebook class
@@ -54,6 +52,7 @@ class CalContinousMeasureFrame(wx.Frame):
         fileMenu = wx.Menu()
         self.fitem = fileMenu.Append(wx.ID_OPEN, 'Load settings', 'Load settings')
         self.fitem2 = fileMenu.Append(wx.ID_SAVEAS, 'Save settings', 'Save settings')
+        self.runmodeitem = fileMenu.AppendCheckItem(7890, "Testing Mode", "Enable testing mode")
         menubar.Append(fileMenu, '&File')
         self.SetMenuBar(menubar)
         
@@ -107,9 +106,10 @@ class CalContinousMeasureFrame(wx.Frame):
         exec("value = {param}.GetValue()".format(param = parameter))
         writelineonfilesettings(f, parameter, value)
     
+    
     def OnStart(self, event):
 
-        if TEST_MODE:
+        if self.runmodeitem.IsChecked():
             dlg = wx.MessageDialog(None, "Test mode", 'Test mode. Instruments comunication disabled', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
         

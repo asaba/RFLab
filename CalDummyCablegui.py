@@ -13,8 +13,6 @@ from measure_scripts.CalibrazioneDummyCable import unit, create_calibration_cabl
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK
 from utility import writelineonfilesettings, return_now_postfix
 
-TEST_MODE = False
-
 class NotebookDemo(wx.Notebook):
     """
     Notebook class
@@ -51,6 +49,7 @@ class CalDummyCableFrame(wx.Frame):
         fileMenu = wx.Menu()
         self.fitem = fileMenu.Append(wx.ID_OPEN, 'Load settings', 'Load settings')
         self.fitem2 = fileMenu.Append(wx.ID_SAVEAS, 'Save settings', 'Save settings')
+        self.runmodeitem = fileMenu.AppendCheckItem(7890, "Testing Mode", "Enable testing mode")
         menubar.Append(fileMenu, '&File')
         self.SetMenuBar(menubar)
         
@@ -114,7 +113,7 @@ class CalDummyCableFrame(wx.Frame):
     
     def OnStart(self, event):
         
-        if TEST_MODE:
+        if self.runmodeitem.IsChecked():
             dlg = wx.MessageDialog(None, "Test mode", 'Test mode. Instruments comunication disabled', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             

@@ -13,8 +13,6 @@ from measure_scripts.IP1Cal import unit, SMB_RF, NRP2, SAB, measure_IP1
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument
 from utility import writelineonfilesettings, return_now_postfix
 
-TEST_MODE = True
-
 
 class NotebookDemo(wx.Notebook):
     """
@@ -63,13 +61,16 @@ class IP1CalcFrame(wx.Frame):
         
         menubar = wx.MenuBar()
         fileMenu = wx.Menu()
+        
         self.fitem = fileMenu.Append(wx.ID_OPEN, 'Load settings', 'Load settings')
         self.fitem2 = fileMenu.Append(wx.ID_SAVEAS, 'Save settings', 'Save settings')
+        self.runmodeitem = fileMenu.AppendCheckItem(7890, "Testing Mode", "Enable testing mode")
         menubar.Append(fileMenu, '&File')
         self.SetMenuBar(menubar)
         
         self.Bind(wx.EVT_MENU, self.OnLoadSettings, self.fitem)
         self.Bind(wx.EVT_MENU, self.OnSaveSettings, self.fitem2)
+        self.Bind(wx.EVT_MENU, self.OnCheckRunMode, self.runmodeitem)
         
         self.panel = wx.Panel(self)
         self.btn_execute = wx.Button(self.panel, 0, 'Start')
@@ -85,6 +86,14 @@ class IP1CalcFrame(wx.Frame):
         self.Layout()
  
         self.Show()
+    
+    def OnCheckRunMode(self, event):
+        if self.runmodeitem.IsChecked():
+            TEST_MODE = True
+            #self.runmodeitem.Check()
+        else:
+            TEST_MODE = False
+        
     
     def OnLoadSettings(self, event):
         dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.OPEN)
@@ -163,7 +172,7 @@ class IP1CalcFrame(wx.Frame):
     
     def OnStart(self, event):
                 
-        if TEST_MODE:
+        if self.runmodeitem.IsChecked():
             dlg = wx.MessageDialog(None, "Test mode", 'Test mode. Instruments comunication disabled', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
         #Check all values
@@ -315,21 +324,21 @@ class IP1CalcFrame(wx.Frame):
         result_file_name = self.notebook.tabIP1CalcSetting.result_file_name.GetValue()
 
         try:
-            SMB_RF = create_instrument(synthetizer_IP, synthetizer_Port, eval(synthetizer_Timeout), syntetizer_instrType, TEST_MODE = TEST_MODE)
+            SMB_RF = create_instrument(synthetizer_IP, synthetizer_Port, eval(synthetizer_Timeout), syntetizer_instrType, TEST_MODE = self.runmodeitem.IsChecked())
         except:
             dlg = wx.MessageDialog(None, "Synthetizer comunication error", 'Error Synthetizer', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
         
         try:
-            NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = TEST_MODE)
+            NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = self.runmodeitem.IsChecked())
         except:
             dlg = wx.MessageDialog(None, "Power meter comunication error", 'Error Power meter', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
         
         try:
-            SAB = create_instrument(SAB_IP, SAB_Port, eval(SAB_Timeout), SAB_instrType, TEST_MODE = TEST_MODE)
+            SAB = create_instrument(SAB_IP, SAB_Port, eval(SAB_Timeout), SAB_instrType, TEST_MODE = self.runmodeitem.IsChecked())
         except:
             dlg = wx.MessageDialog(None, "SwitchAttBox comunication error", 'Error SwitchAttBox', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()

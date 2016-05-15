@@ -13,7 +13,6 @@ from utilitygui import check_value_is_valid_file, check_value_min_max, check_val
 from utility import writelineonfilesettings, return_now_postfix
 import pyvisa
 
-TEST_MODE = True
 ########################################################################
 class NotebookDemo(wx.Notebook):
     """
@@ -96,6 +95,7 @@ class SpuriusFrame(wx.Frame):
         fileMenu = wx.Menu()
         self.fitem = fileMenu.Append(wx.ID_OPEN, 'Load settings', 'Load settings')
         self.fitem2 = fileMenu.Append(wx.ID_SAVEAS, 'Save settings', 'Save settings')
+        self.runmodeitem = fileMenu.AppendCheckItem(7890, "Testing Mode", "Enable testing mode")
         menubar.Append(fileMenu, '&File')
         self.SetMenuBar(menubar)
         
@@ -116,6 +116,7 @@ class SpuriusFrame(wx.Frame):
         self.Layout()
  
         self.Show()
+    
     
     def OnLoadSettings(self, event):
         dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.OPEN)
@@ -213,7 +214,7 @@ class SpuriusFrame(wx.Frame):
     def OnStart(self, event):
         
         
-        if TEST_MODE:
+        if self.runmodeitem.IsChecked():
             dlg = wx.MessageDialog(None, "Test mode", 'Test mode. Instruments comunication disabled', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
         #Check all values
@@ -492,28 +493,28 @@ class SpuriusFrame(wx.Frame):
         result_file_name = self.notebook.tabSpuriusSetting.result_file_name.GetValue()
 
         try:
-            SMB_LO = create_instrument(synthetizer_LO_IP, synthetizer_LO_Port, eval(synthetizer_LO_Timeout), synthetizer_LO_instrType, TEST_MODE = TEST_MODE)
+            SMB_LO = create_instrument(synthetizer_LO_IP, synthetizer_LO_Port, eval(synthetizer_LO_Timeout), synthetizer_LO_instrType, TEST_MODE = self.runmodeitem.IsChecked())
         except:
             dlg = wx.MessageDialog(None, "LO synthetizer comunication error", 'Error LO synthetizer', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
         
         try:
-            SMB_RF = create_instrument(synthetizer_RF_IP, synthetizer_RF_Port, eval(synthetizer_RF_Timeout), synthetizer_RF_instrType, TEST_MODE = TEST_MODE)
+            SMB_RF = create_instrument(synthetizer_RF_IP, synthetizer_RF_Port, eval(synthetizer_RF_Timeout), synthetizer_RF_instrType, TEST_MODE = self.runmodeitem.IsChecked())
         except:
             dlg = wx.MessageDialog(None, "RF synthetizer comunication error", 'Error RF synthetizer', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
 
         try:
-            NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = TEST_MODE)
+            NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = self.runmodeitem.IsChecked())
         except:
             dlg = wx.MessageDialog(None, "Power meter comunication error", 'Error Power meter', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
         
         try:
-            FSV = create_instrument(spectrum_analyzer_IP, spectrum_analyzer_Port, eval(spectrum_analyzer_Timeout), spectrum_analyzer_instrType, TEST_MODE = TEST_MODE)
+            FSV = create_instrument(spectrum_analyzer_IP, spectrum_analyzer_Port, eval(spectrum_analyzer_Timeout), spectrum_analyzer_instrType, TEST_MODE = self.runmodeitem.IsChecked())
         except:
             dlg = wx.MessageDialog(None, "Spectrum analiser comunication error", 'Error Spectrum analiser', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
