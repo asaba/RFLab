@@ -7,11 +7,21 @@ Created on 29/dic/2015
 import wx, os
 from IPy import IP
 import pyvisa
-from measure_scripts.debug import SMB_class
+from measure_scripts.debug import SMB_class, FSV_class, NRP2_class, TSC_class, SAB_class
+from measure_scripts.tscpy import instruments
 
-def create_instrument(ip, port, timeout, instr_type, TEST_MODE = False):
+def create_instrument(ip, port, timeout, instr_type, TEST_MODE = False, instrument_class = "SMB"):
     if TEST_MODE:
-        instrument = SMB_class()
+        if instrument_class == "SMB":   
+            instrument = SMB_class()
+        elif instrument_class == "FSV": 
+            instrument = FSV_class()
+        elif instrument_class == "NRP2": 
+            instrument = NRP2_class()
+        elif instrument_class == "TSC": 
+            instrument = TSC_class()
+        elif instrument_class == "SAB": 
+            instrument = SAB_class()
         return instrument
     rm = pyvisa.ResourceManager()
     if instr_type == "SOCKET":        
@@ -20,6 +30,8 @@ def create_instrument(ip, port, timeout, instr_type, TEST_MODE = False):
         instrument.read_termination = "\n"
     elif instr_type == "INSTR":
         instrument = rm.open_resource("TCPIP::{ip}::INSTR".format(ip = ip))
+    elif instr_type == "TELNET":
+        instrument = instruments.TSC5120A(ip, port)
     instrument.timeout = timeout
     return instrument
 

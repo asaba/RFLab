@@ -552,7 +552,44 @@ class TabPanelSAB(InstrumentPanelClass):
         self.SetSizer(sizer)
         
 
+class TabPanelTSC(InstrumentPanelClass):
+    """
+    Tab for Phase Noise Test TSC5120A/TSC5115A
+    """
+    
+    def __init__(self, parent):
+        
+        InstrumentPanelClass.__init__(self, parent=parent)
+        sizer = wx.BoxSizer(wx.VERTICAL)
 
+        #power_meter_state = "ON"
+        self.TSC_state, self.sizer_TSC_state = return_checkbox_labeled(self, "State")
+
+        self.TSC_collecting_delay, dummy, dummy, self.sizer_TSC_collecting_delay, dummy, dummy = return_textbox_labeled(self, "Collecting time (m)")
+        
+        self.TSC_plot_adev, self.sizer_TSC_plot_adev = return_checkbox_labeled(self, "Plot Allan Deviation")
+        
+        self.result_file_name, self.result_file_name_button, self.sizer_result_file_name = return_file_browse(self, "Output Path")
+        self.result_file_name_button.Bind(wx.EVT_BUTTON, self.File_browser_Out)
+        
+        sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
+        sizer.Add(self.instrument_test_sizer, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_TSC_state, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_TSC_collecting_delay, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_TSC_plot_adev, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_result_file_name, 0, wx.ALL, 5)
+        
+        self.SetSizer(sizer)
+        
+    def File_browser_Out(self, event):
+        #dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*", wx.SAVE)
+        dlg = wx.DirDialog(self, "Choose a directory:",style=wx.DD_DEFAULT_STYLE | wx.DD_NEW_DIR_BUTTON)
+        if dlg.ShowModal() == wx.ID_OK:
+            path = dlg.GetPath()
+            self.result_file_name.SetValue(path)
+        else:
+            self.result_file_name.SetValue("")
+        dlg.Destroy()
 
 class TabPanelPowerMeter(InstrumentPanelClass):
     """

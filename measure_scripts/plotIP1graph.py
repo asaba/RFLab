@@ -193,32 +193,13 @@ def update_line(num, line_data, line, line_generator, curve_data, curve, curve_g
                     break
     return line, curve
  
- 
- 
-#print "Prepare data and chart..."
-#data = np.array(final)
-#data2 = np.array(final2)
- 
 fig = None
-
-#ax = plt.axes(xlim=(0, 2), ylim=(-2, 2))
-#retta, = ax.plot([], [])
-#ax2 = plt.axes(xlim=(0, 2), ylim=(-2, 2))
-#curve, = ax2.plot([], [], "r")
 
 ax = None
 retta = None
 curve = None
 ip1 = None
 
-# add subplot to chart
-#ax = fig.add_subplot(111)
-# first line is red
-#retta, = ax.plot([], [], 'r-')
- 
-#ax2 = fig.add_subplot(111)
-#and set line color to blue
-#curve, = ax2.plot([], [], 'b-')
 line_ani = None
 
 
