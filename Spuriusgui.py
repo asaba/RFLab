@@ -217,7 +217,7 @@ class SpuriusFrame(wx.Frame):
         
         
         if self.runmodeitem.IsChecked():
-            dlg = wx.MessageDialog(None, "Test mode", 'Test mode. Instruments comunication disabled', wx.OK | wx.ICON_ERROR)
+            dlg = wx.MessageDialog(None,'Test mode. Instruments comunication disabled', "Test mode",  wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
         #Check all values
         
@@ -509,14 +509,14 @@ class SpuriusFrame(wx.Frame):
             return 0
 
         try:
-            NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = self.runmodeitem.IsChecked())
+            NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "NRP2")
         except:
             dlg = wx.MessageDialog(None, "Power meter comunication error", 'Error Power meter', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
         
         try:
-            FSV = create_instrument(spectrum_analyzer_IP, spectrum_analyzer_Port, eval(spectrum_analyzer_Timeout), spectrum_analyzer_instrType, TEST_MODE = self.runmodeitem.IsChecked())
+            FSV = create_instrument(spectrum_analyzer_IP, spectrum_analyzer_Port, eval(spectrum_analyzer_Timeout), spectrum_analyzer_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "FSV")
         except:
             dlg = wx.MessageDialog(None, "Spectrum analiser comunication error", 'Error Spectrum analiser', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()

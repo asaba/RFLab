@@ -43,8 +43,6 @@ class NotebookDemo(wx.Notebook):
         
         self.tabCalCableSetting = TabPanelCalCableSetup(self)
         self.AddPage(self.tabCalCableSetting, "Calibrate Cable")
-        
-        self.TEST_MODE = False
  
 ########################################################################
 class CalCableFrame(wx.Frame):
@@ -152,7 +150,7 @@ class CalCableFrame(wx.Frame):
     def OnStart(self, event):
                 
         if self.runmodeitem.IsChecked():
-            dlg = wx.MessageDialog(None, "Test mode", 'Test mode. Instruments comunication disabled', wx.OK | wx.ICON_ERROR)
+            dlg = wx.MessageDialog(None, 'Test mode. Instruments comunication disabled', "Test mode",  wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
         #Check all values
         synthetizer_IP = self.notebook.tabRF.instrument_txt_IP.GetValue()
@@ -265,14 +263,14 @@ class CalCableFrame(wx.Frame):
             return 0
         
         try:
-            NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = self.runmodeitem.IsChecked())
+            NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "NRP2")
         except:
             dlg = wx.MessageDialog(None, "Power meter comunication error", 'Error Power meter', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
         
         try:
-            SAB = create_instrument(SAB_IP, SAB_Port, eval(SAB_Timeout), SAB_instrType, TEST_MODE = self.runmodeitem.IsChecked())
+            SAB = create_instrument(SAB_IP, SAB_Port, eval(SAB_Timeout), SAB_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "SAB")
         except:
             dlg = wx.MessageDialog(None, "SwitchAttBox comunication error", 'Error SwitchAttBox', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()

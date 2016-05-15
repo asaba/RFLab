@@ -114,7 +114,7 @@ class CalDummyCableFrame(wx.Frame):
     def OnStart(self, event):
         
         if self.runmodeitem.IsChecked():
-            dlg = wx.MessageDialog(None, "Test mode", 'Test mode. Instruments comunication disabled', wx.OK | wx.ICON_ERROR)
+            dlg = wx.MessageDialog(None,'Test mode. Instruments comunication disabled', "Test mode",  wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             
         #Check all values "Minimum Frequency"
