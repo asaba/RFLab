@@ -5,21 +5,30 @@ Created on 07/mag/2016
 '''
 
 from utility import unit_class, csv
+from scipy.interpolate import UnivariateSpline
+from numpy import array
 
 unit = unit_class()
 
-def calibrate(input_power, input_frequency, input_frequency_unit, calibration_table, round_freq = False):
+def calibrate(input_power, input_frequency, input_frequency_unit, calibration_table, calibration_function = None, calibration_function_unit= None, round_freq = False):
     #Correct input_power by calibration_table for input frequency
     #Return the tuple (calibrated_power, "CAL") if frequency in calibration table
     #Else return (input power, "NOCAL")
+    #If calibration_function spline is present it's used to calculate calibrated_power
+    #if round_freq is True 
     calibrated_power = input_power
     calibration_result = "NOCAL"
+    
+    if calibration_function:
+        i_freq = unit.unit_conversion(input_frequency, input_frequency_unit, calibration_function_unit)
+        return input_power - calibration_function(i_freq), "CAL"
     
     if round_freq:
         if len(calibration_table) > 0:
             #build dictionary of Freq: pow
             power_dict ={}
             for t in calibration_table[1:]:
+                #power dictionary {Cable Frequency (input_frequency_unit): calibrated power}
                 power_dict[unit.unit_conversion(eval(t[0].replace(",", ".")), unit.return_unit(t[1]), input_frequency_unit)] = eval(t[2].replace(",", "."))
                 
             calibration_value = power_dict[min(power_dict, key=lambda x:abs(x-input_frequency))]
@@ -56,3 +65,14 @@ def readcalibrationfile(filename):
         return result[2:] #remove separator and header
     except:
         return []
+    
+def calibrationfilefunction(calibrationresult):
+    #return the spline function for calibration of cable
+    x_curve = []
+    y_curve = []
+    calibration_unit = unit.return_unit(calibrationresult[0][1])  
+    for row in calibrationresult:
+        x_curve.append(eval(row[0].replace(",", ".")))
+        y_curve.append(eval(row[2].replace(",", ".")))
+    
+    return UnivariateSpline(array(x_curve), array(y_curve), s=0), calibration_unit
