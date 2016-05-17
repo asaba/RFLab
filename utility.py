@@ -76,6 +76,49 @@ def buildcsvrow(tuplevalue):
 
     return rowresult
 
+def save_harmonic(filename, values):
+    
+    writemode = "wb"
+
+    f = open(filename + ".csv", writemode)
+    #Freq LO(unit), Level LO(DBm), Fundamental, 2 harmonic, 3 harmonic, ..., AMP_marker (dBm) = Spurius Level (1)]
+    s_unit = values[0][1]
+    harmonic_number = max([eval(row[12]) for row in values])
+    harmonic_list = [str(x) + " Harmonic" for x in range(2, harmonic_number+1)]
+    
+    header = ["Freq(" + s_unit + ")", "Level (dBm)", "Fundamental"] + harmonic_list + ["AMP_marker (dBm)"]
+
+    harmonic = {}
+    for row in values:
+        freq = eval(row[0])
+        level = eval(row[2])
+        if freq in harmonic: #freq
+            if level in harmonic[freq]: #level
+                if len(harmonic[freq][level]) == eval(row[12])-1:
+                    harmonic[freq][level].append(row[10])
+                else:
+                    print("Error in row")
+            else:
+                harmonic[freq][level] = [row[10]]
+        else:
+            harmonic[freq] = {level : [row[10]]}
+        
+        
+    values_harmonic = []
+    e = harmonic.keys()
+    e.sort()
+    for k in e:
+        fh = harmonic[k].keys()
+        fh.sort()
+        for j in fh:
+            values_harmonic.append([str(k), str(j)] + harmonic[k][j])
+            
+    #header = ["Freq LO", "unit", "Level LO", "LO Calibration", "Freq RF", "unit", "Level RF", "RF Calibration", "Spurius Freq", "unit", "Spurius Level"]
+
+    create_csv(f, header, [], values_harmonic)
+
+    f.close()
+    
 def save_spurius(filename, values):
     
     writemode = "wb"
