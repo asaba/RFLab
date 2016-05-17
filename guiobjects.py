@@ -214,6 +214,34 @@ def return_spinctrl(parent, label):
     Sizer.Add(sc, 0, wx.ALL, 5)
     return sc, Sizer
 
+
+def return_spinctrl_min_max(parent, label):
+    """
+    return sizer
+    ----------------------------------------------------------------------
+    | label    |  spincoontrol_min | spincoontrol_max | spincoontrol_step |
+    ----------------------------------------------------------------------
+    label text is label 
+    
+    return also the spincoontrol object
+    """
+    label = wx.StaticText(parent, wx.ID_ANY, label, size = (150,-1))
+    sc_min = wx.SpinCtrl(parent, -1, '', size = (60, -1))
+    sc_min.SetRange(-10, 10)
+    sc_min.SetValue(1)
+    sc_max = wx.SpinCtrl(parent, -1, '', size = (60, -1))
+    sc_max.SetRange(-10, 10)
+    sc_max.SetValue(1)
+    sc_step = wx.SpinCtrl(parent, -1, '', size = (60, -1))
+    sc_step.SetRange(1, 10)
+    sc_step.SetValue(1)
+    Sizer   = wx.BoxSizer(wx.HORIZONTAL)
+    Sizer.Add(label, 0, wx.ALL, 5)
+    Sizer.Add(sc_min, 0, wx.ALL, 5)
+    Sizer.Add(sc_max, 0, wx.ALL, 5)
+    Sizer.Add(sc_step, 0, wx.ALL, 5)
+    return sc_min, sc_max, sc_step, Sizer
+
 def return_min_max_step_labeled(parent, label, unit = False):
     """
     return sizer
