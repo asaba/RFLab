@@ -17,8 +17,8 @@ import numpy as np
 import time
 import datetime
 from debug import FSV_class, SAB_class, NRP2_class, SMB_class
-from utility import save_data, save_settings, unit_class, save_spurius, return_now_postfix
-from scriptutility import calibrate, readcalibrationfile
+from utility import save_data, save_settings, unit_class, save_spurius, return_now_postfix, save_harmonic
+from scriptutility import calibrate, readcalibrationfile, calibrationfilefunction
 
 VERSION = 7.0
 
@@ -200,8 +200,11 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
 
     #load data for cables from calibration files
     calibration_LO = readcalibrationfile(calibration_file_LO)
+    calibration_function_LO, calibration_function_LO_unit = calibrationfilefunction(calibration_LO)
     calibration_IF = readcalibrationfile(calibration_file_IF)
+    calibration_function_IF, calibration_function_unit = calibrationfilefunction(calibration_IF)
     calibration_RF = readcalibrationfile(calibration_file_RF)
+    calibration_function_RF, calibration_function_IF_unit = calibrationfilefunction(calibration_RF)
     totale_values = []
     if synthetizer_LO_state == "OFF":
         #set default parameter to skeep syntetizer loop
@@ -218,6 +221,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
 
     if synthetizer_RF_state == "OFF" or m_max_RF == 0:
         #set default parameter to skeep syntetizer loop
+        #By this mode is possibile calculate harmonic for LO frequency LO power
         synthetizer_RF_frequency_min_unit = unit.MHz
         synthetizer_RF_frequency_min = 3000
         synthetizer_RF_frequency_max_unit = unit.MHz
@@ -228,6 +232,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
         synthetizer_RF_level_min = -10 #dBm
         synthetizer_RF_level_max = -10 #same value of min for fixed value
         synthetizer_RF_level_step = 0.5
+        m_max_RF = 0
 
     frequency_LO_range = np.arange(synthetizer_LO_frequency_min, unit.unit_conversion( synthetizer_LO_frequency_max, synthetizer_LO_frequency_max_unit, synthetizer_LO_frequency_min_unit)  + unit.unit_conversion(synthetizer_LO_frequency_step, synthetizer_LO_frequency_step_unit, synthetizer_LO_frequency_min_unit) , unit.unit_conversion(synthetizer_LO_frequency_step, synthetizer_LO_frequency_step_unit, synthetizer_LO_frequency_min_unit))
     level_LO_range = np.arange(synthetizer_LO_level_min, synthetizer_LO_level_max + synthetizer_LO_level_step, synthetizer_LO_level_step)
@@ -294,8 +299,15 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
                     if len(spurius_markers) >0:
                         spurius_filename  =result_file_name + "_" + "_".join(values[0][0:-2]) + "_" + return_now_postfix()
                         save_spurius(spurius_filename, values)
-    spurius_filename  =result_file_name + "_TOTAL_" + return_now_postfix()
-    save_spurius(spurius_filename, totale_values)     
+    
+    if m_max_RF == 0:
+        harmonic_filename =result_file_name + "_TOTAL_HARMONIC_" + return_now_postfix()
+        save_harmonic(harmonic_filename, totale_values)
+        spurius_filename =result_file_name + "_TOTAL_" + return_now_postfix()
+        save_spurius(spurius_filename, totale_values) 
+    else:
+        spurius_filename  =result_file_name + "_TOTAL_" + return_now_postfix()
+        save_spurius(spurius_filename, totale_values)     
     #turn off LO and RF
     SMB_LO.write("OUTP OFF")
     SMB_RF.write("OUTP OFF")
@@ -417,7 +429,9 @@ def readFSV_marker(FSV, FSV_delay, central_frequency, fsv_att_value, spurius_IF_
     frequency = unit.unit_conversion(eval(FSV.ask("CALC:MARK:X?")[0]), unit.Hz, spurius_IF_unit)
     result = [str(frequency)]    
     result += [unit.return_unit_str(spurius_IF_unit)]
-    result += [str(x) for x in calibrate(eval(FSV.ask("CALC:MARK:Y?")[0]), frequency, spurius_IF_unit, calibration_IF, round_freq = True)]
+    #response = FSV.ask("CALC:MARK:Y?")
+    tmp = eval(FSV.ask("CALC:MARK:Y?"))
+    result += [str(x) for x in calibrate(tmp, frequency, spurius_IF_unit, calibration_IF, round_freq = True)]
     return result
 
 
