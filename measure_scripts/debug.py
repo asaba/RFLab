@@ -49,7 +49,7 @@ class FSV_class():
         if command == "CALC:MARK:X?":
             return [str(uniform(1000000, 5000000))] #unit HZ
         elif command == "CALC:MARK:Y?":
-            return [str(uniform(-12, 10))]
+            return str(uniform(-12, 10))
 
 class TSC_class(tscpy.instruments.TSC5120A):
 
