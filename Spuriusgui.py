@@ -224,15 +224,15 @@ class SpuriusFrame(wx.Frame):
         
         #load values
          
-        synthetizer_LO_IP = self.notebook.tabRF.instrument_txt_IP.GetValue()
+        synthetizer_LO_IP = self.notebook.tabLO.instrument_txt_IP.GetValue()
         if check_value_is_IP(synthetizer_LO_IP, "LO Synthetizer IP") == 0:
             return None
         
-        synthetizer_LO_Port = self.notebook.tabRF.instrument_txt_Port.GetValue()
+        synthetizer_LO_Port = self.notebook.tabLO.instrument_txt_Port.GetValue()
         if check_value_min_max(synthetizer_LO_Port, "LO Synthetizer Port", minimum = 0) == 0:
             return None
         
-        synthetizer_LO_Timeout = self.notebook.tabRF.instrument_txt_Timeout.GetValue()
+        synthetizer_LO_Timeout = self.notebook.tabLO.instrument_txt_Timeout.GetValue()
         if check_value_min_max(synthetizer_LO_Timeout, "LO Synthetizer Timeout", minimum = 0) == 0:
             return None
         
@@ -375,15 +375,15 @@ class SpuriusFrame(wx.Frame):
         else:
             power_meter_misure_delay = eval(self.notebook.tabPowerMeter.power_meter_misure_delay.GetValue())
         
-        spectrum_analyzer_IP = self.notebook.tabRF.instrument_txt_IP.GetValue()
+        spectrum_analyzer_IP = self.notebook.tabFSV.instrument_txt_IP.GetValue()
         if check_value_is_IP(spectrum_analyzer_IP, "LO Synthetizer IP") == 0:
             return None
         
-        spectrum_analyzer_Port = self.notebook.tabRF.instrument_txt_Port.GetValue()
+        spectrum_analyzer_Port = self.notebook.tabFSV.instrument_txt_Port.GetValue()
         if check_value_min_max(spectrum_analyzer_Port, "LO Synthetizer Port", minimum = 0) == 0:
             return None
         
-        spectrum_analyzer_Timeout = self.notebook.tabRF.instrument_txt_Timeout.GetValue()
+        spectrum_analyzer_Timeout = self.notebook.tabFSV.instrument_txt_Timeout.GetValue()
         if check_value_min_max(spectrum_analyzer_Timeout, "LO Synthetizer Timeout", minimum = 0) == 0:
             return None
         
@@ -495,28 +495,40 @@ class SpuriusFrame(wx.Frame):
         result_file_name = self.notebook.tabSpuriusSetting.result_file_name.GetValue()
 
         try:
-            SMB_LO = create_instrument(synthetizer_LO_IP, synthetizer_LO_Port, eval(synthetizer_LO_Timeout), synthetizer_LO_instrType, TEST_MODE = self.runmodeitem.IsChecked())
+            if synthetizer_LO_state:
+                SMB_LO = create_instrument(synthetizer_LO_IP, synthetizer_LO_Port, eval(synthetizer_LO_Timeout), synthetizer_LO_instrType, TEST_MODE = self.runmodeitem.IsChecked())
+            else:
+                SMB_LO = create_instrument(synthetizer_LO_IP, synthetizer_LO_Port, eval(synthetizer_LO_Timeout), synthetizer_LO_instrType, TEST_MODE = True)
         except:
             dlg = wx.MessageDialog(None, "LO synthetizer comunication error", 'Error LO synthetizer', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
         
         try:
-            SMB_RF = create_instrument(synthetizer_RF_IP, synthetizer_RF_Port, eval(synthetizer_RF_Timeout), synthetizer_RF_instrType, TEST_MODE = self.runmodeitem.IsChecked())
+            if synthetizer_RF_state:
+                SMB_RF = create_instrument(synthetizer_RF_IP, synthetizer_RF_Port, eval(synthetizer_RF_Timeout), synthetizer_RF_instrType, TEST_MODE = self.runmodeitem.IsChecked())
+            else:
+                SMB_RF = create_instrument(synthetizer_RF_IP, synthetizer_RF_Port, eval(synthetizer_RF_Timeout), synthetizer_RF_instrType, TEST_MODE = True)
         except:
             dlg = wx.MessageDialog(None, "RF synthetizer comunication error", 'Error RF synthetizer', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
 
         try:
-            NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "NRP2")
+            if power_meter_state:
+                NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "NRP2")
+            else:
+                NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = True, instrument_class = "NRP2")
         except:
             dlg = wx.MessageDialog(None, "Power meter comunication error", 'Error Power meter', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
         
         try:
-            FSV = create_instrument(spectrum_analyzer_IP, spectrum_analyzer_Port, eval(spectrum_analyzer_Timeout), spectrum_analyzer_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "FSV")
+            if spectrum_analyzer_state:
+                FSV = create_instrument(spectrum_analyzer_IP, spectrum_analyzer_Port, eval(spectrum_analyzer_Timeout), spectrum_analyzer_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "FSV")
+            else:
+                FSV = create_instrument(spectrum_analyzer_IP, spectrum_analyzer_Port, eval(spectrum_analyzer_Timeout), spectrum_analyzer_instrType, TEST_MODE = True, instrument_class = "FSV")
         except:
             dlg = wx.MessageDialog(None, "Spectrum analiser comunication error", 'Error Spectrum analiser', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
