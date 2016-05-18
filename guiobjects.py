@@ -10,12 +10,12 @@ from utility import unit_class
 
 unit_tmp = unit_class()
 
-def return_file_browse(parent, label):
+def return_file_browse(parent, label, enabled = False):
     """
     return a sizer:
-    --------------------------------------
-    | label     | textcontrol | button   |
-    --------------------------------------
+    ------------------------------------------------------------
+    | label     | textcontrol | button   | checkbox (optional) |
+    ------------------------------------------------------------
     label text is label
     button text is "..."
     
@@ -28,7 +28,13 @@ def return_file_browse(parent, label):
     Sizer.Add(label, 0, wx.ALL, 5)
     Sizer.Add(txt, 0, wx.ALL, 5)
     Sizer.Add(button, 0, wx.ALL, 5)
-    return txt, button, Sizer
+    if enabled:
+        cb = wx.CheckBox(parent, -1, "", (10, 10))
+        cb.SetValue(True)
+        Sizer.Add(cb, 0, wx.ALL, 5)
+    else:
+        cb = None
+    return txt, button, cb, Sizer
 
 def return_simple_button(parent, label, button_txt):
     """
