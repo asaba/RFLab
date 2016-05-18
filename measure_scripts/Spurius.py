@@ -25,8 +25,11 @@ VERSION = 7.0
 unit = unit_class()
         
 calibration_file_LO = "C:\\Users\\sabah\\Documents\\Aptana Studio 3 Workspace\\ArduinoStepAttenuator\\v04\\RF_cal.csv"
+calibration_file_LO_enable = True
 calibration_file_RF = "C:\\Users\\sabah\\Documents\\Aptana Studio 3 Workspace\\ArduinoStepAttenuator\\v04\\RF_cal.csv"
+calibration_file_RF_enable = True
 calibration_file_IF = "C:\\Users\\sabah\\Documents\\Aptana Studio 3 Workspace\\ArduinoStepAttenuator\\v04\\RF_cal.csv"
+calibration_file_IF_enable = False
 #D:\Users\Andrea\Desktop
 result_file_name = "C:\\Users\\sabah\\Documents\\Aptana Studio 3 Workspace\\ArduinoStepAttenuator\\v04\\misuraSpuri_TEST_HARMONIC" #without extension
 
@@ -77,35 +80,46 @@ power_meter_misure_delay = 1 #seconds
 
 
 #spurius calculation variables
+m_min_RF = 0
 m_max_RF = 0 #set to 0 for harmonic only
+m_step_RF = 1
+n_min_LO = 0
 n_max_LO = 4
+n_step_LO = 1
+IF_low = 3000
+IF_low_unit = unit.MHz
 IF_high = 10000
 IF_high_unit = unit.MHz
 spurius_IF_unit = unit.MHz
 
-def return_spurius_list(LO, LO_unit, RF, RF_unit, n_max_LO, m_max_RF, IF_high, IF_high_unit):
+def return_spurius_list(LO, LO_unit, RF, RF_unit, n_min_LO, n_max_LO, n_step_LO, m_min_RF, m_max_RF, m_step_RF, IF_low, IF_low_unit, IF_high, IF_high_unit):
     #build the spurius list table for the LO and RF frequency
     #table format: [Spurius Frequency, unit, LO frequency, RF frequency, n, m]
     #by the equation
     #spurius = n*LO - m*RF
-    #remove the spurius < 0 and > IF_high
+    #remove the spurius for n and m = 0 and > IF_high
     result = []
-    for n in range(0, n_max_LO):
-        if m_max_RF>0:
-            for m in range(0, m_max_RF):
-                current_spurius = (n+1) * unit.unit_conversion(LO, LO_unit, IF_high_unit) - (m+1) * unit.unit_conversion(RF, RF_unit, IF_high_unit)
-                if current_spurius > 0 and current_spurius < IF_high:
-                    result.append([current_spurius, unit.return_unit_str(IF_high_unit), unit.unit_conversion(LO, LO_unit, IF_high_unit), unit.unit_conversion(RF, RF_unit, IF_high_unit), n+1, m+1])
-        else:
-            current_spurius = (n+1) * unit.unit_conversion(LO, LO_unit, IF_high_unit)
-            if current_spurius > 0 and current_spurius < IF_high:
-                result.append([current_spurius, unit.return_unit_str(IF_high_unit), unit.unit_conversion(LO, LO_unit, IF_high_unit), unit.unit_conversion(LO, LO_unit, IF_high_unit), n+1, m_max_RF])
+    IF_low_converted = unit.unit_conversion(IF_low, IF_low_unit, IF_high_unit)
+    for n in range(n_min_LO, n_max_LO + n_step_LO, n_step_LO):
+        if m_step_RF>0: # RF enabled
+            for m in range(m_min_RF, m_max_RF + m_step_RF, m_step_RF):
+                if n != 0 and m != 0:
+                    current_spurius = n * unit.unit_conversion(LO, LO_unit, IF_high_unit) + m * unit.unit_conversion(RF, RF_unit, IF_high_unit)
+                    current_spurius = round(current_spurius, 5)
+                    if current_spurius > IF_low_converted and current_spurius < IF_high:
+                        result.append([current_spurius, unit.return_unit_str(IF_high_unit), unit.unit_conversion(LO, LO_unit, IF_high_unit), unit.unit_conversion(RF, RF_unit, IF_high_unit), n, m])
+        else: #RF disable
+            if n != 0:
+                current_spurius = n * unit.unit_conversion(LO, LO_unit, IF_high_unit)
+                current_spurius = round(current_spurius, 5)
+                if current_spurius > IF_low_converted and current_spurius < IF_high:
+                    result.append([current_spurius, unit.return_unit_str(IF_high_unit), unit.unit_conversion(LO, LO_unit, IF_high_unit), unit.unit_conversion(LO, LO_unit, IF_high_unit), n, 0])
     return result
 
 
         
 
-def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
+def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
                         synthetizer_LO_state = synthetizer_LO_state,
                         synthetizer_LO_frequency_min_unit = synthetizer_LO_frequency_min_unit,
                         synthetizer_LO_frequency_min = synthetizer_LO_frequency_min,
@@ -126,9 +140,9 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
                         synthetizer_RF_level_min = synthetizer_RF_level_min, #dBm
                         synthetizer_RF_level_max = synthetizer_RF_level_max,
                         synthetizer_RF_level_step = synthetizer_RF_level_step,
-                        power_meter_state = power_meter_state,
-                        power_meter_misure_number = power_meter_misure_number,
-                        power_meter_misure_delay = power_meter_misure_delay, #seconds
+                        #power_meter_state = power_meter_state,
+                        #power_meter_misure_number = power_meter_misure_number,
+                        #power_meter_misure_delay = power_meter_misure_delay, #seconds
                         spectrum_analyzer_state = spectrum_analyzer_state,
                         spectrum_analyzer_sweep_points = spectrum_analyzer_sweep_points,
                         spectrum_analyzer_resolution_bandwidth = spectrum_analyzer_resolution_bandwidth,
@@ -146,14 +160,23 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
                         threshold_power = threshold_power, #dB 
                         spectrum_analyzer_frequency_marker_unit = spectrum_analyzer_frequency_marker_unit,
                         FSV_delay = FSV_delay,
+                        m_min_RF = m_min_RF,
                         m_max_RF = m_max_RF,
+                        m_step_RF = m_step_RF,
+                        n_min_LO = n_min_LO,
                         n_max_LO = n_max_LO,
+                        n_step_LO = n_step_LO,
+                        IF_low = IF_low,
+                        IF_low_unit = IF_low_unit,
                         IF_high = IF_high,
                         IF_high_unit = IF_high_unit,
                         spurius_IF_unit = spurius_IF_unit,
                         calibration_file_LO = calibration_file_LO,
+                        calibration_file_LO_enable = calibration_file_LO_enable,
                         calibration_file_RF = calibration_file_RF,
+                        calibration_file_RF_enable = calibration_file_RF_enable,
                         calibration_file_IF = calibration_file_IF,
+                        calibration_file_IF_enable = calibration_file_IF_enable,
                         result_file_name = result_file_name,
                         createprogressdialog = False):
 
@@ -199,14 +222,29 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
     FSV.write("CALC:MARKER ON") #enable marker mode
 
     #load data for cables from calibration files
-    calibration_LO = readcalibrationfile(calibration_file_LO)
-    calibration_function_LO, calibration_function_LO_unit = calibrationfilefunction(calibration_LO)
-    calibration_IF = readcalibrationfile(calibration_file_IF)
-    calibration_function_IF, calibration_function_unit = calibrationfilefunction(calibration_IF)
-    calibration_RF = readcalibrationfile(calibration_file_RF)
-    calibration_function_RF, calibration_function_IF_unit = calibrationfilefunction(calibration_RF)
+    if calibration_file_LO_enable:
+        calibration_LO = readcalibrationfile(calibration_file_LO)
+        calibration_function_LO, calibration_function_LO_unit = calibrationfilefunction(calibration_LO)
+    else:
+        calibration_LO = []
+        calibration_function_LO = None
+        calibration_function_LO_unit = unit.MHz
+    if calibration_file_IF_enable:
+        calibration_IF = readcalibrationfile(calibration_file_IF)
+        calibration_function_IF, calibration_function_IF_unit = calibrationfilefunction(calibration_IF)
+    else:
+        calibration_IF = []
+        calibration_function_IF = None
+        calibration_function_IF_unit = unit.MHz
+    if calibration_file_RF_enable:
+        calibration_RF = readcalibrationfile(calibration_file_RF)
+        calibration_function_RF, calibration_function_RF_unit = calibrationfilefunction(calibration_RF)
+    else:
+        calibration_RF = []
+        calibration_function_RF = None
+        calibration_function_RF_unit = unit.MHz
     totale_values = []
-    if synthetizer_LO_state == "OFF":
+    if not synthetizer_LO_state:
         #set default parameter to skeep syntetizer loop
         synthetizer_LO_frequency_min_unit = unit.MHz
         synthetizer_LO_frequency_min = 3000
@@ -219,7 +257,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
         synthetizer_LO_level_max = -10 #same value of min for fixed value
         synthetizer_LO_level_step = 0.5
 
-    if synthetizer_RF_state == "OFF" or m_max_RF == 0:
+    if (not synthetizer_RF_state) or (m_min_RF == 0 and m_max_RF == 0 and m_step_RF == 1):
         #set default parameter to skeep syntetizer loop
         #By this mode is possibile calculate harmonic for LO frequency LO power
         synthetizer_RF_frequency_min_unit = unit.MHz
@@ -232,7 +270,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
         synthetizer_RF_level_min = -10 #dBm
         synthetizer_RF_level_max = -10 #same value of min for fixed value
         synthetizer_RF_level_step = 0.5
-        m_max_RF = 0
+        m_step_RF = 0
 
     frequency_LO_range = np.arange(synthetizer_LO_frequency_min, unit.unit_conversion( synthetizer_LO_frequency_max, synthetizer_LO_frequency_max_unit, synthetizer_LO_frequency_min_unit)  + unit.unit_conversion(synthetizer_LO_frequency_step, synthetizer_LO_frequency_step_unit, synthetizer_LO_frequency_min_unit) , unit.unit_conversion(synthetizer_LO_frequency_step, synthetizer_LO_frequency_step_unit, synthetizer_LO_frequency_min_unit))
     level_LO_range = np.arange(synthetizer_LO_level_min, synthetizer_LO_level_max + synthetizer_LO_level_step, synthetizer_LO_level_step)
@@ -253,7 +291,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
         for l_LO in level_LO_range: #power level loop
             #set SMB100A level for LO
             #calculate calibrated value of level for LO
-            current_LO_level, calibration_LO_result =  calibrate(l_LO, f_LO,  synthetizer_LO_frequency_min_unit, calibration_LO)
+            current_LO_level, calibration_LO_result =  calibrate(l_LO, f_LO,  synthetizer_LO_frequency_min_unit, calibration_LO, calibration_function = calibration_function_LO, calibration_function_unit = calibration_function_LO_unit)
             command = "POW " + str(current_LO_level)
             SMB_LO.write(command)
             #turn on LO
@@ -264,7 +302,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
                 for f_RF in frequency_RF_range: #frequency loop
                     values = []
                     #calculate calibrated value of level for RF
-                    current_RF_level, calibration_RF_result =  calibrate(l_RF, f_RF, synthetizer_RF_frequency_min_unit, calibration_RF)
+                    current_RF_level, calibration_RF_result =  calibrate(l_RF, f_RF, synthetizer_RF_frequency_min_unit, calibration_RF, calibration_function = calibration_function_RF, calibration_function_unit = calibration_function_RF_unit)
                     command = "POW " + str(current_RF_level)
                     SMB_RF.write(command) #set level for RF
                     #set SMB100A frequency for RF
@@ -274,10 +312,10 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
                     SMB_RF.write(command)
                     
                     #calculate spurius frequency
-                    spurius_tmp = return_spurius_list(f_LO, synthetizer_LO_frequency_min_unit, f_RF, synthetizer_RF_frequency_min_unit, n_max_LO, m_max_RF, IF_high, IF_high_unit)
+                    spurius_tmp = return_spurius_list(f_LO, synthetizer_LO_frequency_min_unit, f_RF, synthetizer_RF_frequency_min_unit, n_min_LO, n_max_LO, n_step_LO, m_min_RF, m_max_RF, m_step_RF, IF_low, IF_low_unit, IF_high, IF_high_unit)
                     #turn on RF
                     SMB_RF.write("OUTP ON")
-                    spurius_markers = readFSV_marker_spurius(FSV, FSV_delay, spurius_tmp, spectrum_analyzer_IF_atten, spurius_IF_unit, calibration_IF)
+                    spurius_markers = readFSV_marker_spurius(FSV, FSV_delay, spurius_tmp, spectrum_analyzer_IF_atten, spurius_IF_unit, calibration_IF, calibration_IF_function = calibration_function_IF, calibration_IF_function_unit = calibration_function_IF_unit)
                     count +=1
                     
                     
@@ -295,12 +333,16 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
                         #values.append([f_LO_value, unit.return_unit_str(synthetizer_LO_frequency_unit), str(current_LO_level), calibration_LO_result, f_RF_value, unit.return_unit_str(synthetizer_RF_frequency_unit), str(current_RF_level), calibration_RF_result] + s)
                         values.append([f_LO_value, unit.return_unit_str(synthetizer_LO_frequency_min_unit), str(l_LO), calibration_LO_result, f_RF_value, unit.return_unit_str(synthetizer_RF_frequency_min_unit), str(l_RF), calibration_RF_result] + s)
                         totale_values.append(values[-1])
+                        print(totale_values[-1])
                     #build filename - result_file_name_LOfrequency_unit_LOlevel_CAL/NOCAL_RFfrequency_unit_RFlevel_CAL/NOCAL_datetime
                     if len(spurius_markers) >0:
                         spurius_filename  =result_file_name + "_" + "_".join(values[0][0:-2]) + "_" + return_now_postfix()
                         save_spurius(spurius_filename, values)
+    #turn off LO and RF
+    SMB_LO.write("OUTP OFF")
+    SMB_RF.write("OUTP OFF")
     
-    if m_max_RF == 0:
+    if m_step_RF == 0:
         harmonic_filename =result_file_name + "_TOTAL_HARMONIC_" + return_now_postfix()
         save_harmonic(harmonic_filename, totale_values)
         spurius_filename =result_file_name + "_TOTAL_" + return_now_postfix()
@@ -308,9 +350,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, NRP2, FSV,
     else:
         spurius_filename  =result_file_name + "_TOTAL_" + return_now_postfix()
         save_spurius(spurius_filename, totale_values)     
-    #turn off LO and RF
-    SMB_LO.write("OUTP OFF")
-    SMB_RF.write("OUTP OFF")
+
 
     print("Misure completed\n")
     
@@ -403,35 +443,39 @@ def readFSV_marker_harmonic(FSV, FSV_delay, central_frequency_value, central_fre
 
     return result
 
-def readFSV_marker_spurius(FSV, FSV_delay, spurius_list, fsv_att_value, spurius_IF_unit, calibration_IF):
+def readFSV_marker_spurius(FSV, FSV_delay, spurius_list, fsv_att_value, spurius_IF_unit, calibration_IF, calibration_IF_function, calibration_IF_function_unit):
     #measure all spurius level from FSV
     #return list [[Frequency, Unit, Level, n, m], [Frequency, Unit, Level, n, m], ..., [Frequency, Unit, Level, n, m]]
     result = []
     
     for s in spurius_list:
         freq = s[0]
-        result += [readFSV_marker(FSV, FSV_delay, str(freq) + s[1], fsv_att_value, spurius_IF_unit, calibration_IF) + [str(s[4]) , str(s[5])]]
+        result += [readFSV_marker(FSV, FSV_delay, str(freq) + s[1], fsv_att_value, spurius_IF_unit, calibration_IF, calibration_IF_function, calibration_IF_function_unit) + [str(s[4]) , str(s[5])]]
     return result
 
-def readFSV_marker(FSV, FSV_delay, central_frequency, fsv_att_value, spurius_IF_unit, calibration_IF):
+def readFSV_marker(FSV, FSV_delay, central_frequency, fsv_att_value, spurius_IF_unit, calibration_IF, calibration_IF_function, calibration_IF_function_unit):
     #return the list [Frequency, Unit, Level]
     
     FSV.write("INP:ATT " + str(fsv_att_value)) #set attenuation
     
     #set central frequency
-    command = "FREQ:CENT " + str(central_frequency)
+    command = "FREQ:CENT " + central_frequency
     FSV.write(command)
     #wait for center frequency
     time.sleep(FSV_delay)
-    FSV.write("INIT;*WAI")
-
+    FSV.write("ABOR;INIT:IMM; *WAI")
+    #FSV.write("*OPT")
+    #FSV.write("*WAI")
     FSV.write("CALC:MARK:MAX")
-    frequency = unit.unit_conversion(eval(FSV.ask("CALC:MARK:X?")[0]), unit.Hz, spurius_IF_unit)
+    #lettura = FSV.ask("CALC:MARK:X?")
+    #time.sleep(FSV_delay)
+    frequency = unit.unit_conversion(eval(FSV.ask("CALC:MARK:X?")), unit.Hz, spurius_IF_unit)
     result = [str(frequency)]    
     result += [unit.return_unit_str(spurius_IF_unit)]
     #response = FSV.ask("CALC:MARK:Y?")
+    #time.sleep(FSV_delay)
     tmp = eval(FSV.ask("CALC:MARK:Y?"))
-    result += [str(x) for x in calibrate(tmp, frequency, spurius_IF_unit, calibration_IF, round_freq = True)]
+    result += [str(x) for x in calibrate(tmp, frequency, spurius_IF_unit, calibration_IF, round_freq = True, calibration_function = calibration_IF_function, calibration_function_unit = calibration_IF_function_unit)]
     return result
 
 
