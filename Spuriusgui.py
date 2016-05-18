@@ -50,8 +50,8 @@ class NotebookDemo(wx.Notebook):
         self.tabFSV = TabPanelFSV(self)
         self.AddPage(self.tabFSV, "Spectrum Analyser")
  
-        self.tabPowerMeter = TabPanelPowerMeter(self)
-        self.AddPage(self.tabPowerMeter, "Power Meter")
+        #self.tabPowerMeter = TabPanelPowerMeter(self)
+        #self.AddPage(self.tabPowerMeter, "Power Meter")
         
         self.tabSpuriusSetting = TabPanelSpuriusSetup(self)
         self.AddPage(self.tabSpuriusSetting, "Spurius Calculation")
@@ -161,12 +161,12 @@ class SpuriusFrame(wx.Frame):
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_max")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_step")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_fixed")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_IP")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_Port")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_Timeout")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_state")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_misure_number")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_misure_delay")
+        #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_IP")
+        #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_Port")
+        #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_Timeout")
+        #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_state")
+        #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_misure_number")
+        #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_misure_delay")
         self.writelinesettings(filepointer, "self.notebook.tabFSV.instrument_txt_IP")
         self.writelinesettings(filepointer, "self.notebook.tabFSV.instrument_txt_Port")
         self.writelinesettings(filepointer, "self.notebook.tabFSV.instrument_txt_Timeout")
@@ -187,8 +187,14 @@ class SpuriusFrame(wx.Frame):
         self.writelinesettings(filepointer, "self.notebook.tabFSV.threshold_power")
         self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_frequency_marker_unit")
         self.writelinesettings(filepointer, "self.notebook.tabFSV.FSV_delay")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.m_min_RF")
         self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.m_max_RF")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.m_step_RF")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.n_min_LO")
         self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.n_max_LO")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.n_step_LO")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.IF_low")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.IF_low_unit")
         self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.IF_high")
         self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.IF_high_unit")
         self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.spurius_IF_unit")
@@ -351,29 +357,29 @@ class SpuriusFrame(wx.Frame):
         else:
             synthetizer_RF_level_step = eval(self.notebook.tabRF.synthetizer_level_step.GetValue())
             
-        power_meter_IP = self.notebook.tabRF.instrument_txt_IP.GetValue()
-        if check_value_is_IP(power_meter_IP, "LO Synthetizer IP") == 0:
-            return None
+        #power_meter_IP = self.notebook.tabRF.instrument_txt_IP.GetValue()
+        #if check_value_is_IP(power_meter_IP, "LO Synthetizer IP") == 0:
+        #    return None
         
-        power_meter_Port = self.notebook.tabRF.instrument_txt_Port.GetValue()
-        if check_value_min_max(power_meter_Port, "LO Synthetizer Port", minimum = 0) == 0:
-            return None
+        #power_meter_Port = self.notebook.tabRF.instrument_txt_Port.GetValue()
+        #if check_value_min_max(power_meter_Port, "LO Synthetizer Port", minimum = 0) == 0:
+        #    return None
         
-        power_meter_Timeout = self.notebook.tabRF.instrument_txt_Timeout.GetValue()
-        if check_value_min_max(power_meter_Timeout, "LO Synthetizer Timeout", minimum = 0) == 0:
-            return None
+        #power_meter_Timeout = self.notebook.tabRF.instrument_txt_Timeout.GetValue()
+        #if check_value_min_max(power_meter_Timeout, "LO Synthetizer Timeout", minimum = 0) == 0:
+        #    return None
             
-        power_meter_instrType = self.notebook.tabPowerMeter.combobox_instrtype.GetValue()
+        #power_meter_instrType = self.notebook.tabPowerMeter.combobox_instrtype.GetValue()
             
-        power_meter_state = self.notebook.tabPowerMeter.power_meter_state.GetValue()
-        power_meter_misure_number = self.notebook.tabPowerMeter.power_meter_misure_number.GetValue()
+        #power_meter_state = self.notebook.tabPowerMeter.power_meter_state.GetValue()
+        #power_meter_misure_number = self.notebook.tabPowerMeter.power_meter_misure_number.GetValue()
         
         
-        power_meter_misure_delay = self.notebook.tabPowerMeter.power_meter_misure_delay.GetValue() #seconds
-        if check_value_min_max(power_meter_misure_delay, "Measure Delay", minimum = 0) == 0:
-            return None
-        else:
-            power_meter_misure_delay = eval(self.notebook.tabPowerMeter.power_meter_misure_delay.GetValue())
+        #power_meter_misure_delay = self.notebook.tabPowerMeter.power_meter_misure_delay.GetValue() #seconds
+        #if check_value_min_max(power_meter_misure_delay, "Measure Delay", minimum = 0) == 0:
+        #    return None
+        #else:
+        #    power_meter_misure_delay = eval(self.notebook.tabPowerMeter.power_meter_misure_delay.GetValue())
         
         spectrum_analyzer_IP = self.notebook.tabFSV.instrument_txt_IP.GetValue()
         if check_value_is_IP(spectrum_analyzer_IP, "LO Synthetizer IP") == 0:
@@ -463,9 +469,24 @@ class SpuriusFrame(wx.Frame):
         else:
             FSV_delay = eval(self.notebook.tabFSV.FSV_delay.GetValue())
             
+        m_min_RF = self.notebook.tabSpuriusSetting.m_min_RF.GetValue()
         m_max_RF = self.notebook.tabSpuriusSetting.m_max_RF.GetValue()
+        m_step_RF = self.notebook.tabSpuriusSetting.m_step_RF.GetValue()
+        n_min_LO = self.notebook.tabSpuriusSetting.n_min_LO.GetValue()
         n_max_LO = self.notebook.tabSpuriusSetting.n_max_LO.GetValue()
+        n_step_LO = self.notebook.tabSpuriusSetting.n_step_LO.GetValue()
+
+        IF_low = self.notebook.tabSpuriusSetting.IF_low.GetValue()
+        if check_value_min_max(IF_low, "Low Frequency", minimum = 0) == 0:
+            return None
+        else:
+            IF_low = eval(self.notebook.tabSpuriusSetting.IF_low.GetValue())
         
+        IF_low_unit = unit.return_unit(self.notebook.tabSpuriusSetting.IF_low_unit.GetValue())
+        if check_value_not_none(IF_low_unit, "Low Frequency Unit") == 0:
+            return None
+
+
         IF_high = self.notebook.tabSpuriusSetting.IF_high.GetValue()
         if check_value_min_max(IF_high, "High Frequency", minimum = 0) == 0:
             return None
@@ -481,16 +502,22 @@ class SpuriusFrame(wx.Frame):
             return None
         
         calibration_file_LO = self.notebook.tabSpuriusSetting.calibration_file_LO.GetValue()
-        if check_value_is_valid_file(calibration_file_LO, "LO Calibration file") == 0:
-            return None
+        calibration_file_LO_enable = self.notebook.tabSpuriusSetting.calibration_file_LO_enable.GetValue()
+        if calibration_file_LO_enable:
+            if check_value_is_valid_file(calibration_file_LO, "LO Calibration file") == 0:
+                return None
         
         calibration_file_RF = self.notebook.tabSpuriusSetting.calibration_file_RF.GetValue()
-        if check_value_is_valid_file(calibration_file_LO, "LO Calibration file") == 0:
-            return None
+        calibration_file_RF_enable = self.notebook.tabSpuriusSetting.calibration_file_RF_enable.GetValue()
+        if calibration_file_RF_enable:
+            if check_value_is_valid_file(calibration_file_LO, "LO Calibration file") == 0:
+                return None
         
         calibration_file_IF = self.notebook.tabSpuriusSetting.calibration_file_IF.GetValue()
-        if check_value_is_valid_file(calibration_file_LO, "LO Calibration file") == 0:
-            return None
+        calibration_file_IF_enable = self.notebook.tabSpuriusSetting.calibration_file_IF_enable.GetValue()
+        if calibration_file_IF_enable:
+            if check_value_is_valid_file(calibration_file_LO, "LO Calibration file") == 0:
+                return None
         
         result_file_name = self.notebook.tabSpuriusSetting.result_file_name.GetValue()
 
@@ -514,15 +541,15 @@ class SpuriusFrame(wx.Frame):
             dlg.ShowModal()
             return 0
 
-        try:
-            if power_meter_state:
-                NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "NRP2")
-            else:
-                NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = True, instrument_class = "NRP2")
-        except:
-            dlg = wx.MessageDialog(None, "Power meter comunication error", 'Error Power meter', wx.OK | wx.ICON_ERROR)
-            dlg.ShowModal()
-            return 0
+        #try:
+        #    if power_meter_state:
+        #        NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "NRP2")
+        #    else:
+        #        NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = True, instrument_class = "NRP2")
+        #except:
+        #    dlg = wx.MessageDialog(None, "Power meter comunication error", 'Error Power meter', wx.OK | wx.ICON_ERROR)
+        #    dlg.ShowModal()
+        #    return 0
         
         try:
             if spectrum_analyzer_state:
@@ -539,7 +566,7 @@ class SpuriusFrame(wx.Frame):
 
         measure_LNA_spurius(SMB_LO, 
                             SMB_RF, 
-                            NRP2, 
+                            #NRP2, 
                             FSV, 
                             synthetizer_LO_state, 
                             synthetizer_LO_frequency_min_unit, 
@@ -561,9 +588,9 @@ class SpuriusFrame(wx.Frame):
                             synthetizer_RF_level_min, 
                             synthetizer_RF_level_max, 
                             synthetizer_RF_level_step, 
-                            power_meter_state, 
-                            power_meter_misure_number, 
-                            power_meter_misure_delay, 
+                            #power_meter_state, 
+                            #power_meter_misure_number, 
+                            #power_meter_misure_delay, 
                             spectrum_analyzer_state, 
                             spectrum_analyzer_sweep_points, 
                             spectrum_analyzer_resolution_bandwidth, 
@@ -581,14 +608,23 @@ class SpuriusFrame(wx.Frame):
                             threshold_power, 
                             spectrum_analyzer_frequency_marker_unit, 
                             FSV_delay, 
-                            m_max_RF, 
+                            m_min_RF,
+                            m_max_RF,
+                            m_step_RF, 
+                            n_min_LO,
                             n_max_LO, 
+                            n_step_LO,
+                            IF_low, 
+                            IF_low_unit, 
                             IF_high, 
                             IF_high_unit, 
                             spurius_IF_unit, 
                             calibration_file_LO, 
+                            calibration_file_LO_enable,
                             calibration_file_RF, 
+                            calibration_file_RF_enable,
                             calibration_file_IF, 
+                            calibration_file_IF_enable,
                             result_file_name, 
                             createprogressdialog = dialog)
  
