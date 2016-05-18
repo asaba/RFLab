@@ -7,7 +7,7 @@ Created on 28/dic/2015
 import wx
 import os
 
-from guiobjects import return_checkbox_labeled, return_spinctrl, return_textbox_labeled, return_comboBox_unit, return_file_browse, return_instrument, return_test_instrument, return_simple_button, return_min_max_step_labeled
+from guiobjects import return_checkbox_labeled, return_spinctrl, return_textbox_labeled, return_comboBox_unit, return_file_browse, return_instrument, return_test_instrument, return_simple_button, return_min_max_step_labeled, return_spinctrl_min_max
 from utilitygui import check_instrument_comunication
 from utilitygui import check_value_is_valid_file, check_value_min_max
 from measure_scripts.plotIP1graph import calculate_all_IP1
@@ -29,7 +29,7 @@ class SetupPanelClass(wx.Panel):
     
     def __init__(self, parent):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
-        self.result_file_name, self.result_file_name_button, self.sizer_result_file_name = return_file_browse(self, "Output File")
+        self.result_file_name, self.result_file_name_button, dummy, self.sizer_result_file_name = return_file_browse(self, "Output File")
         self.result_file_name_button.Bind(wx.EVT_BUTTON, self.File_browser_Out)
     
     def File_browser_Out(self, event):
@@ -48,7 +48,7 @@ class PlotGraphPanelClass(wx.Panel):
     
     def __init__(self, parent):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
-        self.data_file_name, self.data_file_name_button, self.sizer_data_file_name = return_file_browse(self, "Data File")
+        self.data_file_name, self.data_file_name_button, dummy, self.sizer_data_file_name = return_file_browse(self, "Data File")
         self.data_file_name_button.Bind(wx.EVT_BUTTON, self.File_browser_DataFile)
         
         #Graph Title
@@ -148,7 +148,7 @@ class TabPanelIP1CalcSetup(SetupPanelClass):
 
         #IP1 calculation variables
 
-        self.calibration_file_RF, self.calibration_file_RF_button, self.sizer_calibration_file_RF = return_file_browse(self, "Radio Frequency Cable Calibration File")
+        self.calibration_file_RF, self.calibration_file_RF_button, self.calibration_file_RF_enable, self.sizer_calibration_file_RF = return_file_browse(self, "Radio Frequency Cable Calibration File", enabled = True)
         self.calibration_file_RF_button.Bind(wx.EVT_BUTTON, self.File_browser_RF)
         
 
@@ -179,10 +179,14 @@ class TabPanelSpuriusSetup(SetupPanelClass):
         #spurius calculation variables
 
         #m_max_RF = 7
-        self.m_max_RF, self.sizer_m_max_RF = return_spinctrl(self, "Max m for RF")
-        
+        #self.m_max_RF, self.sizer_m_max_RF = return_spinctrl(self, "Max m for RF")
+        self.m_min_RF, self.m_max_RF, self.m_step_RF, self.sizer_m_RF = return_spinctrl_min_max(self, "m for RF (min/max/step)")
         #n_max_LO = 7
-        self.n_max_LO, self.sizer_n_max_LO = return_spinctrl(self, "Max n for LO")
+        #self.n_max_LO, self.sizer_n_max_LO = return_spinctrl(self, "Max n for LO")
+        self.n_min_LO, self.n_max_LO, self.n_step_LO, self.sizer_n_LO = return_spinctrl_min_max(self, "n for LO (min/max/step)")
+        
+        #IF_high = 3000
+        self.IF_low, self.IF_low_unit, dummy, self.sizer_IF_low, dummy, dummy = return_textbox_labeled(self, "Min Spurius Frequency", unit = True)
         
         #IF_high = 3000
         self.IF_high, self.IF_high_unit, dummy, self.sizer_IF_high, dummy, dummy = return_textbox_labeled(self, "Max Spurius Frequency", unit = True)
@@ -191,20 +195,21 @@ class TabPanelSpuriusSetup(SetupPanelClass):
         self.spurius_IF_unit, self.sizer_spurius_IF_unit = return_comboBox_unit(self, "Spurius Frequency unit")
         
         #calibration_file_LO = "C:\\Users\\Labele\\Desktop\\Spurius\\LO_cal.csv"
-        self.calibration_file_LO, self.calibration_file_LO_button, self.sizer_calibration_file_LO = return_file_browse(self, "Local Ocillator Cable Calibration File")
+        self.calibration_file_LO, self.calibration_file_LO_button, self.calibration_file_LO_enable, self.sizer_calibration_file_LO = return_file_browse(self, "Local Ocillator Cable Calibration File", enabled = True)
         self.calibration_file_LO_button.Bind(wx.EVT_BUTTON, self.File_browser_LO)
         
         #calibration_file_RF = "C:\\Users\\Labele\\Desktop\\Spurius\\LO_cal.csv"
-        self.calibration_file_RF, self.calibration_file_RF_button, self.sizer_calibration_file_RF = return_file_browse(self, "Radio Frequency Cable Calibration File")
+        self.calibration_file_RF, self.calibration_file_RF_button, self.calibration_file_RF_enable, self.sizer_calibration_file_RF = return_file_browse(self, "Radio Frequency Cable Calibration File", enabled = True)
         self.calibration_file_RF_button.Bind(wx.EVT_BUTTON, self.File_browser_RF)
 
         #calibration_file_IF = ""
-        self.calibration_file_IF, self.calibration_file_IF_button, self.sizer_calibration_file_IF = return_file_browse(self, "Output Frequency Cable Calibration File")
+        self.calibration_file_IF, self.calibration_file_IF_button, self.calibration_file_IF_enable, self.sizer_calibration_file_IF = return_file_browse(self, "Output Frequency Cable Calibration File", enabled = True)
         self.calibration_file_IF_button.Bind(wx.EVT_BUTTON, self.File_browser_IF)
         
 
-        sizer.Add(self.sizer_m_max_RF, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_n_max_LO, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_m_RF, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_n_LO, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_IF_low, 0, wx.ALL, 5)
         sizer.Add(self.sizer_IF_high, 0, wx.ALL, 5)
         sizer.Add(self.sizer_calibration_file_LO, 0, wx.ALL, 5)
         sizer.Add(self.sizer_calibration_file_RF, 0, wx.ALL, 5)
@@ -569,7 +574,7 @@ class TabPanelTSC(InstrumentPanelClass):
         
         self.TSC_plot_adev, self.sizer_TSC_plot_adev = return_checkbox_labeled(self, "Plot Allan Deviation")
         
-        self.result_file_name, self.result_file_name_button, self.sizer_result_file_name = return_file_browse(self, "Output Path")
+        self.result_file_name, self.result_file_name_button, dummy, self.sizer_result_file_name = return_file_browse(self, "Output Path")
         self.result_file_name_button.Bind(wx.EVT_BUTTON, self.File_browser_Out)
         
         sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
