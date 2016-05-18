@@ -21,7 +21,8 @@ def calibrate(input_power, input_frequency, input_frequency_unit, calibration_ta
     
     if calibration_function:
         i_freq = unit.unit_conversion(input_frequency, input_frequency_unit, calibration_function_unit)
-        return input_power - calibration_function(i_freq), "CAL"
+        function_result = calibration_function(i_freq)
+        return input_power - function_result, "CAL"
     
     if round_freq:
         if len(calibration_table) > 0:
@@ -30,7 +31,9 @@ def calibrate(input_power, input_frequency, input_frequency_unit, calibration_ta
             for t in calibration_table[1:]:
                 #power dictionary {Cable Frequency (input_frequency_unit): calibrated power}
                 power_dict[unit.unit_conversion(eval(t[0].replace(",", ".")), unit.return_unit(t[1]), input_frequency_unit)] = eval(t[2].replace(",", "."))
-                
+            
+            #search the narrow value in power_dict keys
+            #notes: lambda is equal to def func(x): return abs(x-input_frequency)
             calibration_value = power_dict[min(power_dict, key=lambda x:abs(x-input_frequency))]
             calibration_result = "CAL"
             if input_power > 0:
@@ -68,8 +71,12 @@ def readcalibrationfile(filename):
     
 def calibrationfilefunction(calibrationresult):
     #return the spline function for calibration of cable
+    #return None, unit.MHz
+    if calibrationresult is []:
+        return None, unit.MHz
     x_curve = []
     y_curve = []
+    #if len()
     calibration_unit = unit.return_unit(calibrationresult[0][1])  
     for row in calibrationresult:
         x_curve.append(eval(row[0].replace(",", ".")))
