@@ -409,9 +409,9 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
         #power_meter_misure_number = 1
         self.graph_x_label, dummy, self.graph_x_label_auto, self.sizer_graph_x_label, dummy, dummy = return_textbox_labeled(self, "X Axes label", enabled=True, enable_text="Auto")
         
-        self.graph_x_min, dummy, self.graph_x_min_auto, self.sizer_graph_x_min, dummy, dummy = return_textbox_labeled(self, "X Axes min", enabled=True, enable_text="Auto")
+        self.graph_x_min, dummy, self.graph_x_min_auto, self.sizer_graph_x_min, self.grap_x_min_calc_button, dummy = return_textbox_labeled(self, "X Axes min", enabled=True, enable_text="Auto", read = True, button_text = "Calculate")
         
-        self.graph_x_max, dummy, self.graph_x_max_auto, self.sizer_graph_x_max, dummy, dummy = return_textbox_labeled(self, "X Axes max", enabled=True, enable_text="Auto")
+        self.graph_x_max, dummy, self.graph_x_max_auto, self.sizer_graph_x_max, self.grap_x_max_calc_button, dummy = return_textbox_labeled(self, "X Axes max", enabled=True, enable_text="Auto", read = True, button_text = "Calculate")
         
         self.graph_x_step, dummy, self.graph_x_step_auto, self.sizer_graph_x_step, dummy, dummy = return_textbox_labeled(self, "X Axes step", enabled=True, enable_text="Auto")
         
@@ -536,8 +536,19 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
 
         self.plot_button, self.sizer_plot_button = return_simple_button(self, "Plot Graph", "Start")
         self.plot_button.Bind(wx.EVT_BUTTON, self.OnPlotGraph)
-        self.grap_y_min_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcYmin)
-        self.grap_y_max_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcYmax)
+        self.x_index = 0
+        self.y_index = 0
+        self.row_data_filter = []
+        self.grap_y_min_calc_button.param_to_calc = {"type": "min", "index" : "self.y_index", "textbox" : "self.graph_y_min", "filter" : "self.row_data_filter"}
+        self.grap_y_max_calc_button.param_to_calc = {"type": "max", "index" : "self.y_index", "textbox" : "self.graph_y_max", "filter" : "self.row_data_filter"}
+        self.grap_x_min_calc_button.param_to_calc = {"type": "min", "index" : "self.x_index", "textbox" : "self.graph_x_min", "filter" : "self.row_data_filter"}
+        self.grap_x_max_calc_button.param_to_calc = {"type": "max", "index" : "self.x_index", "textbox" : "self.graph_x_max", "filter" : "self.row_data_filter"}
+        
+        
+        self.grap_y_min_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcAuto)
+        self.grap_y_max_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcAuto)
+        self.grap_x_min_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcAuto)
+        self.grap_x_max_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcAuto)
         #input Data File
         #Graph Title
         
@@ -567,35 +578,73 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
  
         self.SetSizer(sizer)
     
-    def OnCalcYmax(self, event):
-        data_file_name = self.data_file_name.GetValue()
-        result = [0]
-        if check_value_is_valid_file(data_file_name, "Data Spurius file") == 0:
-            return None
+    def OnCalcAuto(self, event):
         
-        
+        button = event.GetEventObject()
 
-    def OnCalcYmin(self, event):
+        param_to_calc = button.param_to_calc #{"type": "max", "index" : "self.x_index", "textbox" : "self.graph_y_max"}
+
+        m = []
+        for row in self.return_list_of_row():
+            for d in row:
+                if self.check_filter(d, eval(param_to_calc["filter"])):
+                    m.append(d[eval(param_to_calc["index"])])
+        if param_to_calc["type"] == "max":
+            eval(param_to_calc["textbox"]).ChangeValue(str(max(m)))
+        elif param_to_calc["type"] == "min":
+            eval(param_to_calc["textbox"]).ChangeValue(str(min(m)))
+        
+    def check_filter(self, row, row_filter):
+        result = True
+        for f in row_filter:
+            index = f[0]
+            filter_type = f[1]
+            filter_value = f[2]
+            if filter_type == "in":
+                if row[index] in filter_value:
+                    pass
+                else:
+                    return False
+            elif filter_type == "not in":
+                if row[index] not in filter_value:
+                    pass
+                else:
+                    return False
+        return result
+    
+    def return_list_of_row(self):
         data_file_name = self.data_file_name.GetValue()
         result = [0]
         if check_value_is_valid_file(data_file_name, "Data Spurius file") == 0:
             return None
         
+        IF_Frequency_selected = [0]
         SD_LO_Level = 0
         SD_RF_Level = 0
         graph_type = self.graph_type.GetValue()
         if graph_type == "Conversion Loss":
+            self.x_index = frequency_IF_index
+            self.y_index = conversion_loss
+            self.row_data_filter = [(n_LO_index, "in", [1, -1]), (m_RF_index, "in", [1, -1])]
             graph_type = "LO"
         elif graph_type == "Compression point":
+            self.x_index = power_RF_index
+            self.y_index = power_IF_index
             graph_type = "RF"
+            self.row_data_filter = [(n_LO_index, "in", [1, -1]), (m_RF_index, "in", [1, -1])]
         elif graph_type == "Harmonic Intermodulation Products":
+            self.x_index = power_RF_index
+            self.y_index = power_IF_index
             graph_type = "SP"
             dlg = wx.TextEntryDialog(self, "Insert Spurius Frequency")
             dlg.ShowModal()
             result = dlg.GetValue()
             dlg.Destroy()
             IF_Frequency_selected = eval("[" + result + "]")
+            self.row_data_filter = [(n_LO_index, "not in", [1, -1]), (m_RF_index, "not in", [1, -1])]
         elif graph_type == "Spurious Distribution":
+            self.x_index = frequency_IF_index
+            self.y_index = power_IF_index
             dlg = wx.TextEntryDialog(self, "Insert LO Level")
             dlg.ShowModal()
             SD_LO_Level = dlg.GetValue()
@@ -607,13 +656,14 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
             SD_LO_Level = eval(SD_LO_Level)
             SD_RF_Level = eval(SD_RF_Level)
             graph_type = "SD"
+            self.row_data_filter = [(n_LO_index, "not in", [1, -1]), (m_RF_index, "not in", [1, -1])]
         data_table, data_file_directory, graph_group_index, x_index, y_index, legend_index = order_and_group_data(data_file_name = data_file_name, 
                        graph_type = graph_type, 
                        SD_LO_Level = SD_LO_Level,
                        SD_RF_Level = SD_RF_Level,
                        IF_Frequency_selected = IF_Frequency_selected)
-        
-        y_min = min([d[power_IF_index] for d in [row for row in data_table]])
+        return data_table
+
     
     def OnPlotGraph(self, event):
         data_file_name = self.data_file_name.GetValue()
