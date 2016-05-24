@@ -65,7 +65,7 @@ def openSpuriusfile(filename):
                                 unit.return_unit(row[unit_LO_index]),
                                 eval(row[power_RF_index].replace(",", ".")),
                                 row[is_RF_calibrated_index],
-                                unit.unit_conversion(round(eval(row[frequency_IF_index].replace(",", ".")), 0), unit.return_unit(row[unit_IF_index]), unit.return_unit(row[unit_LO_index])),
+                                round(unit.unit_conversion(eval(row[frequency_IF_index].replace(",", ".")), unit.return_unit(row[unit_IF_index]), unit.return_unit(row[unit_LO_index])), 0),
                                 unit.return_unit(row[unit_LO_index]),
                                 eval(row[power_IF_index].replace(",", ".")),
                                 row[is_IF_calibrated_index],
