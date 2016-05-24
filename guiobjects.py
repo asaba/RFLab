@@ -75,7 +75,7 @@ def return_test_instrument(parent):
     Sizer.Add(label, 0, wx.ALL, 5)
     return button, label, Sizer
 
-def return_textbox_labeled(parent, label, unit = False, enabled = False, read = False, read_command=""):
+def return_textbox_labeled(parent, label, unit = False, enabled = False, enable_text = "", read = False, button_text = "Read", read_command=""):
     """
     return sizer
     -----------------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ def return_textbox_labeled(parent, label, unit = False, enabled = False, read = 
     Sizer.Add(label, 0, wx.ALL, 5)
     Sizer.Add(txt, 0, wx.ALL, 5)
     if enabled:
-        cb = wx.CheckBox(parent, -1, "", (10, 10))
+        cb = wx.CheckBox(parent, -1, enable_text, (10, 10))
         cb.SetValue(False)
         Sizer.Add(cb, 0, wx.ALL, 5)
     else:
@@ -105,7 +105,7 @@ def return_textbox_labeled(parent, label, unit = False, enabled = False, read = 
     else:
         combobox = None
     if read:
-        read_button = wx.Button(parent, 0, "Read")
+        read_button = wx.Button(parent, 0, button_text)
         Sizer.Add(read_button, 0, wx.ALL, 5)
     else:
         read_button = None
@@ -177,6 +177,25 @@ def return_comboBox_unit(parent, label):
     
     label = wx.StaticText(parent, wx.ID_ANY, label, size = (150,-1))
     combobox = wx.ComboBox(parent, -1, pos=(50, 170), size=(-1, -1), choices=unit_tmp.return_unit_list(), style=wx.CB_READONLY)
+    Sizer   = wx.BoxSizer(wx.HORIZONTAL)
+    Sizer.Add(label, 0, wx.ALL, 5)
+    Sizer.Add(combobox, 0, wx.ALL, 5)
+    return combobox, Sizer
+
+def return_comboBox(parent, label, choices_list):
+    """
+    return sizer
+    --------------------------
+    | label    |  combobox   |
+    --------------------------
+    label text is label 
+    combobox is list choices_list
+    
+    return also the combobox object
+    """
+    
+    label = wx.StaticText(parent, wx.ID_ANY, label, size = (150,-1))
+    combobox = wx.ComboBox(parent, -1, pos=(50, 170), size=(-1, -1), choices=choices_list, style=wx.CB_READONLY)
     Sizer   = wx.BoxSizer(wx.HORIZONTAL)
     Sizer.Add(label, 0, wx.ALL, 5)
     Sizer.Add(combobox, 0, wx.ALL, 5)
