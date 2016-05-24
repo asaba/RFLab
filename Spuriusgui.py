@@ -7,7 +7,7 @@ Created on 26/dic/2015
 #import images
 import wx
 import os
-from guitabs import TabPanelFSV, TabPanelPowerMeter, TabPanelSMB, TabPanelSpuriusSetup
+from guitabs import TabPanelFSV, TabPanelPowerMeter, TabPanelSMB, TabPanelSpuriusSetup, TabPanelSpuriusCPlotGraph
 from measure_scripts.Spurius import unit, measure_LNA_spurius, SMB_LO, SMB_RF, NRP2, FSV
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument
 from utility import writelineonfilesettings, return_now_postfix
@@ -55,6 +55,10 @@ class NotebookDemo(wx.Notebook):
         
         self.tabSpuriusSetting = TabPanelSpuriusSetup(self)
         self.AddPage(self.tabSpuriusSetting, "Spurius Calculation")
+        
+        
+        self.tabSpuriusPlotGraph = TabPanelSpuriusCPlotGraph(self)
+        self.AddPage(self.tabSpuriusPlotGraph, "Graph Spurius plot")
         # Create and add the third tab
         #self.AddPage(TabPanel(self), "TabThree")
  
@@ -87,7 +91,7 @@ class SpuriusFrame(wx.Frame):
         """Constructor"""
         wx.Frame.__init__(self, None, wx.ID_ANY,
                           "Spurius Calculation",
-                          size=(800,650)
+                          size=(800,800)
                           )
         
         
@@ -202,6 +206,27 @@ class SpuriusFrame(wx.Frame):
         self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.calibration_file_RF")
         self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.calibration_file_IF")
         self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.result_file_name")
+        
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_label")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_min")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_max")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_step")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_label")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_min")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_max")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_step")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_label_auto")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_min_auto")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_max_auto")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_step_auto")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_label_auto")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_min_auto")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_max_auto")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_step_auto")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.data_file_name")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_title")
+        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_type")
+        
 
     def OnSaveSettings(self, event):
         dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.SAVE)
