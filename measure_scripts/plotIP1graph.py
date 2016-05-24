@@ -43,7 +43,7 @@ def openIP1file(filename):
 
 def splitIP1filetablevalue(table_value):
     """
-    build a dictionary of values from table extracted from IP1 file measure
+    build a dictionary of values from table extracted from spurius file measure
     the stucture is dict{frequency: [power_level_input, power_level_output, calibration_info]}
     """
     file_measures = {}
@@ -69,10 +69,15 @@ def splitIP1filetablevalue(table_value):
         
 
 def calculate_all_IP1(data_file_name, graph_title, graph_x_label, graph_x_min, graph_x_max, graph_x_step, graph_y_label, graph_y_min, graph_y_max, graph_y_step, animated):
+    """
+    data = dict{frequency: [power_level_input, power_level_output, calibration_info]}
+    """
+    
     file_table_result, unit_value, data_file_directory = openIP1file(data_file_name)
     
     for k, v in splitIP1filetablevalue(file_table_result).iteritems():
         calculateIP1(k, unit_value, sorted(v, key=lambda x: x[0]), graph_title, graph_x_label, graph_x_min, graph_x_max, graph_x_step, graph_y_label, graph_y_min, graph_y_max, graph_y_step, data_file_directory = data_file_directory, animated = animated) #return list of value sorted by power_level_input field. Used to manage different measure for different attenuations
+
 
 
 def calculateIP1(frequency, frequency_unit_value, table_value, graph_title, graph_x_label = 'Input Power(dBm)', graph_x_min = -40, graph_x_max = 10, graph_x_step = 5, graph_y_label = 'Output Power(dBm)', graph_y_min = -30, graph_y_max = 20, graph_y_step = 5, return_IP1 = False, data_file_directory = "", animated = False):
@@ -192,7 +197,7 @@ def update_line(num, line_data, line, line_generator, curve_data, curve, curve_g
                     plt.text(x+0.2, curve_generator(x)-2, "{:.3f} dBm".format(x), **csfont)
                     break
     return line, curve
- 
+
 fig = None
 
 ax = None
