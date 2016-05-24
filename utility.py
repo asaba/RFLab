@@ -71,8 +71,10 @@ def buildcsvrow(tuplevalue):
             rowresult.append(v)
 
         else:
-
-            rowresult.append(v.replace(".", ","))
+            if type(v) is str:
+                rowresult.append(v.replace(".", ","))
+            else:
+                rowresult.append(str(v).replace(".", ","))
 
     return rowresult
 
