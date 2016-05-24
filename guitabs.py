@@ -7,10 +7,12 @@ Created on 28/dic/2015
 import wx
 import os
 
-from guiobjects import return_checkbox_labeled, return_spinctrl, return_textbox_labeled, return_comboBox_unit, return_file_browse, return_instrument, return_test_instrument, return_simple_button, return_min_max_step_labeled, return_spinctrl_min_max
+from guiobjects import return_checkbox_labeled, return_spinctrl, return_textbox_labeled, return_comboBox_unit, return_file_browse, return_instrument, return_test_instrument, return_simple_button, return_min_max_step_labeled, return_spinctrl_min_max, return_comboBox
 from utilitygui import check_instrument_comunication
 from utilitygui import check_value_is_valid_file, check_value_min_max
 from measure_scripts.plotIP1graph import calculate_all_IP1
+from measure_scripts.plotSpuriusCGraph import plot_spurius_graph, order_and_group_data
+from measure_scripts.csvutility import *
 
 
 class InstrumentPanelClass(wx.Panel):
@@ -387,10 +389,10 @@ class TabPanelSourceMeter (InstrumentPanelClass):
 
 class XYPlotGraphPanelClass(PlotGraphPanelClass):
     """
-    Tab for Plot IP1 Graph
+    Tab for Plot XY Graph ex. IP1, Spurius, ...
     """
     
-    def __init__(self, parent):
+    def __init__(self, parent, animated = False):
         
         PlotGraphPanelClass.__init__(self, parent=parent)
 
@@ -405,23 +407,24 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
         
 
         #power_meter_misure_number = 1
-        self.graph_x_label, dummy, dummy, self.sizer_graph_x_label, dummy, dummy = return_textbox_labeled(self, "X Axes label")
+        self.graph_x_label, dummy, self.graph_x_label_auto, self.sizer_graph_x_label, dummy, dummy = return_textbox_labeled(self, "X Axes label", enabled=True, enable_text="Auto")
         
-        self.graph_x_min, dummy, dummy, self.sizer_graph_x_min, dummy, dummy = return_textbox_labeled(self, "X Axes min")
+        self.graph_x_min, dummy, self.graph_x_min_auto, self.sizer_graph_x_min, dummy, dummy = return_textbox_labeled(self, "X Axes min", enabled=True, enable_text="Auto")
         
-        self.graph_x_max, dummy, dummy, self.sizer_graph_x_max, dummy, dummy = return_textbox_labeled(self, "X Axes max")
+        self.graph_x_max, dummy, self.graph_x_max_auto, self.sizer_graph_x_max, dummy, dummy = return_textbox_labeled(self, "X Axes max", enabled=True, enable_text="Auto")
         
-        self.graph_x_step, dummy, dummy, self.sizer_graph_x_step, dummy, dummy = return_textbox_labeled(self, "X Axes step")
+        self.graph_x_step, dummy, self.graph_x_step_auto, self.sizer_graph_x_step, dummy, dummy = return_textbox_labeled(self, "X Axes step", enabled=True, enable_text="Auto")
         
-        self.graph_y_label, dummy, dummy, self.sizer_graph_y_label, dummy, dummy = return_textbox_labeled(self, "Y Axes label")
+        self.graph_y_label, dummy, self.graph_y_label_auto, self.sizer_graph_y_label, dummy, dummy = return_textbox_labeled(self, "Y Axes label", enabled=True, enable_text="Auto")
         
-        self.graph_y_min, dummy, dummy, self.sizer_graph_y_min, dummy, dummy = return_textbox_labeled(self, "Y Axes min")
+        self.graph_y_min, dummy, self.graph_y_min_auto, self.sizer_graph_y_min, self.grap_y_min_calc_button, dummy = return_textbox_labeled(self, "Y Axes min", enabled=True, enable_text="Auto", read = True, button_text = "Calculate")
         
-        self.graph_y_max, dummy, dummy, self.sizer_graph_y_max, dummy, dummy = return_textbox_labeled(self, "Y Axes max")
+        self.graph_y_max, dummy, self.graph_y_max_auto, self.sizer_graph_y_max, self.grap_y_max_calc_button, dummy = return_textbox_labeled(self, "Y Axes max", enabled=True, enable_text="Auto", read = True, button_text = "Calculate")
         
-        self.graph_y_step, dummy, dummy, self.sizer_graph_y_step, dummy, dummy = return_textbox_labeled(self, "Y Axes step")
+        self.graph_y_step, dummy, self.graph_y_step_auto, self.sizer_graph_y_step, dummy, dummy = return_textbox_labeled(self, "Y Axes step", enabled=True, enable_text="Auto")
         
-        self.graph_animated, self.sizer_graph_animated = return_checkbox_labeled(self, "Animate Graph")
+        if animated:
+            self.graph_animated, self.sizer_graph_animated = return_checkbox_labeled(self, "Animate Graph")
         
 
 
@@ -432,7 +435,7 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
     
     def __init__(self, parent):
         
-        XYPlotGraphPanelClass.__init__(self, parent=parent)
+        XYPlotGraphPanelClass.__init__(self, parent=parent, animated = True)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         self.plot_button, self.sizer_plot_button = return_simple_button(self, "Plot Graph", "Start")
@@ -441,13 +444,13 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
         #Graph Title
 
         self.graph_x_label.ChangeValue("Input Power (dBm)")
-        self.graph_x_min.ChangeValue("-40")
-        self.graph_x_max.ChangeValue("10")
-        self.graph_x_step.ChangeValue("5")
+        #self.graph_x_min.ChangeValue("-40")
+        #self.graph_x_max.ChangeValue("10")
+        #self.graph_x_step.ChangeValue("5")
         self.graph_y_label.ChangeValue("Output Power (dBm)")
-        self.graph_y_min.ChangeValue("-30")
-        self.graph_y_max.ChangeValue("20")
-        self.graph_y_step.ChangeValue("5")
+        #self.graph_y_min.ChangeValue("-30")
+        #self.graph_y_max.ChangeValue("20")
+        #self.graph_y_step.ChangeValue("5")
 
         sizer.Add(self.sizer_data_file_name, 0, wx.ALL, 5)
         sizer.Add(self.sizer_graph_title, 0, wx.ALL, 5)
@@ -471,43 +474,249 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
         
         graph_title = self.graph_title.GetValue()
         graph_x_label = self.graph_x_label.GetValue()
+        graph_x_label_auto = self.graph_x_label_auto.GetValue()
         graph_x_min = self.graph_x_min.GetValue()
         if check_value_min_max(graph_x_min, "Graph X min", minimum = None) == 0:
             return None
         else:
             graph_x_min = eval(self.graph_x_min.GetValue())
+        graph_x_min_auto = self.graph_x_min_auto.GetValue()
         
         graph_x_max = self.graph_x_max.GetValue()
         if check_value_min_max(graph_x_max, "Graph X max", minimum = None) == 0:
             return None
         else:
             graph_x_max = eval(self.graph_x_max.GetValue())
+        graph_x_max_auto = self.graph_x_max_auto.GetValue()
         graph_x_step = self.graph_x_step.GetValue()
         if check_value_min_max(graph_x_step, "Graph X step", minimum = 0) == 0:
             return None
         else:
             graph_x_step = eval(self.graph_x_step.GetValue())
+        graph_x_step_auto = self.graph_x_step_auto.GetValue()
         graph_y_label = self.graph_y_label.GetValue()
+        graph_y_label_auto = self.graph_y_label_auto.GetValue()
         
         graph_y_min = self.graph_y_min.GetValue()
         if check_value_min_max(graph_y_min, "Graph Y min", minimum = None) == 0:
             return None
         else:
             graph_y_min = eval(self.graph_y_min.GetValue())
+        graph_y_min_auto = self.graph_y_min_auto.GetValue()
         graph_y_max = self.graph_y_max.GetValue()
         if check_value_min_max(graph_y_max, "Graph Y max", minimum = None) == 0:
             return None
         else:
             graph_y_max = eval(self.graph_y_max.GetValue())
+        graph_y_max_auto = self.graph_y_max_auto.GetValue()
         graph_y_step = self.graph_y_step.GetValue()
         if check_value_min_max(graph_y_step, "Graph Y step", minimum = 0) == 0:
             return None
         else:
             graph_y_step = eval(self.graph_y_step.GetValue())
+        graph_y_step_auto = self.graph_y_step_auto.GetValue()
             
         graph_animated = self.graph_animated.GetValue()
         
         calculate_all_IP1(data_file_name, graph_title, graph_x_label, graph_x_min, graph_x_max, graph_x_step, graph_y_label, graph_y_min, graph_y_max, graph_y_step, graph_animated)
+        #self.instrument_label.SetLabel(response)
+
+
+class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
+    """
+    Tab for Plot IP1 Graph
+    """
+    
+    def __init__(self, parent):
+        
+        XYPlotGraphPanelClass.__init__(self, parent=parent, animated = False)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.graph_type, self.sizer_graph_type = return_comboBox(self, "Graph type", choices_list = ["Conversion Loss", "Compression point", "Harmonic Intermodulation Products", "Spurious Distribution"])
+
+        self.plot_button, self.sizer_plot_button = return_simple_button(self, "Plot Graph", "Start")
+        self.plot_button.Bind(wx.EVT_BUTTON, self.OnPlotGraph)
+        self.grap_y_min_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcYmin)
+        self.grap_y_max_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcYmax)
+        #input Data File
+        #Graph Title
+        
+
+        self.graph_x_label.ChangeValue("IF Frequency (MHz)")
+        self.graph_x_min.ChangeValue("100")
+        self.graph_x_max.ChangeValue("3000")
+        self.graph_x_step.ChangeValue("100")
+        self.graph_y_label.ChangeValue("IF Power Loss (dBm)")
+        self.graph_y_min.ChangeValue("-20")
+        self.graph_y_max.ChangeValue("0")
+        self.graph_y_step.ChangeValue("2")
+
+        sizer.Add(self.sizer_data_file_name, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_type, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_title, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_x_label, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_x_min, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_x_max, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_x_step, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_y_label, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_y_min, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_y_max, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_y_step, 0, wx.ALL, 5)
+        #sizer.Add(self.sizer_graph_animated, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_plot_button, 0, wx.ALL, 5)
+ 
+        self.SetSizer(sizer)
+    
+    def OnCalcYmax(self, event):
+        data_file_name = self.data_file_name.GetValue()
+        result = [0]
+        if check_value_is_valid_file(data_file_name, "Data Spurius file") == 0:
+            return None
+        
+        
+
+    def OnCalcYmin(self, event):
+        data_file_name = self.data_file_name.GetValue()
+        result = [0]
+        if check_value_is_valid_file(data_file_name, "Data Spurius file") == 0:
+            return None
+        
+        SD_LO_Level = 0
+        SD_RF_Level = 0
+        graph_type = self.graph_type.GetValue()
+        if graph_type == "Conversion Loss":
+            graph_type = "LO"
+        elif graph_type == "Compression point":
+            graph_type = "RF"
+        elif graph_type == "Harmonic Intermodulation Products":
+            graph_type = "SP"
+            dlg = wx.TextEntryDialog(self, "Insert Spurius Frequency")
+            dlg.ShowModal()
+            result = dlg.GetValue()
+            dlg.Destroy()
+            IF_Frequency_selected = eval("[" + result + "]")
+        elif graph_type == "Spurious Distribution":
+            dlg = wx.TextEntryDialog(self, "Insert LO Level")
+            dlg.ShowModal()
+            SD_LO_Level = dlg.GetValue()
+            dlg.Destroy()
+            dlg = wx.TextEntryDialog(self, "Insert RF Level")
+            dlg.ShowModal()
+            SD_RF_Level = dlg.GetValue()
+            dlg.Destroy()
+            SD_LO_Level = eval(SD_LO_Level)
+            SD_RF_Level = eval(SD_RF_Level)
+            graph_type = "SD"
+        data_table, data_file_directory, graph_group_index, x_index, y_index, legend_index = order_and_group_data(data_file_name = data_file_name, 
+                       graph_type = graph_type, 
+                       SD_LO_Level = SD_LO_Level,
+                       SD_RF_Level = SD_RF_Level,
+                       IF_Frequency_selected = IF_Frequency_selected)
+        
+        y_min = min([d[power_IF_index] for d in [row for row in data_table]])
+    
+    def OnPlotGraph(self, event):
+        data_file_name = self.data_file_name.GetValue()
+        result = [0]
+        if check_value_is_valid_file(data_file_name, "Data Spurius file") == 0:
+            return None
+        
+        graph_title = self.graph_title.GetValue()
+        graph_x_label = self.graph_x_label.GetValue()
+        graph_x_label_auto = self.graph_x_label_auto.GetValue()
+        graph_x_min = self.graph_x_min.GetValue()
+        if check_value_min_max(graph_x_min, "Graph X min", minimum = None) == 0:
+            return None
+        else:
+            graph_x_min = eval(self.graph_x_min.GetValue())
+        graph_x_min_auto = self.graph_x_min_auto.GetValue()
+        
+        graph_x_max = self.graph_x_max.GetValue()
+        if check_value_min_max(graph_x_max, "Graph X max", minimum = None) == 0:
+            return None
+        else:
+            graph_x_max = eval(self.graph_x_max.GetValue())
+        graph_x_max_auto = self.graph_x_max_auto.GetValue()
+        graph_x_step = self.graph_x_step.GetValue()
+        if check_value_min_max(graph_x_step, "Graph X step", minimum = 0) == 0:
+            return None
+        else:
+            graph_x_step = eval(self.graph_x_step.GetValue())
+        graph_x_step_auto = self.graph_x_step_auto.GetValue()
+        graph_y_label = self.graph_y_label.GetValue()
+        graph_y_label_auto = self.graph_y_label_auto.GetValue()
+        
+        graph_y_min = self.graph_y_min.GetValue()
+        if check_value_min_max(graph_y_min, "Graph Y min", minimum = None) == 0:
+            return None
+        else:
+            graph_y_min = eval(self.graph_y_min.GetValue())
+        graph_y_min_auto = self.graph_y_min_auto.GetValue()
+        graph_y_max = self.graph_y_max.GetValue()
+        if check_value_min_max(graph_y_max, "Graph Y max", minimum = None) == 0:
+            return None
+        else:
+            graph_y_max = eval(self.graph_y_max.GetValue())
+        graph_y_max_auto = self.graph_y_max_auto.GetValue()
+        graph_y_step = self.graph_y_step.GetValue()
+        if check_value_min_max(graph_y_step, "Graph Y step", minimum = 0) == 0:
+            return None
+        else:
+            graph_y_step = eval(self.graph_y_step.GetValue())
+        graph_y_step_auto = self.graph_y_step_auto.GetValue()
+            
+        IF_Frequency_selected = [0]
+        SD_LO_Level = 0
+        SD_RF_Level = 0
+        graph_type = self.graph_type.GetValue()
+        if graph_type == "Conversion Loss":
+            graph_type = "LO"
+        elif graph_type == "Compression point":
+            graph_type = "RF"
+        elif graph_type == "Harmonic Intermodulation Products":
+            graph_type = "SP"
+            dlg = wx.TextEntryDialog(self, "Insert Spurius Frequency")
+            dlg.ShowModal()
+            result = dlg.GetValue()
+            dlg.Destroy()
+            IF_Frequency_selected = eval("[" + result + "]")
+        elif graph_type == "Spurious Distribution":
+            dlg = wx.TextEntryDialog(self, "Insert LO Level")
+            dlg.ShowModal()
+            SD_LO_Level = dlg.GetValue()
+            dlg.Destroy()
+            dlg = wx.TextEntryDialog(self, "Insert RF Level")
+            dlg.ShowModal()
+            SD_RF_Level = dlg.GetValue()
+            dlg.Destroy()
+            SD_LO_Level = eval(SD_LO_Level)
+            SD_RF_Level = eval(SD_RF_Level)
+            graph_type = "SD"
+        
+        
+        for frequency_IF_filter  in IF_Frequency_selected:
+            plot_spurius_graph(data_file_name, 
+                           graph_type, 
+                           graph_title, 
+                           graph_x_label, 
+                           graph_x_label_auto, 
+                           graph_x_min, 
+                           graph_x_min_auto, 
+                           graph_x_max, 
+                           graph_x_max_auto, 
+                           graph_x_step, 
+                           graph_x_step_auto,
+                           graph_y_label, 
+                           graph_y_label_auto, 
+                           graph_y_min, 
+                           graph_y_min_auto, 
+                           graph_y_max, 
+                           graph_y_max_auto, 
+                           graph_y_step, 
+                           graph_y_step_auto, 
+                           SD_LO_Level = SD_LO_Level,
+                           SD_RF_Level = SD_RF_Level,
+                           IF_Frequency_selected = frequency_IF_filter)
         #self.instrument_label.SetLabel(response)
 
 
