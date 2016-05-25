@@ -2,6 +2,9 @@
 Created on 26/dic/2015
 
 @author: sabah
+
+Version 2.0
+Update: 25/05/2016
 '''
 
 #import images
