@@ -19,6 +19,7 @@ from CalDummyCablegui import CalDummyCableFrame
 from ContinousMeasuregui import CalContinousMeasureFrame
 from IP1Calcgui import IP1CalcFrame
 from PlotAllanDevgui import PlotAllanDevFrame
+import sys
 
 
 class MainFrame(wx.Frame):
@@ -54,6 +55,9 @@ class MainFrame(wx.Frame):
         self.btn_calc_adev = wx.Button(self.panel, 0, 'Calculate Allan Deviation')
         self.btn_calc_adev.Bind(wx.EVT_BUTTON, self.OnCalcAdev)
         
+        self.btn_exit = wx.Button(self.panel, 0, 'Exit')
+        self.btn_exit.Bind(wx.EVT_BUTTON, self.OnExit)
+        
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.btn_cal_cable, 0, wx.ALL|wx.EXPAND, 5)
         sizer.Add(self.btn_cal_dummy_cable, 0, wx.ALL|wx.EXPAND, 5)
@@ -61,6 +65,7 @@ class MainFrame(wx.Frame):
         sizer.Add(self.btn_calc_IP1, 0, wx.ALL|wx.EXPAND, 5)
         sizer.Add(self.btn_continous_measure, 0, wx.ALL|wx.EXPAND, 5)
         sizer.Add(self.btn_calc_adev, 0, wx.ALL|wx.EXPAND, 5)
+        sizer.Add(self.btn_exit, 0, wx.ALL|wx.EXPAND, 5)
         self.panel.SetSizer(sizer)
         self.Layout()
  
@@ -98,6 +103,9 @@ class MainFrame(wx.Frame):
         calcAdevapp = wx.App()
         frame = PlotAllanDevFrame()
         calcAdevapp.MainLoop()
+        
+    def OnExit(self, event):
+        sys.exit()
  
 #----------------------------------------------------------------------
 if __name__ == "__main__":
