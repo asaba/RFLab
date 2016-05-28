@@ -20,7 +20,15 @@ class SAB_class():
     def ask(self, command):
         return ["1.1"]
 
-        
+
+#create dummy class and objects for debugging
+class PM5_class():
+
+    def write(self, command):
+        pass
+
+    def ask(self, command):
+        return str(uniform(1.2, 5.5))
 
 #create dummy class and objects for debugging
 class SMB_class():
