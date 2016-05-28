@@ -19,6 +19,7 @@ from CalDummyCablegui import CalDummyCableFrame
 from ContinousMeasuregui import CalContinousMeasureFrame
 from IP1Calcgui import IP1CalcFrame
 from PlotAllanDevgui import PlotAllanDevFrame
+from PM5gui import CalPM5Frame
 import sys
 
 
@@ -32,7 +33,7 @@ class MainFrame(wx.Frame):
         """Constructor"""
         wx.Frame.__init__(self, parent, wx.ID_ANY,
                           "Microware Lab Measure",
-                          size=(350,300)
+                          size=(380,340)
                           )
         self.panel = wx.Panel(self)
         #check if calibration cable module is present
@@ -55,6 +56,9 @@ class MainFrame(wx.Frame):
         self.btn_calc_adev = wx.Button(self.panel, 0, 'Calculate Allan Deviation')
         self.btn_calc_adev.Bind(wx.EVT_BUTTON, self.OnCalcAdev)
         
+        self.btn_calc_pm5 = wx.Button(self.panel, 0, 'mm-submm power meter Measure')
+        self.btn_calc_pm5.Bind(wx.EVT_BUTTON, self.OnCalcPM5)
+        
         self.btn_exit = wx.Button(self.panel, 0, 'Exit')
         self.btn_exit.Bind(wx.EVT_BUTTON, self.OnExit)
         
@@ -65,6 +69,7 @@ class MainFrame(wx.Frame):
         sizer.Add(self.btn_calc_IP1, 0, wx.ALL|wx.EXPAND, 5)
         sizer.Add(self.btn_continous_measure, 0, wx.ALL|wx.EXPAND, 5)
         sizer.Add(self.btn_calc_adev, 0, wx.ALL|wx.EXPAND, 5)
+        sizer.Add(self.btn_calc_pm5, 0, wx.ALL|wx.EXPAND, 5)
         sizer.Add(self.btn_exit, 0, wx.ALL|wx.EXPAND, 5)
         self.panel.SetSizer(sizer)
         self.Layout()
@@ -103,6 +108,11 @@ class MainFrame(wx.Frame):
         calcAdevapp = wx.App()
         frame = PlotAllanDevFrame()
         calcAdevapp.MainLoop()
+        
+    def OnCalcPM5(self, event):
+        calcPM5app = wx.App()
+        frame = CalPM5Frame()
+        calcPM5app.MainLoop()
         
     def OnExit(self, event):
         sys.exit()
