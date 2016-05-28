@@ -12,6 +12,7 @@ Spurius measurements
 
 
 import sys
+import os
 import csv
 import numpy as np
 import time
@@ -272,12 +273,20 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
         synthetizer_RF_level_step = 0.5
         m_step_RF = 0
 
+    p = unicode("_".join(["PartialResults", return_now_postfix()]))
+    partial_file_path = os.path.join(result_file_name, p)
+    if not os.path.exists(partial_file_path):
+        try:
+            os.makedirs(partial_file_path)
+        except:
+            print("Error creating " + partial_file_path)
+            return 0
     frequency_LO_range = np.arange(synthetizer_LO_frequency_min, unit.unit_conversion( synthetizer_LO_frequency_max, synthetizer_LO_frequency_max_unit, synthetizer_LO_frequency_min_unit)  + unit.unit_conversion(synthetizer_LO_frequency_step, synthetizer_LO_frequency_step_unit, synthetizer_LO_frequency_min_unit) , unit.unit_conversion(synthetizer_LO_frequency_step, synthetizer_LO_frequency_step_unit, synthetizer_LO_frequency_min_unit))
     level_LO_range = np.arange(synthetizer_LO_level_min, synthetizer_LO_level_max + synthetizer_LO_level_step, synthetizer_LO_level_step)
     level_RF_range = np.arange(synthetizer_RF_level_min, synthetizer_RF_level_max + synthetizer_RF_level_step, synthetizer_RF_level_step)
     frequency_RF_range = np.arange(synthetizer_RF_frequency_min, unit.unit_conversion(synthetizer_RF_frequency_max, synthetizer_RF_frequency_max_unit, synthetizer_RF_frequency_min_unit) + unit.unit_conversion(synthetizer_RF_frequency_step, synthetizer_RF_frequency_step_unit, synthetizer_RF_frequency_min_unit) , unit.unit_conversion(synthetizer_RF_frequency_step, synthetizer_RF_frequency_step_unit, synthetizer_RF_frequency_min_unit))
     
-    maxcount = len(frequency_LO_range) * len(level_LO_range) * len(level_RF_range) * len(frequency_RF_range)
+    maxcount = float(len(frequency_LO_range) * len(level_LO_range) * len(level_RF_range) * len(frequency_RF_range))
     count = 0
     
 
@@ -323,8 +332,14 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
                         import wx
                         wx.MicroSleep(500)
                         message = "LO {lo_freq} {lo_pow}dB - RF  {rf_freq} {rf_pow}dB".format(lo_freq = current_lo_frequency, lo_pow = str(current_LO_level), rf_freq = current_rf_frequency, rf_pow = str(current_RF_level))
-                        newvalue = int(float(count)/maxcount * 100)
-                        dialog.Update(newvalue, message)
+                        newvalue = min([int(count/maxcount * 100), 100])
+                        if newvalue == 100:
+                            createprogressdialog = False
+                            #dialog.Update(newvalue, message)
+                            #wx.MicroSleep(500)
+                            dialog.Close()
+                        else:
+                            dialog.Update(newvalue, message)
                     
                     
                     #load value for each spurius frequency
@@ -336,8 +351,16 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
                         print(totale_values[-1])
                     #build filename - result_file_name_LOfrequency_unit_LOlevel_CAL/NOCAL_RFfrequency_unit_RFlevel_CAL/NOCAL_datetime
                     if len(spurius_markers) >0:
-                        spurius_filename  =result_file_name + "_" + "_".join(values[0][0:-2]) + "_" + return_now_postfix()
+                        spurius_filename =  os.path.join(partial_file_path, "_".join(["R"] + values[0][0:-2]))
                         save_spurius(spurius_filename, values)
+                    if f_LO == frequency_LO_range[-1] and l_LO == level_LO_range[-1] and l_RF == level_RF_range[-1] and f_RF == frequency_RF_range[-1]:
+                        #safety turn Off
+                        #dialog.Update(100, "Measure completed)
+                        dialog.Destroy()
+                        #SMB_LO.write("OUTP OFF")
+                        #SMB_RF.write("OUTP OFF")
+                    
+                    
     #turn off LO and RF
     SMB_LO.write("OUTP OFF")
     SMB_RF.write("OUTP OFF")
@@ -351,7 +374,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
         spurius_filename  =result_file_name + "_TOTAL_" + return_now_postfix()
         save_spurius(spurius_filename, totale_values)     
 
-
+    return result_file_name
     print("Misure completed\n")
     
     
@@ -463,10 +486,11 @@ def readFSV_marker(FSV, FSV_delay, central_frequency, fsv_att_value, spurius_IF_
     FSV.write(command)
     #wait for center frequency
     time.sleep(FSV_delay)
-    FSV.write("ABOR;INIT:IMM; *WAI")
+    FSV.write("CALC:MARK:MAX")
+    FSV.write("INIT:IMM; *WAI")
     #FSV.write("*OPT")
     #FSV.write("*WAI")
-    FSV.write("CALC:MARK:MAX")
+    
     #lettura = FSV.ask("CALC:MARK:X?")
     #time.sleep(FSV_delay)
     frequency = unit.unit_conversion(eval(FSV.ask("CALC:MARK:X?")), unit.Hz, spurius_IF_unit)
@@ -474,6 +498,7 @@ def readFSV_marker(FSV, FSV_delay, central_frequency, fsv_att_value, spurius_IF_
     result += [unit.return_unit_str(spurius_IF_unit)]
     #response = FSV.ask("CALC:MARK:Y?")
     #time.sleep(FSV_delay)
+    FSV.write("INIT:IMM; *WAI")
     tmp = eval(FSV.ask("CALC:MARK:Y?"))
     result += [str(x) for x in calibrate(tmp, frequency, spurius_IF_unit, calibration_IF, round_freq = True, calibration_function = calibration_IF_function, calibration_function_unit = calibration_IF_function_unit)]
     return result
