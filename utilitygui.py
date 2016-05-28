@@ -7,8 +7,27 @@ Created on 29/dic/2015
 import wx, os
 from IPy import IP
 import pyvisa
-from measure_scripts.debug import SMB_class, FSV_class, NRP2_class, TSC_class, SAB_class
+from measure_scripts.debug import SMB_class, FSV_class, NRP2_class, TSC_class, SAB_class, PM5_class
+from measure_scripts.USBInstruments import USB_PM5
 from measure_scripts.tscpy import instruments
+
+
+def browse_file(parent, text_control_file, dialog_text = "Choose a file", wildcard = "*.csv"):
+    defaultFile = ""
+    try:
+        defaultFile = text_control_file.GetValue()
+    except:
+        defaultFile = ""
+    dlg = wx.FileDialog(parent, dialog_text, os.getcwd(), defaultFile = defaultFile, wildcard = wildcard, style = wx.OPEN)
+    if dlg.ShowModal() == wx.ID_OK:
+        path = dlg.GetPath()
+        #mypath = os.path.basename(path)
+        text_control_file.SetValue(path)
+    else:
+        if os.path.exists(defaultFile):
+            text_control_file.SetValue(defaultFile)
+        else:
+            text_control_file.SetValue("")
 
 def create_instrument(ip, port, timeout, instr_type, TEST_MODE = False, instrument_class = "SMB"):
     if TEST_MODE:
@@ -35,9 +54,35 @@ def create_instrument(ip, port, timeout, instr_type, TEST_MODE = False, instrume
     instrument.timeout = timeout
     return instrument
 
+
+def create_USB_instrument(com_port, timeout, baudrate, TEST_MODE = False, instrument_class = "PM5"):
+    if TEST_MODE:
+        if instrument_class == "PM5":   
+            instrument = PM5_class()
+        return instrument
+    instrument = USB_PM5(com_port, eval(baudrate), timeout)
+    return instrument
+
+def check_USB_instrument_comunication(instrument_COM, instrument_Timeout, instrument_Baud):
+    
+    INST = create_USB_instrument(instrument_COM, instrument_Timeout, instrument_Baud)
+    #self.instrument_label.SetLabel(INST.ask("*IDN?"))
+    result = INST.ask("E1?")
+    INST.closeport()
+    return (1, result)
+    
+    try:
+        INST = create_USB_instrument(instrument_COM, instrument_Timeout, instrument_Baud)
+        #self.instrument_label.SetLabel(INST.ask("*IDN?"))
+        result = INST.ask("E1?")
+        INST.closeport()
+        return (1, result)
+    except:
+        return (0, "Comunication Error")
+
 def check_instrument_comunication(instrument_IP, instrument_Port, instrument_Timeout, instrument_type):
-    INST = create_instrument(instrument_IP, instrument_Port, instrument_Timeout, instrument_type)
-    return (1, INST.ask("*IDN?"))
+    #INST = create_instrument(instrument_IP, instrument_Port, instrument_Timeout, instrument_type)
+    #return (1, INST.ask("*IDN?"))
     try:
         INST = create_instrument(instrument_IP, instrument_Port, instrument_Timeout, instrument_type)
         #self.instrument_label.SetLabel(INST.ask("*IDN?"))

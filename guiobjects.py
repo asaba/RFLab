@@ -163,6 +163,54 @@ def return_instrument(parent):
     
     return txt_IP, txt_Port, txt_Timeout, combobox_instrtype, Sizer
 
+def return_usb_instrument(parent):
+    """
+    return sizer
+    --------------------------------------------------------------------------------------------
+    |        |  label_com_port   | label_timeout       | label_baudrate  | label_search_button |
+    | label  |-------------------|---------------------|-----------------|---------------------|
+    |        |  combobox_com_port| textcontrol_timeout | combobox_baud  | search_button       |
+    --------------------------------------------------------------------------------------------
+    label text is "Instrument USB"
+    label_com_port text is "COM Port"
+    label_timeout text is "Timeout (ms)"
+    label_boudrate is "Boundrate"
+    label_search_button is "Search"
+    
+    return also combobox_com_port, txt_timeout_timeout, combobox_bound, search_button objects
+    It's used to define comunication USB instrument settings in combination with sizer
+    returned by return_test_instrument used for test test instrument comunication
+    """
+    label = wx.StaticText(parent, wx.ID_ANY, "Instrument USB", size = (150,-1))
+    label_com_port = wx.StaticText(parent, wx.ID_ANY, "COM Port", size = (150,-1))
+    combobox_com_port = wx.ComboBox(parent, -1, pos=(50, 170), size=(-1, -1), choices=["Click search button"], style=wx.CB_READONLY)
+    Sizer_com_port   = wx.BoxSizer(wx.VERTICAL)
+    Sizer_com_port.Add(label_com_port, 0, wx.ALL, 5)
+    Sizer_com_port.Add(combobox_com_port, 0, wx.ALL, 5)
+    label_timeout = wx.StaticText(parent, wx.ID_ANY, "Timeout (ms)", size = (-1,-1))
+    txt_timeout = wx.TextCtrl(parent, wx.ID_ANY, value = "5000", size = (50,-1))
+    Sizer_Timeout   = wx.BoxSizer(wx.VERTICAL)
+    Sizer_Timeout.Add(label_timeout, 0, wx.ALL, 5)
+    Sizer_Timeout.Add(txt_timeout, 0, wx.ALL, 5)
+    label_baudrate = wx.StaticText(parent, wx.ID_ANY, "Baud rate", size = (-1,-1))
+    combobox_baud = wx.ComboBox(parent, -1, pos=(50, 170), size=(-1, -1), value="5600", choices=["300", "600", "1200", "2400", "4800", "9600", "14400", "19200", "28800", "38400", "57600", "115200"], style=wx.CB_READONLY)
+    Sizer_BaudRate   = wx.BoxSizer(wx.VERTICAL)
+    Sizer_BaudRate.Add(label_baudrate, 0, wx.ALL, 5)
+    Sizer_BaudRate.Add(combobox_baud, 0, wx.ALL, 5)
+    label_search_button = wx.StaticText(parent, wx.ID_ANY, "Search COM", size = (-1,-1))
+    search_button = wx.Button(parent, 0, "Search")
+    Sizer_search   = wx.BoxSizer(wx.VERTICAL)
+    Sizer_search.Add(label_search_button, 0, wx.ALL, 5)
+    Sizer_search.Add(search_button, 0, wx.ALL, 5)
+    Sizer   = wx.BoxSizer(wx.HORIZONTAL)
+    Sizer.Add(label, 0, wx.ALL, 5)
+    Sizer.Add(Sizer_com_port, 0, wx.ALL, 5)
+    Sizer.Add(Sizer_Timeout, 0, wx.ALL, 5)
+    Sizer.Add(Sizer_BaudRate, 0, wx.ALL, 5)
+    Sizer.Add(Sizer_search, 0, wx.ALL, 5)
+    
+    return combobox_com_port, txt_timeout, combobox_baud, search_button, Sizer
+
 def return_comboBox_unit(parent, label):
     """
     return sizer
