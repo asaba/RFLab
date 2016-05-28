@@ -7,12 +7,13 @@ Created on 28/dic/2015
 import wx
 import os
 
-from guiobjects import return_checkbox_labeled, return_spinctrl, return_textbox_labeled, return_comboBox_unit, return_file_browse, return_instrument, return_test_instrument, return_simple_button, return_min_max_step_labeled, return_spinctrl_min_max, return_comboBox
-from utilitygui import check_instrument_comunication
-from utilitygui import check_value_is_valid_file, check_value_min_max
+from guiobjects import return_checkbox_labeled, return_spinctrl, return_textbox_labeled, return_comboBox_unit, return_file_browse, return_instrument, return_test_instrument, return_simple_button, return_min_max_step_labeled, return_spinctrl_min_max, return_comboBox, return_usb_instrument
+from utilitygui import check_instrument_comunication, check_USB_instrument_comunication
+from utilitygui import check_value_is_valid_file, check_value_min_max, browse_file
 from measure_scripts.plotIP1graph import calculate_all_IP1
 from measure_scripts.plotSpuriusCGraph import plot_spurius_graph, order_and_group_data
 from measure_scripts.csvutility import *
+import serial.tools.list_ports
 
 
 class InstrumentPanelClass(wx.Panel):
@@ -25,6 +26,29 @@ class InstrumentPanelClass(wx.Panel):
     
     def OnTestInstrument(self, event):
         dummy, response = check_instrument_comunication(self.instrument_txt_IP.GetValue(), self.instrument_txt_Port.GetValue(), eval(self.instrument_txt_Timeout.GetValue()), self.combobox_instrtype.GetValue())
+        self.instrument_label.SetLabel(response)
+        
+        
+class InstrumentUSBPanelClass(wx.Panel):
+    
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
+        self.instrument_combobox_com_port, self.instrument_txt_timeout, self.instrument_combobox_baud, self.instrument_search_button, self.instrument_sizer = return_usb_instrument(self)
+        self.instrument_test_button, self.instrument_label, self.instrument_test_sizer  = return_test_instrument(self)
+        self.instrument_test_button.Bind(wx.EVT_BUTTON, self.OnTestInstrument)
+        self.instrument_search_button.Bind(wx.EVT_BUTTON, self.OnSearchCom)
+    
+    def OnSearchCom(self, event):
+        
+        ports_present = list(serial.tools.list_ports.comports())
+        if len(ports_present) == 0:
+            ports_present = [u"No device"]
+        self.instrument_combobox_com_port.Clear()
+        for c in ports_present:
+            self.instrument_combobox_com_port.Append(unicode(c[0]))
+            
+    def OnTestInstrument(self, event):
+        dummy, response = check_USB_instrument_comunication(self.instrument_combobox_com_port.GetValue(), eval(self.instrument_txt_timeout.GetValue()), self.instrument_combobox_baud.GetValue())
         self.instrument_label.SetLabel(response)
 
 class SetupPanelClass(wx.Panel):
@@ -58,12 +82,7 @@ class PlotGraphPanelClass(wx.Panel):
         
     
     def File_browser_DataFile(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.csv", wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            self.data_file_name.SetValue(path)
-        else:
-            self.data_file_name.SetValue("")
+        browse_file(self, self.data_file_name)
         
 class TabPanelContinousVoltageSetup(SetupPanelClass):
     """
@@ -160,12 +179,7 @@ class TabPanelIP1CalcSetup(SetupPanelClass):
         self.SetSizer(sizer)
         
     def File_browser_RF(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.csv", wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            self.calibration_file_RF.SetValue(path)
-        else:
-            self.calibration_file_RF.SetValue("")
+        browse_file(self, self.calibration_file_RF)
         
 
 class TabPanelSpuriusSetup(SetupPanelClass):
@@ -222,31 +236,36 @@ class TabPanelSpuriusSetup(SetupPanelClass):
         self.SetSizer(sizer)
     
     def File_browser_LO(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.csv", wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            #mypath = os.path.basename(path)
-            self.calibration_file_LO.SetValue(path)
-        else:
-            self.calibration_file_LO.SetValue("")
+        browse_file(self, self.calibration_file_LO)
         
     def File_browser_RF(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.csv", wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            self.calibration_file_RF.SetValue(path)
-        else:
-            self.calibration_file_RF.SetValue("")
-        
+        browse_file(self, self.calibration_file_RF)
         
     def File_browser_IF(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.csv", wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            self.calibration_file_IF.SetValue(path)
-        else:
-            self.calibration_file_IF.SetValue("")
+        browse_file(self, self.calibration_file_IF)
         
+class TabPanelPM5Setup(SetupPanelClass):
+    """
+    Tab for Spurius parameters
+    """
+    
+    def __init__(self, parent):
+        
+        SetupPanelClass.__init__(self, parent=parent)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+
+        #calibration_file_LO = "C:\\Users\\Labele\\Desktop\\Spurius\\LO_cal.csv"
+        self.calibration_file_LO, self.calibration_file_LO_button, self.calibration_file_LO_enable, self.sizer_calibration_file_LO = return_file_browse(self, "Local Ocillator Cable Calibration File", enabled = True)
+        self.calibration_file_LO_button.Bind(wx.EVT_BUTTON, self.File_browser_LO)
+
+        sizer.Add(self.sizer_calibration_file_LO, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_result_file_name, 0, wx.ALL, 5)
+ 
+        self.SetSizer(sizer)
+    
+    def File_browser_LO(self, event):
+        browse_file(self, self.calibration_file_LO)
 
 class TabPanelFSV(InstrumentPanelClass):
     """
@@ -314,6 +333,33 @@ class TabPanelFSV(InstrumentPanelClass):
  
         self.SetSizer(sizer)
 
+
+class TabPanelPM5(InstrumentUSBPanelClass):
+    """
+    This will be the first notebook tab
+    """
+    #----------------------------------------------------------------------
+    def __init__(self, parent):
+        """"""
+        InstrumentUSBPanelClass.__init__(self, parent=parent)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        #pm5_state = "ON"
+        self.pm5_state, self.sizer_pm5_state = return_checkbox_labeled(self, "State")
+        #power_meter_misure_number = 1
+        self.pm5_misure_number, self.sizer_pm5_misure_number = return_spinctrl(self, "Measures")
+        
+        #power_meter_misure_delay = 1 #seconds
+        self.pm5_misure_delay, dummy, dummy, self.sizer_pm5_misure_delay, dummy, dummy = return_textbox_labeled(self, "Measure delay (s)")
+
+        
+        sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
+        sizer.Add(self.instrument_test_sizer, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_pm5_state, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_pm5_misure_number, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_pm5_misure_delay, 0, wx.ALL, 5)
+
+        self.SetSizer(sizer)
 
 ########################################################################
 class TabPanelSMB(InstrumentPanelClass):
@@ -408,25 +454,52 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
 
         #power_meter_misure_number = 1
         self.graph_x_label, dummy, self.graph_x_label_auto, self.sizer_graph_x_label, dummy, dummy = return_textbox_labeled(self, "X Axes label", enabled=True, enable_text="Auto")
+        self.graph_x_label_auto.object_to_enable = "self.graph_x_label"
+        self.graph_x_label_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
         
         self.graph_x_min, dummy, self.graph_x_min_auto, self.sizer_graph_x_min, self.grap_x_min_calc_button, dummy = return_textbox_labeled(self, "X Axes min", enabled=True, enable_text="Auto", read = True, button_text = "Calculate")
+        self.graph_x_min_auto.object_to_enable = "self.graph_x_min"
+        self.graph_x_min_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
         
         self.graph_x_max, dummy, self.graph_x_max_auto, self.sizer_graph_x_max, self.grap_x_max_calc_button, dummy = return_textbox_labeled(self, "X Axes max", enabled=True, enable_text="Auto", read = True, button_text = "Calculate")
+        self.graph_x_max_auto.object_to_enable = "self.graph_x_max"
+        self.graph_x_max_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
         
         self.graph_x_step, dummy, self.graph_x_step_auto, self.sizer_graph_x_step, dummy, dummy = return_textbox_labeled(self, "X Axes step", enabled=True, enable_text="Auto")
+        self.graph_x_step_auto.object_to_enable = "self.graph_x_step"
+        self.graph_x_step_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
         
         self.graph_y_label, dummy, self.graph_y_label_auto, self.sizer_graph_y_label, dummy, dummy = return_textbox_labeled(self, "Y Axes label", enabled=True, enable_text="Auto")
+        self.graph_y_label_auto.object_to_enable = "self.graph_y_label"
+        self.graph_y_label_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
         
         self.graph_y_min, dummy, self.graph_y_min_auto, self.sizer_graph_y_min, self.grap_y_min_calc_button, dummy = return_textbox_labeled(self, "Y Axes min", enabled=True, enable_text="Auto", read = True, button_text = "Calculate")
+        self.graph_y_min_auto.object_to_enable = "self.graph_y_min"
+        self.graph_y_min_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
         
         self.graph_y_max, dummy, self.graph_y_max_auto, self.sizer_graph_y_max, self.grap_y_max_calc_button, dummy = return_textbox_labeled(self, "Y Axes max", enabled=True, enable_text="Auto", read = True, button_text = "Calculate")
+        self.graph_y_max_auto.object_to_enable = "self.graph_y_max"
+        self.graph_y_max_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
         
         self.graph_y_step, dummy, self.graph_y_step_auto, self.sizer_graph_y_step, dummy, dummy = return_textbox_labeled(self, "Y Axes step", enabled=True, enable_text="Auto")
+        self.graph_y_step_auto.object_to_enable = "self.graph_y_step"
+        self.graph_y_step_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
         
         if animated:
             self.graph_animated, self.sizer_graph_animated = return_checkbox_labeled(self, "Animate Graph")
         
+    def OnAutoCheck(self, event):
+        checkObject = event.GetEventObject()
 
+        object_to_enable = checkObject.object_to_enable #{"type": "max", "index" : "self.x_index", "textbox" : "self.graph_y_max"}
+
+        
+        if self.graph_x_min_auto.GetValue():
+            self.graph_x_min.Enable = True
+        else:
+            self.graph_x_min.Enable = False
+            
+    
 
 class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
     """
@@ -621,6 +694,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         IF_Frequency_selected = [0]
         SD_LO_Level = 0
         SD_RF_Level = 0
+        SD_IF_Min_Level = 0
         graph_type = self.graph_type.GetValue()
         if graph_type == "Conversion Loss":
             self.x_index = frequency_IF_index
@@ -645,23 +719,30 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         elif graph_type == "Spurious Distribution":
             self.x_index = frequency_IF_index
             self.y_index = power_IF_index
-            dlg = wx.TextEntryDialog(self, "Insert LO Level")
+            dlg = wx.TextEntryDialog(self, "Insert LO Level (dBm)")
             dlg.ShowModal()
             SD_LO_Level = dlg.GetValue()
             dlg.Destroy()
-            dlg = wx.TextEntryDialog(self, "Insert RF Level")
+            SD_LO_Level = eval(SD_LO_Level)
+            dlg = wx.TextEntryDialog(self, "Insert RF Level (dBm)")
             dlg.ShowModal()
             SD_RF_Level = dlg.GetValue()
             dlg.Destroy()
-            SD_LO_Level = eval(SD_LO_Level)
             SD_RF_Level = eval(SD_RF_Level)
+            dlg = wx.TextEntryDialog(self, "Insert IF Min Level (dBm)")
+            dlg.ShowModal()
+            SD_IF_Min_Level = dlg.GetValue()
+            dlg.Destroy()
+            SD_IF_Min_Level = eval(SD_IF_Min_Level)
             graph_type = "SD"
             self.row_data_filter = [(n_LO_index, "not in", [1, -1]), (m_RF_index, "not in", [1, -1])]
         data_table, data_file_directory, graph_group_index, x_index, y_index, legend_index = order_and_group_data(data_file_name = data_file_name, 
                        graph_type = graph_type, 
                        SD_LO_Level = SD_LO_Level,
                        SD_RF_Level = SD_RF_Level,
-                       IF_Frequency_selected = IF_Frequency_selected)
+                       SD_IF_Min_Level = SD_IF_Min_Level,
+                       IF_Frequency_selected = IF_Frequency_selected, 
+                       savefile = False)
         return data_table
 
     
@@ -718,6 +799,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         IF_Frequency_selected = [0]
         SD_LO_Level = 0
         SD_RF_Level = 0
+        SD_IF_Min_Level = 0
         graph_type = self.graph_type.GetValue()
         if graph_type == "Conversion Loss":
             graph_type = "LO"
@@ -731,16 +813,21 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
             dlg.Destroy()
             IF_Frequency_selected = eval("[" + result + "]")
         elif graph_type == "Spurious Distribution":
-            dlg = wx.TextEntryDialog(self, "Insert LO Level")
+            dlg = wx.TextEntryDialog(self, "Insert LO Level (dBm)")
             dlg.ShowModal()
             SD_LO_Level = dlg.GetValue()
             dlg.Destroy()
-            dlg = wx.TextEntryDialog(self, "Insert RF Level")
+            dlg = wx.TextEntryDialog(self, "Insert RF Level (dBm)")
             dlg.ShowModal()
             SD_RF_Level = dlg.GetValue()
             dlg.Destroy()
+            dlg = wx.TextEntryDialog(self, "Insert IF Min Level (dBm)")
+            dlg.ShowModal()
+            SD_IF_Min_Level = dlg.GetValue()
+            dlg.Destroy()
             SD_LO_Level = eval(SD_LO_Level)
             SD_RF_Level = eval(SD_RF_Level)
+            SD_IF_Min_Level = eval(SD_IF_Min_Level)
             graph_type = "SD"
         
         
@@ -766,6 +853,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
                            graph_y_step_auto, 
                            SD_LO_Level = SD_LO_Level,
                            SD_RF_Level = SD_RF_Level,
+                           SD_IF_Min_Level = SD_IF_Min_Level,
                            IF_Frequency_selected = frequency_IF_filter)
         #self.instrument_label.SetLabel(response)
 
