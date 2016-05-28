@@ -589,7 +589,7 @@ class SpuriusFrame(wx.Frame):
         dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
                 style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME)
 
-        measure_LNA_spurius(SMB_LO, 
+        spurius_filename = measure_LNA_spurius(SMB_LO, 
                             SMB_RF, 
                             #NRP2, 
                             FSV, 
@@ -654,10 +654,28 @@ class SpuriusFrame(wx.Frame):
                             createprogressdialog = dialog)
  
         dialog.Destroy()
-        filesettingname = result_file_name + "_spurius_" + return_now_postfix() + ".cfg"
+        
+        setting_file_path = os.path.join(result_file_name, "_".join(["Config", return_now_postfix()]))
+        if not os.path.exists(setting_file_path):
+            try:
+                os.makedirs(setting_file_path)
+            except:
+                print("Error creating " + setting_file_path)
+                return 0
+        
+        filesettingname = os.path.join(setting_file_path, "config.cfg")
         f = open(filesettingname, "w")
         self.savesettings(f)
         f.close()
+        #try:
+        #    while 1:
+        #        dialog.GetId()
+        #        dialog.Destroy()
+        #except wx.PyDeadObjectError:
+        #    # siamo sicuri che e' davvero morto
+        #    dlg = wx.MessageDialog(None, 'Spurius measure completed.\n Result file: ' + spurius_filename, "Misure completed", wx.OK | wx.ICON_INFORMATION)
+        #    dlg.ShowModal()
+        
 #----------------------------------------------------------------------
 if __name__ == "__main__":
     app = wx.App()
