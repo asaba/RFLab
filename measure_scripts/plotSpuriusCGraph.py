@@ -20,6 +20,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.pyplot import gca
+from matplotlib.colors import colorConverter
 #from mpl_toolkits.mplot3d import axes3d
 import sys
 import operator
@@ -34,6 +35,14 @@ unit = unit_class()
 
 csfont = {'fontname':'Times New Roman'}
 csfont_suptitle = {'fontname':'Times New Roman', "size":"14"}
+
+styles = [(None, "b"), (None, "g"), (None, "r"), (None, "c"), (None, "m"), (None, "y"), (None, "k"),
+          ("o", "b"), ("o", "g"), ("o", "r"), ("o", "c"), ("o", "m"), ("o", "y"), ("o", "k"),
+          ("v", "b"), ("v", "g"), ("v", "r"), ("v", "c"), ("v", "m"), ("v", "y"), ("v", "k"),
+          ("s", "b"), ("s", "g"), ("s", "r"), ("s", "c"), ("s", "m"), ("s", "y"), ("s", "k")]
+
+linecolors = ["b", "g", "r", "c", "m", "y", "k"]
+markerstyles = [None, "o", "v", "s", ]
 
 final = []
 final2 = []
@@ -76,7 +85,7 @@ def openSpuriusfile(filename):
     except:
         return [], unit.MHz, None
 
-def splitSpuriusCfiletablevalueDict(data_file_name, graph_type, table_value, sort_data, group_level_01, SD_LO_Level, SD_RF_Level):
+def splitSpuriusCfiletablevalueDict(data_file_name, graph_type, table_value, sort_data, group_level_01, SD_LO_Level, SD_RF_Level, SD_IF_Min_Level, savefile = True):
     """
     build a list of list of data sorted by sort_data index list and grouped by group_level_01 index list
     the restult is [[LO_Freq, LO_Freq_unit, LO_Level, ..., n_LO, m_RF, -(RF_Level-IF_level)], 
@@ -93,15 +102,16 @@ def splitSpuriusCfiletablevalueDict(data_file_name, graph_type, table_value, sor
     for row in table_value:
         table_result.append(row + [-(row[power_RF_index] - row[power_IF_index])])
     
-    filepointer = open(data_file_name.split(".")[0] + "_" + graph_type + "_" + return_now_postfix() + ".csv", "wb")
-    create_csv(filepointer, csv_file_header, [], table_result)
-    filepointer.close()
+    if savefile:
+        filepointer = open(data_file_name.split(".")[0] + "_" + graph_type + "_" + return_now_postfix() + ".csv", "wb")
+        create_csv(filepointer, csv_file_header, [], table_result)
+        filepointer.close()
     
     group_result = [[table_result[0][:]]]
     last_tupla = tuple([table_result[0][index] for index in group_level_01])
     #last_tupla = (table_result[0][n_LO_index], table_result[0][m_RF_index], table_result[0][frequency_LO_index], table_result[0][power_LO_index])
     for row in table_result[1:]:
-        if graph_type == "SD" and row[power_LO_index] == SD_LO_Level and row[power_RF_index] == SD_RF_Level and row[power_IF_index]>-100:
+        if graph_type == "SD" and row[power_LO_index] == SD_LO_Level and row[power_RF_index] == SD_RF_Level and row[power_IF_index]>SD_IF_Min_Level:
             current_tupla = tuple([row[index] for index in group_level_01])
             if last_tupla == current_tupla:
                 group_result[-1].append(row[:])
@@ -122,7 +132,9 @@ def order_and_group_data(data_file_name,
                        graph_type, 
                        SD_LO_Level,
                        SD_RF_Level,
-                       IF_Frequency_selected = 1000):
+                       SD_IF_Min_Level,
+                       IF_Frequency_selected = 1000,
+                       savefile = True):
     """
     data = dict{(n, m, Freq_LO, Level_LO, Level_RF): [Freq_unit_LO, Calib_LO, Freq_RF, Freq_unit_RF, Calib_RF, Freq_IF, Freq_unit_IF, Level_IF, Calib_IF, -(Level_RF - Level_IF)]}
     """
@@ -165,7 +177,7 @@ def order_and_group_data(data_file_name,
         y_index = power_IF_index
         legend_index = [(power_LO_index, None, "LO", n_LO_index)]
     #data_table = splitSpuriusCfiletablevalue(file_table_result)
-    return splitSpuriusCfiletablevalueDict(data_file_name, graph_type, file_table_result, sort_data, group_level_01, SD_LO_Level = SD_LO_Level, SD_RF_Level = SD_RF_Level,), data_file_directory, graph_group_index, x_index, y_index, legend_index
+    return splitSpuriusCfiletablevalueDict(data_file_name, graph_type, file_table_result, sort_data, group_level_01, SD_LO_Level = SD_LO_Level, SD_RF_Level = SD_RF_Level, SD_IF_Min_Level = SD_IF_Min_Level, savefile = savefile), data_file_directory, graph_group_index, x_index, y_index, legend_index
     
     
 
@@ -192,6 +204,7 @@ def plot_spurius_graph(data_file_name,
                        graph_y_step_auto,
                        SD_LO_Level,
                        SD_RF_Level,
+                       SD_IF_Min_Level,
                        IF_Frequency_selected = 1000):
     """
     data = dict{(n, m, Freq_LO, Level_LO, Level_RF): [Freq_unit_LO, Calib_LO, Freq_RF, Freq_unit_RF, Calib_RF, Freq_IF, Freq_unit_IF, Level_IF, Calib_IF, -(Level_RF - Level_IF)]}
@@ -201,7 +214,16 @@ def plot_spurius_graph(data_file_name,
                        graph_type, 
                        SD_LO_Level = SD_LO_Level,
                        SD_RF_Level = SD_RF_Level,
+                       SD_IF_Min_Level = SD_IF_Min_Level,
                        IF_Frequency_selected = IF_Frequency_selected)
+    
+    data_file_directory = os.path.join(data_file_directory, "_".join([graph_type, return_now_postfix()]))
+    if not os.path.exists(data_file_directory):
+        try:
+            os.makedirs(data_file_directory)
+        except:
+            print("Error creating " + data_file_directory)
+            return 0
     group_for_SD = []
     for row_grouped in data_table:
         plot_this = False
@@ -322,27 +344,27 @@ def plot_3d_distribution(fig, data_table):
     ax = fig.add_subplot(111, projection='3d')
     front_back_position = [x*10 for x in range(1, len(data_table)+2)] #same number of y ticks as list of value for couple n,m
     color = ['r', 'g', 'b', 'y']
-    for j in data_table:
-        yticklabels = [str(r[0][n_LO_index])+ ", " + str(r[0][m_RF_index]) for r in j]
+    yticklabels = [str(r[0][n_LO_index])+ ", " + str(r[0][m_RF_index]) for r in data_table]
     ax.set_yticks(front_back_position)
     ax.set_yticklabels(yticklabels)
     color_index = 0
     fb_index = 0
     sort_data = [frequency_IF_index]
-    for j in data_table:
-        for row_group in j:
-            tmp_row_group = sorted(row_group, key=operator.itemgetter(*sort_data)) 
-            freq = [r[frequency_IF_index] for r in tmp_row_group]
-            level = [r[power_IF_index] for r in tmp_row_group]
-            color_index += 1
-            if color_index >= len(color):
-                color_index = 0
-            ax.bar(freq, level, zs=front_back_position[fb_index], color = color[color_index], width  = 50, zdir='y', alpha=0.8)
+    for row_group in data_table:
+        tmp_row_group = sorted(row_group, key=operator.itemgetter(*sort_data)) 
+        freq = [r[frequency_IF_index] for r in tmp_row_group]
+        level = [r[power_IF_index] for r in tmp_row_group]
+        #ref = min(level)
+        #level = [l - ref for l in level]
+        color_index += 1
+        if color_index >= len(color):
+            color_index = 0
+        ax.bar(freq, level, zs=front_back_position[fb_index], color = color[color_index], width  = 50, zdir='y', alpha=0.8)
         fb_index += 1
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
-    
+    plt.gca().invert_zaxis()
     plt.show()
 
 
@@ -432,20 +454,21 @@ def plot_spurius_Single(fig, table_value,
         legend_title = "IF"
         
     #split by RF_level or LO_level
-    last_group_index = tuple([table_value[0][index] for index in graph_group_index])
-    result = [[table_value[0][:]]]
-    for row in table_value[1:]:
-        current_group_index = tuple([row[index] for index in graph_group_index])
-        if current_group_index == last_group_index:
-            result[-1].append(row[:])
-        else:
-            last_group_index = current_group_index
-            result.append([row[:]])
+    if graph_type != "SD":
+        last_group_index = tuple([table_value[0][index] for index in graph_group_index])
+        result = [[table_value[0][:]]]
+        for row in table_value[1:]:
+            current_group_index = tuple([row[index] for index in graph_group_index])
+            if current_group_index == last_group_index:
+                result[-1].append(row[:])
+            else:
+                last_group_index = current_group_index
+                result.append([row[:]])
 
     
     
     if graph_type == "SD":
-        plot_3d_distribution(fig, result)
+        plot_3d_distribution(fig, table_value)
     else:
 
         ax = plt.axes(xlim=(graph_x_min, graph_x_max), ylim=(graph_y_min, graph_y_max))
@@ -476,9 +499,12 @@ def plot_spurius_Single(fig, table_value,
     # Put a legend to the right of the current axis
         mn = 1000
         mx = -1000
+        s = 0 #style index
         for row in result:
             if filter_1 and (row[0][n_LO_index] == 1 or row[0][n_LO_index] == -1 or row[0][m_RF_index] == 1 or row[0][m_RF_index] == -1):
                 continue
+            if s == len(styles):
+                s = 0
             label = ""
             for l in legend_index:
                 if l[1] is None:
@@ -510,8 +536,9 @@ def plot_spurius_Single(fig, table_value,
             plt.yticks([round(yt, 2) for yt in np.arange(mn-0.5, mx+0.5 +1, graph_y_step)])
             a.set_xticklabels(a.get_xticks(), **csfont)
             a.set_yticklabels(a.get_yticks(), **csfont)
-            ax.plot(np.array(x), np.array(y), label=label)
-        
+            markercolor = tuple(list(colorConverter.to_rgb(styles[s][1])) + [0.4])
+            ax.plot(np.array(x), np.array(y), label=label, linestyle='-', marker=styles[s][0], color=styles[s][1], markerfacecolor=markercolor)
+            s += 1
         
         box = ax.get_position()
         ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
@@ -520,7 +547,9 @@ def plot_spurius_Single(fig, table_value,
         #len(curves_data[0][0])
         #line_ani = animation.FuncAnimation(fig, update_sprius_line, 100,  fargs=(curves_data, curves, spl), interval=interval, blit=False, repeat=False)
         #plt.show()
-        plt.savefig(os.path.join(data_file_directory, "Graph_" + graph_title + return_now_postfix() + ".png"))
+        
+        
+        plt.savefig(os.path.join(data_file_directory, "Graph_" + graph_title + ".png"))
         
 
 fig = None
