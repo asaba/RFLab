@@ -10,6 +10,16 @@ from utility import unit_class
 unit = unit_class()
 
 
+
+def readPM5(PM5, misure_number, misure_delay):
+    result_values = []
+    for i in range(0, misure_number):
+        time.sleep(misure_delay)
+        command = "E1?"
+        x = PM5.ask(command) #read NRP2 value
+        result_values.append(x)
+    return result_values
+
 def readNRP2(SAB, NRP2, misure_number, misure_delay, calibration_frequency, calibration_frequency_unit, SAB_switch_delay, make_zero = False):
     result_values = []
     for i in range(0, misure_number):
