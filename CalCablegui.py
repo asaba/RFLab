@@ -256,7 +256,7 @@ class CalCableFrame(wx.Frame):
         result_file_name = self.notebook.tabCalCableSetting.result_file_name.GetValue()
 
         try:
-            SMB_RF = create_instrument(synthetizer_IP, synthetizer_Port, eval(synthetizer_Timeout), syntetizer_instrType, TEST_MODE = self.TEST_MODE)
+            SMB_RF = create_instrument(synthetizer_IP, synthetizer_Port, eval(synthetizer_Timeout), syntetizer_instrType, TEST_MODE = self.runmodeitem.IsChecked())
         except:
             dlg = wx.MessageDialog(None, "Synthetizer comunication error", 'Error Synthetizer', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
