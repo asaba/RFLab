@@ -315,24 +315,24 @@ def return_spinctrl_min_max(parent, label):
     Sizer.Add(sc_step, 0, wx.ALL, 5)
     return sc_min, sc_max, sc_step, Sizer
 
-def return_min_max_step_labeled(parent, label, unit = False):
+def return_min_max_step_labeled(parent, label, unit = False, single_unit = False, button_text = None):
     """
     return sizer
-    -------------------------------------------------------------------------------------------------
-    |          |  label_min                |  label_max                |  label_step                |
-    |          |---------------------------|---------------------------|----------------------------|
-    | label    | textcontrol_min           | textcontrol_max           | textcontrol_step           |
-    |          |---------------------------|---------------------------|----------------------------|
-    |          | combobox_min (optional)   | combobox_max (optional)   | combobox_step (optional)   |
-    -------------------------------------------------------------------------------------------------
+    -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    |          |  label_min      |                     | label_max        |                     | label_step        |                       |  label_unit (opt.)    |                   |
+    | label    |-----------------|---------------------|------------------|---------------------|-------------------|-----------------------|-----------------------| button_calc(opt.) |
+    |          | textcontrol_min | combobox_min (opt.) | textcontrol_max  | combobox_max (opt.) | textcontrol_step  |  combobox_step (opt.) |  combobox_unit (opt.) |                   |
+    -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     label text is label
     label_min text is "Min"
     label_max text is "Max"
     label_step text is "Step"
-    combobox_min, combobox_max, combobox_step are optional and used for units
+    label_unit test is "Unit"
+    combobox_min, combobox_max, combobox_step, label_unit test, combobox_unit are optional and used for units
+    button_cal is optional 
     
     return also textcontrol_min, textcontrol_max, textcontrol_step objects
-    if selected it'return also combobox_min, combobox_max, combobox_step or None
+    if selected it'return also combobox_min, combobox_max, combobox_step, combobox_unit, button_cal or None
     """
     label = wx.StaticText(parent, id=wx.ID_ANY, label=label, size = (150,-1))
     #min
@@ -383,10 +383,39 @@ def return_min_max_step_labeled(parent, label, unit = False):
     Sizer_step   = wx.BoxSizer(wx.VERTICAL)
     Sizer_step.Add(label_step, 0, wx.ALL, 5)
     Sizer_step.Add(Sizer_step_sub, 0, wx.ALL, 5)
+    
+    if single_unit:
+        #unit
+        label_unit = wx.StaticText(parent, id=wx.ID_ANY, label="Unit", size = (100,-1))
+        combobox_unit = wx.ComboBox(parent, -1, pos=(50, 170), size=(-1, -1), choices=unit_tmp.return_unit_list(), style=wx.CB_READONLY)
+        Sizer_unit_sub = wx.BoxSizer(wx.HORIZONTAL)
+        
+        Sizer_unit_sub.Add(combobox_unit, 0, wx.ALL, 5)
+        Sizer_unit   = wx.BoxSizer(wx.VERTICAL)
+        Sizer_unit.Add(label_unit, 0, wx.ALL, 5)
+        Sizer_unit.Add(Sizer_unit_sub, 0, wx.ALL, 5)
+    else:
+        combobox_unit = None
+    
+    if button_text is None:
+        button_cal = None
+    else:
+        #unit
+        button_cal = wx.Button(parent, 0, button_text)
+        Sizer_calc_sub = wx.BoxSizer(wx.HORIZONTAL)
+        Sizer_calc_sub.Add(button_cal, 0, wx.ALL, 5)
+    
+    
     Sizer   = wx.BoxSizer(wx.HORIZONTAL)
     Sizer.Add(label, 0, wx.ALL, 5)
     Sizer.Add(Sizer_min, 0, wx.ALL, 5)
     Sizer.Add(Sizer_max, 0, wx.ALL, 5)
     Sizer.Add(Sizer_step, 0, wx.ALL, 5)
-    return txt_min, combobox_min, txt_max, combobox_max, txt_step, combobox_step, Sizer
+    if single_unit:
+        Sizer.Add(Sizer_unit, 0, wx.ALL, 5)
+    if button_text is None:
+        pass
+    else:
+        Sizer.Add(Sizer_calc_sub, 0, wx.ALL, 5)
+    return txt_min, combobox_min, txt_max, combobox_max, txt_step, combobox_step, combobox_unit, button_cal, Sizer
     
