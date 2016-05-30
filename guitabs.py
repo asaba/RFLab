@@ -370,7 +370,7 @@ class TabPanelSMB(InstrumentPanelClass):
     This will be the first notebook tab
     """
     #----------------------------------------------------------------------
-    def __init__(self, parent):
+    def __init__(self, parent, range_power = True):
         """"""
         InstrumentPanelClass.__init__(self, parent=parent)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -399,8 +399,8 @@ class TabPanelSMB(InstrumentPanelClass):
         
         #synthetizer_LO_level_step = 3
         #self.synthetizer_level_step, dummy, dummy, self.sizer_synthetizer_level_step, dummy, dummy = return_textbox_labeled(self, "Power Level Step")
-        
-        self.synthetizer_level_min, dummy, self.synthetizer_level_max, dummy, self.synthetizer_level_step, dummy, dummy, dummy, self.sizer_synthetizer_level = return_min_max_step_labeled(self, "Level", unit = False)
+        if range_power:
+            self.synthetizer_level_min, dummy, self.synthetizer_level_max, dummy, self.synthetizer_level_step, dummy, dummy, dummy, self.sizer_synthetizer_level = return_min_max_step_labeled(self, "Level", unit = False)
         
         self.synthetizer_level_fixed, dummy, dummy, self.sizer_synthetizer_level_fixed, dummy, dummy = return_textbox_labeled(self, "Fixed Power Level")
         
@@ -414,7 +414,8 @@ class TabPanelSMB(InstrumentPanelClass):
         #sizer.Add(self.sizer_synthetizer_level_min, 0, wx.ALL, 5)
         #sizer.Add(self.sizer_synthetizer_level_max, 0, wx.ALL, 5)
         #sizer.Add(self.sizer_synthetizer_level_step, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_synthetizer_level, 0, wx.ALL, 5)
+        if range_power:
+            sizer.Add(self.sizer_synthetizer_level, 0, wx.ALL, 5)
         sizer.Add(self.sizer_synthetizer_level_fixed, 0, wx.ALL, 5)
 
  
