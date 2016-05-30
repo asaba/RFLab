@@ -118,7 +118,7 @@ def measure_100GHz_cal(SMB = SMB_RF,
     level_range = np.arange(synthetizer_level_min, synthetizer_level_max + synthetizer_level_step, synthetizer_level_step)
 
 
-    maxcount = len(frequency_range)
+    maxcount = len(frequency_range) * len(level_range)
     count = 0
     
     SMB.write("OUTP ON")
@@ -136,7 +136,7 @@ def measure_100GHz_cal(SMB = SMB_RF,
             
             current_level = str(current_LO_level)
             command = "POW " + current_level
-            SMB_RF.write(command)
+            SMB.write(command)
             
             
             
@@ -150,15 +150,23 @@ def measure_100GHz_cal(SMB = SMB_RF,
             if not createprogressdialog is None:
                 import wx
                 wx.MicroSleep(500)
-                message = "{lo_freq}".format(lo_freq = current_frequency)
+                message = "{lo_freq} {lo_level}".format(lo_freq = current_frequency, lo_level = current_level)
                 newvalue = int(float(count)/maxcount * 100)
-                dialog.Update(newvalue, message)
-        
+                if newvalue >= 100:
+                    createprogressdialog = False
+                    #dialog.Update(newvalue, message)
+                    #wx.MicroSleep(500)
+                    dialog.Close()
+                else:
+                    dialog.Update(newvalue, message)
+                    
+                if f == frequency_range[-1] and l == level_range[-1]:
+                    dialog.Destroy()
 
 
     #turn off RF
     SMB.write("OUTP OFF")
-
+    PM5.closeport()
     #Output [Frequenza, output power meter(Loss), time]
 
     print("Misure completed\n")

@@ -29,7 +29,10 @@ class USBInstrument():
             self.serialport.open()
         
     def closeport(self):
-        self.serialport.close()
+        try:
+            self.serialport.close()
+        except:
+            pass
 
 
 
@@ -44,7 +47,7 @@ class USB_PM5(USBInstrument):
             try:
                 self.serialport.openport()
             except:
-                pass
+                print("write: Error Opening Port")
             #a = self.serialport.IsOpen()
             #if a == False:
             #    self.serialport.openport()
@@ -60,16 +63,13 @@ class USB_PM5(USBInstrument):
             line = self.serialport.read(14)
             return line[1:]
         except:
+            print("read: Error reading from serial")
             return "0"
             
     def ask(self, command):
         self.write(command)
         time.sleep(1)
         result = self.read()
-        try: 
-            self.closeport()
-        except:
-            return "0"
         return result
     
     def write_bytes(self, *args):

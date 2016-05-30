@@ -261,12 +261,12 @@ class CalPM5Frame(wx.Frame):
             #return 0
         
         
-        #dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
-        #        style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME)
-        dialog =None
+        dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
+                style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME)
+        #dialog =None
         measure_100GHz_cal(SMB_LO, PM5, synthetizer_frequency_min_unit, synthetizer_frequency_min, synthetizer_frequency_max_unit, synthetizer_frequency_max, synthetizer_frequency_step_unit, synthetizer_frequency_step, synthetizer_level_min, synthetizer_level_max, synthetizer_level_step, calibration_file_LO, pm5_misure_number, pm5_misure_delay, result_file_name, createprogressdialog = dialog)
 
-        #dialog.Destroy()
+        dialog.Destroy()
         filesettingname = result_file_name + "_calcable_" + return_now_postfix() + ".cfg"
         f = open(filesettingname, "w")
         self.savesettings(f)
