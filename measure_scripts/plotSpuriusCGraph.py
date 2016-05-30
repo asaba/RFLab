@@ -322,6 +322,7 @@ def plot_spurius_graph(data_file_name,
                            graph_y_step_auto = graph_y_step_auto,
                            graph_y_unit = graph_y_unit,
                            data_file_directory = data_file_directory)
+    return data_file_directory
 
 def plot_spurius_C(table_value, 
                    graph_group_index,

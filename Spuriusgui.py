@@ -12,6 +12,7 @@ from measure_scripts.Spurius import unit, measure_LNA_spurius, SMB_LO, SMB_RF, N
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument
 from utility import writelineonfilesettings, return_now_postfix
 import pyvisa
+import webbrowser
 
 ########################################################################
 class NotebookDemo(wx.Notebook):
@@ -669,14 +670,10 @@ class SpuriusFrame(wx.Frame):
         f = open(filesettingname, "w")
         self.savesettings(f)
         f.close()
-        #try:
-        #    while 1:
-        #        dialog.GetId()
-        #        dialog.Destroy()
-        #except wx.PyDeadObjectError:
-        #    # siamo sicuri che e' davvero morto
-        #    dlg = wx.MessageDialog(None, 'Spurius measure completed.\n Result file: ' + spurius_filename, "Misure completed", wx.OK | wx.ICON_INFORMATION)
-        #    dlg.ShowModal()
+        try:
+            webbrowser.open(spurius_filename)
+        except:
+            pass
         
 #----------------------------------------------------------------------
 if __name__ == "__main__":

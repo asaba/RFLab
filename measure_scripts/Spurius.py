@@ -374,7 +374,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
         spurius_filename  =result_file_name + "_TOTAL_" + return_now_postfix()
         save_spurius(spurius_filename, totale_values)     
 
-    return result_file_name
+    return spurius_filename
     print("Misure completed\n")
     
     

@@ -859,7 +859,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         
         
         for frequency_IF_filter  in IF_Frequency_selected:
-            plot_spurius_graph(data_file_name, 
+            result_folder = plot_spurius_graph(data_file_name, 
                            graph_type, 
                            graph_title, 
                            graph_x_label, 
@@ -884,6 +884,10 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
                            SD_RF_Level = SD_RF_Level,
                            SD_IF_Min_Level = SD_IF_Min_Level,
                            IF_Frequency_selected = frequency_IF_filter)
+            try:
+                webbrowser.open(result_folder)
+            except:
+                pass
         #self.instrument_label.SetLabel(response)
         
         #webbrowser.open('/home/test/test_folder')
