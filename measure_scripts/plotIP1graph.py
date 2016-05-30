@@ -12,6 +12,8 @@ import matplotlib.animation as animation
 from matplotlib.pyplot import gca
 import sys
 
+from graphutility import csfont_title, csfont_axislegend, csfont_axisticks, csfont_legendlines, csfont_legendtitle, csfont_suptitle, csfont_annotation
+
 from utility import save_data, save_settings, create_csv, unit_class, return_now_postfix
 import os.path
 
@@ -20,7 +22,6 @@ unit = unit_class()
 
 ip1_filename = "misura IP1 ZVA213_3.csv"
 
-csfont = {'fontname':'Times New Roman'}
 
 final = []
 final2 = []
@@ -139,18 +140,18 @@ def calculateIP1(frequency, frequency_unit_value, table_value, graph_title, grap
     
     
     a = gca()
-    a.set_xticklabels(a.get_xticks(), **csfont)
-    a.set_yticklabels(a.get_yticks(), **csfont)
+    a.set_xticklabels(a.get_xticks(), **csfont_axisticks)
+    a.set_yticklabels(a.get_yticks(), **csfont_axisticks)
     
     if not graph_x_label:
         graph_x_label = 'Input Power(dBm)'
-    plt.xlabel(graph_x_label, **csfont)
+    plt.xlabel(graph_x_label, **csfont_axislegend)
     if not graph_y_label:
         graph_y_label = "Output Power (dBm)"
-    plt.ylabel(graph_y_label, **csfont)
+    plt.ylabel(graph_y_label, **csfont_axislegend)
     if not graph_title:
         graph_title = "Freq. " + str(frequency) + " " + unit.return_unit_str(frequency_unit_value) + " Cable Cal." + str(calibrated)
-    plt.title(graph_title, **csfont)
+    plt.title(graph_title, **csfont_title)
     plt.grid(True)
     lower = 0
     upper = len(t)
@@ -194,7 +195,7 @@ def update_line(num, line_data, line, line_generator, curve_data, curve, curve_g
                     #IP1 found
                     ip1.set_xdata(np.append(ip1.get_xdata(), curve_data[0][num]))
                     ip1.set_ydata(np.append(ip1.get_ydata(), curve_data[1][num]))
-                    plt.text(x+0.2, curve_generator(x)-2, "{:.3f} dBm".format(x), **csfont)
+                    plt.text(x+0.2, curve_generator(x)-2, "{:.3f} dBm".format(x), **csfont_annotation)
                     break
     return line, curve
 

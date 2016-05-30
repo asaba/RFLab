@@ -28,21 +28,11 @@ import operator
 from utility import create_csv, create_csv, unit_class, return_now_postfix
 import os.path
 from csvutility import frequency_LO_index, unit_LO_index, power_LO_index, is_LO_calibrated_index, frequency_RF_index, unit_RF_index, power_RF_index, is_RF_calibrated_index, frequency_IF_index, unit_IF_index, power_IF_index, is_IF_calibrated_index, n_LO_index, m_RF_index, conversion_loss, csv_file_header
-from measure_scripts.csvutility import frequency_IF_index
-
+from measure_scripts.csvutility import frequency_IF_index, frequency_LO_index
+from graphutility import styles, linecolors, markerstyles, csfont_axislegend, csfont_axisticks, csfont_legendlines, csfont_legendtitle, csfont_suptitle, csfont_title
 
 unit = unit_class()
 
-csfont = {'fontname':'Times New Roman'}
-csfont_suptitle = {'fontname':'Times New Roman', "size":"14"}
-
-styles = [(None, "b"), (None, "g"), (None, "r"), (None, "c"), (None, "m"), (None, "y"), (None, "k"),
-          ("o", "b"), ("o", "g"), ("o", "r"), ("o", "c"), ("o", "m"), ("o", "y"), ("o", "k"),
-          ("v", "b"), ("v", "g"), ("v", "r"), ("v", "c"), ("v", "m"), ("v", "y"), ("v", "k"),
-          ("s", "b"), ("s", "g"), ("s", "r"), ("s", "c"), ("s", "m"), ("s", "y"), ("s", "k")]
-
-linecolors = ["b", "g", "r", "c", "m", "y", "k"]
-markerstyles = [None, "o", "v", "s", ]
 
 final = []
 final2 = []
@@ -79,7 +69,7 @@ def openSpuriusfile(filename):
                                 eval(row[power_IF_index].replace(",", ".")),
                                 row[is_IF_calibrated_index],
                                 eval(row[n_LO_index].replace(",", ".")),
-                                eval(row[m_RF_index].replace(",", "."))]),
+                                eval(row[m_RF_index].replace(",", "."))])
         
         return result_eval, unit.return_unit(result[1][1]), os.path.dirname(filename)
     except:
@@ -162,12 +152,6 @@ def order_and_group_data(data_file_name,
         graph_group_index = [power_LO_index]
         x_index = power_RF_index
         y_index = power_IF_index
-        #legend_index = [(frequency_LO_index, unit_LO_index, "LO", n_LO_index), (frequency_RF_index, unit_RF_index, "RF", m_RF_index)]
-        #sort_data = [n_LO_index, m_RF_index, frequency_LO_index, power_LO_index, frequency_RF_index, power_RF_index]
-        #group_level_01 = [n_LO_index, m_RF_index, frequency_LO_index, frequency_RF_index]
-        #graph_group_index = [power_LO_index]
-        #x_index = power_RF_index
-        #y_index = power_IF_index
         legend_index = [(power_LO_index, None, "LO", n_LO_index)]
     elif graph_type == "SD":
         sort_data = [n_LO_index, m_RF_index, power_LO_index, power_RF_index, power_IF_index]
@@ -180,7 +164,53 @@ def order_and_group_data(data_file_name,
     return splitSpuriusCfiletablevalueDict(data_file_name, graph_type, file_table_result, sort_data, group_level_01, SD_LO_Level = SD_LO_Level, SD_RF_Level = SD_RF_Level, SD_IF_Min_Level = SD_IF_Min_Level, savefile = savefile), data_file_directory, graph_group_index, x_index, y_index, legend_index
     
     
-
+def convert_x_y_axes(data_table, graph_x_unit, x_index, graph_y_unit, y_index):
+    result_eval = [[] for x in range(len(data_table))]
+    k = 0
+    for group in data_table:
+        j = 0
+        for row in group:
+            new_row = []
+            if x_index == frequency_LO_index:
+                new_row.append(unit.unit_conversion(row[frequency_LO_index], row[unit_LO_index], graph_x_unit))
+                new_row.append(graph_x_unit)
+            elif y_index == frequency_LO_index:
+                new_row.append(unit.unit_conversion(row[frequency_LO_index], row[unit_LO_index], graph_y_unit))
+                new_row.append(graph_y_unit)
+            else:
+                new_row.append(row[frequency_LO_index])
+                new_row.append(row[unit_LO_index])
+            new_row.append(row[power_LO_index])
+            new_row.append(row[is_LO_calibrated_index])
+            if x_index == frequency_RF_index:
+                new_row.append(unit.unit_conversion(row[frequency_RF_index], row[unit_RF_index], graph_x_unit))
+                new_row.append(graph_x_unit)
+            elif y_index == frequency_RF_index:
+                new_row.append(unit.unit_conversion(row[frequency_RF_index], row[unit_RF_index], graph_y_unit))
+                new_row.append(graph_y_unit)
+            else:
+                new_row.append(row[frequency_RF_index])
+                new_row.append(row[unit_RF_index])
+            new_row.append(row[power_RF_index])
+            new_row.append(row[is_RF_calibrated_index])
+            if x_index == frequency_IF_index:
+                new_row.append(unit.unit_conversion(row[frequency_IF_index], row[unit_IF_index], graph_x_unit))
+                new_row.append(graph_x_unit)
+            elif y_index == frequency_RF_index:
+                new_row.append(unit.unit_conversion(row[frequency_IF_index], row[unit_IF_index], graph_y_unit))
+                new_row.append(graph_y_unit)
+            else:
+                new_row.append(row[frequency_IF_index])
+                new_row.append(row[unit_IF_index])
+            new_row.append(row[power_IF_index])
+            new_row.append(row[is_IF_calibrated_index])
+            new_row.append(row[n_LO_index])
+            new_row.append(row[m_RF_index])
+            new_row.append(row[conversion_loss])
+            result_eval[k].append(new_row)
+            j += 1
+        k += 1
+    return result_eval
 
 
 def plot_spurius_graph(data_file_name, 
@@ -194,6 +224,7 @@ def plot_spurius_graph(data_file_name,
                        graph_x_max_auto, 
                        graph_x_step, 
                        graph_x_step_auto, 
+                       graph_x_unit,
                        graph_y_label, 
                        graph_y_label_auto,
                        graph_y_min,
@@ -202,6 +233,7 @@ def plot_spurius_graph(data_file_name,
                        graph_y_max_auto, 
                        graph_y_step, 
                        graph_y_step_auto,
+                       graph_y_unit,
                        SD_LO_Level,
                        SD_RF_Level,
                        SD_IF_Min_Level,
@@ -216,6 +248,8 @@ def plot_spurius_graph(data_file_name,
                        SD_RF_Level = SD_RF_Level,
                        SD_IF_Min_Level = SD_IF_Min_Level,
                        IF_Frequency_selected = IF_Frequency_selected)
+    
+    data_table = convert_x_y_axes(data_table, graph_x_unit, x_index, graph_y_unit, y_index)
     
     data_file_directory = os.path.join(data_file_directory, "_".join([graph_type, return_now_postfix()]))
     if not os.path.exists(data_file_directory):
@@ -250,6 +284,7 @@ def plot_spurius_graph(data_file_name,
                            graph_x_max_auto = graph_x_max_auto,
                            graph_x_step = graph_x_step, 
                            graph_x_step_auto = graph_x_step_auto,
+                           graph_x_unit = graph_x_unit,
                            graph_y_label = graph_y_label, 
                            graph_y_label_auto = graph_y_label_auto,
                            graph_y_min = graph_y_min, 
@@ -258,6 +293,7 @@ def plot_spurius_graph(data_file_name,
                            graph_y_max_auto = graph_y_max_auto,
                            graph_y_step = graph_y_step, 
                            graph_y_step_auto = graph_y_step_auto,
+                           graph_y_unit = graph_y_unit,
                            data_file_directory = data_file_directory)
     if len(group_for_SD)>0:
         plot_spurius_C(table_value = group_for_SD,
@@ -275,6 +311,7 @@ def plot_spurius_graph(data_file_name,
                            graph_x_max_auto = graph_x_max_auto,
                            graph_x_step = graph_x_step, 
                            graph_x_step_auto = graph_x_step_auto,
+                           graph_x_unit = graph_x_unit,
                            graph_y_label = graph_y_label, 
                            graph_y_label_auto = graph_y_label_auto,
                            graph_y_min = graph_y_min, 
@@ -283,6 +320,7 @@ def plot_spurius_graph(data_file_name,
                            graph_y_max_auto = graph_y_max_auto,
                            graph_y_step = graph_y_step, 
                            graph_y_step_auto = graph_y_step_auto,
+                           graph_y_unit = graph_y_unit,
                            data_file_directory = data_file_directory)
 
 def plot_spurius_C(table_value, 
@@ -300,6 +338,7 @@ def plot_spurius_C(table_value,
                    graph_x_max_auto = False,
                    graph_x_step = 100, 
                    graph_x_step_auto = False,
+                   graph_x_unit = unit.MHz,
                    graph_y_label = 'Output Power(dBm)', 
                    graph_y_label_auto = False,
                    graph_y_min = -10, 
@@ -308,6 +347,7 @@ def plot_spurius_C(table_value,
                    graph_y_max_auto = False,
                    graph_y_step = 1, 
                    graph_y_step_auto = False,
+                   graph_y_unit = unit.MHz,
                    data_file_directory = ""):
     
     fig = plt.figure()
@@ -328,6 +368,7 @@ def plot_spurius_C(table_value,
                    graph_x_max_auto = graph_x_max_auto,
                    graph_x_step = graph_x_step, 
                    graph_x_step_auto = graph_x_step_auto,
+                   graph_x_unit = graph_x_unit,
                    graph_y_label = graph_y_label, 
                    graph_y_label_auto = graph_y_label_auto,
                    graph_y_min = graph_y_min, 
@@ -336,6 +377,7 @@ def plot_spurius_C(table_value,
                    graph_y_max_auto = graph_y_max_auto,
                    graph_y_step = graph_y_step, 
                    graph_y_step_auto = graph_y_step_auto,
+                   graph_y_unit = graph_y_unit,
                    data_file_directory = data_file_directory)
     
     
@@ -383,6 +425,7 @@ def plot_spurius_Single(fig, table_value,
                    graph_x_max_auto = False,
                    graph_x_step = 100, 
                    graph_x_step_auto = False,
+                   graph_x_unit = unit.MHz,
                    graph_y_label = 'Output Power(dBm)', 
                    graph_y_label_auto = False,
                    graph_y_min = -10, 
@@ -391,6 +434,7 @@ def plot_spurius_Single(fig, table_value,
                    graph_y_max_auto = False,
                    graph_y_step = 1, 
                    graph_y_step_auto = False,
+                   graph_y_unit = unit.MHz,
                    data_file_directory = ""):
     """
 
@@ -411,36 +455,49 @@ def plot_spurius_Single(fig, table_value,
     if graph_y_step is None:
         graph_y_step = 1
          
-        
+    x_y_offset = 0
 
     
     if graph_type == "LO":
         if not graph_x_label:
-            graph_x_label = 'IF Freq (MHz)'
+            graph_x_label = 'IF Freq (' + unit.return_unit_str(table_value[0][x_index + 1])  +  ')'
+        else:
+            graph_x_label = graph_x_label.format(unit = unit.return_unit_str(table_value[0][x_index + 1]))
         if not graph_y_label:
             graph_y_label = "IF Power Loss (dBm)"
         if not graph_title:
             graph_sup_title = "Conversion Loss"
-            graph_title = "LO " + str(table_value[0][frequency_LO_index]) + unit.return_unit_str(table_value[0][unit_LO_index]) + " - RF " + str(table_value[0][power_RF_index]) + "dBm"
-            legend_title = "LO"
+        else:
+            graph_sup_title = graph_title
+        graph_title = "LO " + str(table_value[0][frequency_LO_index]) + unit.return_unit_str(table_value[0][unit_LO_index]) + " - RF " + str(table_value[0][power_RF_index]) + "dBm"
+        legend_title = "LO"
     elif graph_type == "RF":
         if not graph_x_label:
             graph_x_label = 'RF Power (dBm)'
+        else:
+            graph_x_label = graph_x_label.format(unit = "dBm")
         if not graph_y_label:
             graph_y_label = "IF Power (dBm)"
         if not graph_title:
             graph_sup_title = "Compression Point"
-            graph_title = "LO " + str(table_value[0][frequency_LO_index]) + unit.return_unit_str(table_value[0][unit_LO_index]) + " - RF " + str(table_value[0][frequency_RF_index]) + unit.return_unit_str(table_value[0][unit_RF_index])
+            
+        else:
+            graph_sup_title = graph_title
+        graph_title = "LO " + str(table_value[0][frequency_LO_index]) + unit.return_unit_str(table_value[0][unit_LO_index]) + " - RF " + str(table_value[0][frequency_RF_index]) + unit.return_unit_str(table_value[0][unit_RF_index])
         legend_title = "LO"
     elif graph_type == "SP":
         if not graph_x_label:
             graph_x_label = 'RF Power (dBm)'
+        else:
+            graph_x_label = graph_x_label.format(unit = "dBm")
         if not graph_y_label:
             graph_y_label = "IF Power (dBm)"
         if not graph_title:
             graph_sup_title = "Harmonic Intermodulation Products"
-            filter_1 = True
-            graph_title = "IF " + str(table_value[0][frequency_IF_index]) + unit.return_unit_str(table_value[0][unit_IF_index]) + " (LO " + str(table_value[0][frequency_LO_index]) + unit.return_unit_str(table_value[0][unit_LO_index]) + " (" + str(table_value[0][n_LO_index]) + ")" + "; RF " + str(table_value[0][frequency_RF_index]) + unit.return_unit_str(table_value[0][unit_RF_index]) + "(" + str(table_value[0][m_RF_index]) + "))"
+        else:
+            graph_sup_title = graph_title
+        graph_title = "IF " + str(table_value[0][frequency_IF_index]) + unit.return_unit_str(table_value[0][unit_IF_index]) + " (LO " + str(table_value[0][frequency_LO_index]) + unit.return_unit_str(table_value[0][unit_LO_index]) + " (" + str(table_value[0][n_LO_index]) + ")" + "; RF " + str(table_value[0][frequency_RF_index]) + unit.return_unit_str(table_value[0][unit_RF_index]) + "(" + str(table_value[0][m_RF_index]) + "))"
+        filter_1 = True
         legend_title = "LO"
     elif graph_type == "SD":
         if not graph_x_label:
@@ -449,8 +506,8 @@ def plot_spurius_Single(fig, table_value,
             graph_y_label = "IF Power (dBm)"
         if not graph_title:
             graph_sup_title = "Spurious Distribution"
-            filter_1 = True
-            graph_title = ""
+        filter_1 = True
+        graph_title = ""
         legend_title = "IF"
         
     #split by RF_level or LO_level
@@ -476,14 +533,14 @@ def plot_spurius_Single(fig, table_value,
         plt.yticks([round(x, 2) for x in np.arange(graph_y_min, graph_y_max +1, graph_y_step)])
         
         a = gca()
-        a.set_xticklabels(a.get_xticks(), **csfont)
-        a.set_yticklabels(a.get_yticks(), **csfont)
+        a.set_xticklabels(a.get_xticks(), **csfont_axisticks)
+        a.set_yticklabels(a.get_yticks(), **csfont_axisticks)
         
         
         
-        plt.xlabel(graph_x_label, **csfont)
-        plt.ylabel(graph_y_label, **csfont)
-        plt.title(graph_title, **csfont)
+        plt.xlabel(graph_x_label, **csfont_axislegend)
+        plt.ylabel(graph_y_label, **csfont_axislegend)
+        plt.title(graph_title, **csfont_title)
         plt.suptitle(graph_sup_title, **csfont_suptitle)
         plt.grid(True)
         
@@ -513,7 +570,7 @@ def plot_spurius_Single(fig, table_value,
                 else:
                     tmp_unit = unit.return_unit_str(row[0][l[1]])
                     n_m = row[0][l[3]]
-                label += l[2] + " " + str(row[0][l[0]]) + tmp_unit + " " + str(n_m) + "\n"
+                label += l[2] + " " + str(row[0][l[0]]) + " " + tmp_unit + " " + str(n_m) + "\n"
             label = label[0:-1]
             x = [x[x_index] for x in row]
             y = [y[y_index] for y in row]
@@ -531,18 +588,25 @@ def plot_spurius_Single(fig, table_value,
                 
             
                 
-            ax.set_ylim([mn-0.5, mx+0.5])
+            ax.set_ylim([mn-x_y_offset, mx+x_y_offset])
             plt.xticks([round(xt, 2) for xt in np.arange(graph_x_min, graph_x_max +1, graph_x_step)])
-            plt.yticks([round(yt, 2) for yt in np.arange(mn-0.5, mx+0.5 +1, graph_y_step)])
-            a.set_xticklabels(a.get_xticks(), **csfont)
-            a.set_yticklabels(a.get_yticks(), **csfont)
+            plt.yticks([round(yt, 2) for yt in np.arange(mn-x_y_offset, mx+x_y_offset +1, graph_y_step)])
+            a.set_xticklabels(a.get_xticks(), **csfont_axisticks)
+            a.set_yticklabels(a.get_yticks(), **csfont_axisticks)
             markercolor = tuple(list(colorConverter.to_rgb(styles[s][1])) + [0.4])
             ax.plot(np.array(x), np.array(y), label=label, linestyle='-', marker=styles[s][0], color=styles[s][1], markerfacecolor=markercolor)
             s += 1
         
         box = ax.get_position()
         ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
-        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), title = legend_title)
+        legend_object =  ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), title = legend_title)
+        #legend_object.set_title(title = legend_title, prop = csfont_title)
+        #legend_object.get_title().set_fontsize(csfont_title["fontsize"]) #legend 'Title' fontsize
+        #legend_object.get_title().set_fontname(csfont_title["fontname"])
+        plt.setp(plt.gca().get_legend().get_title(), **csfont_legendtitle)
+        plt.setp(plt.gca().get_legend().get_texts(), **csfont_legendlines) #legend 'list' fontsize
+            
+            
             #curves_data.append(np.array([t, [spl[-1](x) for x in t]]))
         #len(curves_data[0][0])
         #line_ani = animation.FuncAnimation(fig, update_sprius_line, 100,  fargs=(curves_data, curves, spl), interval=interval, blit=False, repeat=False)

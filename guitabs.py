@@ -10,10 +10,13 @@ import os
 from guiobjects import return_checkbox_labeled, return_spinctrl, return_textbox_labeled, return_comboBox_unit, return_file_browse, return_instrument, return_test_instrument, return_simple_button, return_min_max_step_labeled, return_spinctrl_min_max, return_comboBox, return_usb_instrument
 from utilitygui import check_instrument_comunication, check_USB_instrument_comunication
 from utilitygui import check_value_is_valid_file, check_value_min_max, browse_file
-from measure_scripts.plotIP1graph import calculate_all_IP1
+from measure_scripts.plotIP1graph import calculate_all_IP1, unit
 from measure_scripts.plotSpuriusCGraph import plot_spurius_graph, order_and_group_data
 from measure_scripts.csvutility import *
+from measure_scripts.graphutility import axis_range
 import serial.tools.list_ports
+import webbrowser
+
 
 
 class InstrumentPanelClass(wx.Panel):
@@ -119,7 +122,7 @@ class TabPanelCalDummyCableSetup(SetupPanelClass):
         #synthetizer_LO_frequency_step = 200
         #self.frequency_step, self.frequency_step_unit, dummy, self.sizer_frequency_step, dummy, dummy = return_textbox_labeled(self, "Frequency Step", unit= True)
         
-        self.frequency_min, self.frequency_min_unit, self.frequency_max, self.frequency_max_unit, self.frequency_step, self.frequency_step_unit, self.sizer_frequency = return_min_max_step_labeled(self, "Frequency", unit = True)
+        self.frequency_min, self.frequency_min_unit, self.frequency_max, self.frequency_max_unit, self.frequency_step, self.frequency_step_unit, dummy, dummy, self.sizer_frequency = return_min_max_step_labeled(self, "Frequency", unit = True)
         
         #synthetizer_LO_level_min = 6 #dBm
         self.output_level, dummy, dummy, self.sizer_output_level, dummy, dummy = return_textbox_labeled(self, "Output Power Level")
@@ -384,7 +387,7 @@ class TabPanelSMB(InstrumentPanelClass):
         #synthetizer_LO_frequency_step = 200
         ##self.synthetizer_frequency_step, self.synthetizer_frequency_step_unit, dummy, self.sizer_synthetizer_frequency_step, dummy, dummy = return_textbox_labeled(self, "Frequency Step", unit= True)
         
-        self.synthetizer_frequency_min, self.synthetizer_frequency_min_unit, self.synthetizer_frequency_max, self.synthetizer_frequency_max_unit, self.synthetizer_frequency_step, self.synthetizer_frequency_step_unit, self.sizer_synthetizer_frequency = return_min_max_step_labeled(self, "Frequency", unit = True)
+        self.synthetizer_frequency_min, self.synthetizer_frequency_min_unit, self.synthetizer_frequency_max, self.synthetizer_frequency_max_unit, self.synthetizer_frequency_step, self.synthetizer_frequency_step_unit, dummy, dummy, self.sizer_synthetizer_frequency = return_min_max_step_labeled(self, "Frequency", unit = True)
         
         
         #synthetizer_LO_level_min = 6 #dBm
@@ -397,7 +400,7 @@ class TabPanelSMB(InstrumentPanelClass):
         #synthetizer_LO_level_step = 3
         #self.synthetizer_level_step, dummy, dummy, self.sizer_synthetizer_level_step, dummy, dummy = return_textbox_labeled(self, "Power Level Step")
         
-        self.synthetizer_level_min, dummy, self.synthetizer_level_max, dummy, self.synthetizer_level_step, dummy, self.sizer_synthetizer_level = return_min_max_step_labeled(self, "Level", unit = False)
+        self.synthetizer_level_min, dummy, self.synthetizer_level_max, dummy, self.synthetizer_level_step, dummy, dummy, dummy, self.sizer_synthetizer_level = return_min_max_step_labeled(self, "Level", unit = False)
         
         self.synthetizer_level_fixed, dummy, dummy, self.sizer_synthetizer_level_fixed, dummy, dummy = return_textbox_labeled(self, "Fixed Power Level")
         
@@ -457,6 +460,10 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
         self.graph_x_label_auto.object_to_enable = "self.graph_x_label"
         self.graph_x_label_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
         
+        #self.graph_x_min, dummy, self.graph_x_max, dummy, self.graph_x_step, dummy, self.graph_x_unit, self.grap_x_calc_button, self.sizer_graph_x = return_min_max_step_labeled(self, "X Axes", unit = False, single_unit = True, button_text = "Calculate")
+        #self.graph_x_min_auto.object_to_enable = ["self.graph_x_min", "self.graph_x_max"]
+        #self.graph_x_min_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
+        
         self.graph_x_min, dummy, self.graph_x_min_auto, self.sizer_graph_x_min, self.grap_x_min_calc_button, dummy = return_textbox_labeled(self, "X Axes min", enabled=True, enable_text="Auto", read = True, button_text = "Calculate")
         self.graph_x_min_auto.object_to_enable = "self.graph_x_min"
         self.graph_x_min_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
@@ -468,6 +475,8 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
         self.graph_x_step, dummy, self.graph_x_step_auto, self.sizer_graph_x_step, dummy, dummy = return_textbox_labeled(self, "X Axes step", enabled=True, enable_text="Auto")
         self.graph_x_step_auto.object_to_enable = "self.graph_x_step"
         self.graph_x_step_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
+        
+        self.graph_x_unit, self.sizer_graph_x_unit = return_comboBox_unit(self, "X unit")
         
         self.graph_y_label, dummy, self.graph_y_label_auto, self.sizer_graph_y_label, dummy, dummy = return_textbox_labeled(self, "Y Axes label", enabled=True, enable_text="Auto")
         self.graph_y_label_auto.object_to_enable = "self.graph_y_label"
@@ -484,6 +493,8 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
         self.graph_y_step, dummy, self.graph_y_step_auto, self.sizer_graph_y_step, dummy, dummy = return_textbox_labeled(self, "Y Axes step", enabled=True, enable_text="Auto")
         self.graph_y_step_auto.object_to_enable = "self.graph_y_step"
         self.graph_y_step_auto.Bind(wx.EVT_BUTTON, self.OnAutoCheck)
+        
+        self.graph_y_unit, self.sizer_graph_y_unit = return_comboBox_unit(self, "Y unit")
         
         if animated:
             self.graph_animated, self.sizer_graph_animated = return_checkbox_labeled(self, "Animate Graph")
@@ -612,10 +623,10 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         self.x_index = 0
         self.y_index = 0
         self.row_data_filter = []
-        self.grap_y_min_calc_button.param_to_calc = {"type": "min", "index" : "self.y_index", "textbox" : "self.graph_y_min", "filter" : "self.row_data_filter"}
-        self.grap_y_max_calc_button.param_to_calc = {"type": "max", "index" : "self.y_index", "textbox" : "self.graph_y_max", "filter" : "self.row_data_filter"}
-        self.grap_x_min_calc_button.param_to_calc = {"type": "min", "index" : "self.x_index", "textbox" : "self.graph_x_min", "filter" : "self.row_data_filter"}
-        self.grap_x_max_calc_button.param_to_calc = {"type": "max", "index" : "self.x_index", "textbox" : "self.graph_x_max", "filter" : "self.row_data_filter"}
+        self.grap_y_min_calc_button.param_to_calc = {"combobox": "self.graph_y_unit",  "type": "min", "index" : "self.y_index", "textbox" : "self.graph_y_min", "filter" : "self.row_data_filter", "unit_index" : "self.y_unit_index"}
+        self.grap_y_max_calc_button.param_to_calc = {"combobox": "self.graph_y_unit", "type": "max", "index" : "self.y_index", "textbox" : "self.graph_y_max", "filter" : "self.row_data_filter", "unit_index" : "self.y_unit_index"}
+        self.grap_x_min_calc_button.param_to_calc = {"combobox": "self.graph_x_unit", "type": "min", "index" : "self.x_index", "textbox" : "self.graph_x_min", "filter" : "self.row_data_filter", "unit_index" : "self.x_unit_index"}
+        self.grap_x_max_calc_button.param_to_calc = {"combobox": "self.graph_x_unit", "type": "max", "index" : "self.x_index", "textbox" : "self.graph_x_max", "filter" : "self.row_data_filter", "unit_index" : "self.x_unit_index"}
         
         
         self.grap_y_min_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcAuto)
@@ -642,10 +653,12 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         sizer.Add(self.sizer_graph_x_min, 0, wx.ALL, 5)
         sizer.Add(self.sizer_graph_x_max, 0, wx.ALL, 5)
         sizer.Add(self.sizer_graph_x_step, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_x_unit, 0, wx.ALL, 5)
         sizer.Add(self.sizer_graph_y_label, 0, wx.ALL, 5)
         sizer.Add(self.sizer_graph_y_min, 0, wx.ALL, 5)
         sizer.Add(self.sizer_graph_y_max, 0, wx.ALL, 5)
         sizer.Add(self.sizer_graph_y_step, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_y_unit, 0, wx.ALL, 5)
         #sizer.Add(self.sizer_graph_animated, 0, wx.ALL, 5)
         sizer.Add(self.sizer_plot_button, 0, wx.ALL, 5)
  
@@ -655,18 +668,21 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         
         button = event.GetEventObject()
 
-        param_to_calc = button.param_to_calc #{"type": "max", "index" : "self.x_index", "textbox" : "self.graph_y_max"}
+        param_to_calc = button.param_to_calc #{"type": "max", "index" : "self.x_index", "textbox" : "self.graph_y_max", "unit_index" : "self.x_unit_index",}
 
         m = []
+        tmp_unit = unit.return_unit_str(unit.MHz) 
         for row in self.return_list_of_row():
             for d in row:
                 if self.check_filter(d, eval(param_to_calc["filter"])):
                     m.append(d[eval(param_to_calc["index"])])
+                    if eval(param_to_calc["unit_index"]) is not None:
+                        tmp_unit = unit.return_unit_str(d[eval(param_to_calc["unit_index"])])
         if param_to_calc["type"] == "max":
             eval(param_to_calc["textbox"]).ChangeValue(str(max(m)))
         elif param_to_calc["type"] == "min":
             eval(param_to_calc["textbox"]).ChangeValue(str(min(m)))
-        
+        eval(param_to_calc["combobox"]).SetSelection(unit.return_unit_index(tmp_unit))
     def check_filter(self, row, row_filter):
         result = True
         for f in row_filter:
@@ -698,17 +714,23 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         graph_type = self.graph_type.GetValue()
         if graph_type == "Conversion Loss":
             self.x_index = frequency_IF_index
+            self.x_unit_index = unit_IF_index
             self.y_index = conversion_loss
+            self.y_unit_index = None
             self.row_data_filter = [(n_LO_index, "in", [1, -1]), (m_RF_index, "in", [1, -1])]
             graph_type = "LO"
         elif graph_type == "Compression point":
             self.x_index = power_RF_index
+            self.x_unit_index = None
             self.y_index = power_IF_index
+            self.y_unit_index = None
             graph_type = "RF"
             self.row_data_filter = [(n_LO_index, "in", [1, -1]), (m_RF_index, "in", [1, -1])]
         elif graph_type == "Harmonic Intermodulation Products":
             self.x_index = power_RF_index
+            self.x_unit_index = None
             self.y_index = power_IF_index
+            self.y_unit_index = None
             graph_type = "SP"
             dlg = wx.TextEntryDialog(self, "Insert Spurius Frequency")
             dlg.ShowModal()
@@ -718,7 +740,9 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
             self.row_data_filter = [(n_LO_index, "not in", [1, -1]), (m_RF_index, "not in", [1, -1])]
         elif graph_type == "Spurious Distribution":
             self.x_index = frequency_IF_index
+            self.x_unit_index = unit_IF_index
             self.y_index = power_IF_index
+            self.y_unit_index = None
             dlg = wx.TextEntryDialog(self, "Insert LO Level (dBm)")
             dlg.ShowModal()
             SD_LO_Level = dlg.GetValue()
@@ -795,6 +819,8 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         else:
             graph_y_step = eval(self.graph_y_step.GetValue())
         graph_y_step_auto = self.graph_y_step_auto.GetValue()
+        graph_x_unit = unit.return_unit(self.graph_x_unit.GetValue())
+        graph_y_unit = unit.return_unit(self.graph_y_unit.GetValue())
             
         IF_Frequency_selected = [0]
         SD_LO_Level = 0
@@ -843,6 +869,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
                            graph_x_max_auto, 
                            graph_x_step, 
                            graph_x_step_auto,
+                           graph_x_unit,
                            graph_y_label, 
                            graph_y_label_auto, 
                            graph_y_min, 
@@ -851,11 +878,14 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
                            graph_y_max_auto, 
                            graph_y_step, 
                            graph_y_step_auto, 
+                           graph_y_unit,
                            SD_LO_Level = SD_LO_Level,
                            SD_RF_Level = SD_RF_Level,
                            SD_IF_Min_Level = SD_IF_Min_Level,
                            IF_Frequency_selected = frequency_IF_filter)
         #self.instrument_label.SetLabel(response)
+        
+        #webbrowser.open('/home/test/test_folder')
 
 
 class TabPanelSAB(InstrumentPanelClass):
@@ -878,7 +908,7 @@ class TabPanelSAB(InstrumentPanelClass):
         
         #self.SAB_attenuation_step, dummy, dummy, self.sizer_SAB_attenuation_step, dummy, dummy = return_textbox_labeled(self, "Attenuation Step")
         
-        self.SAB_attenuation_min, dummy, self.SAB_attenuation_max, dummy, self.SAB_attenuation_step, dummy, self.sizer_SAB_attenuation = return_min_max_step_labeled(self, "Attenuation", unit = False)
+        self.SAB_attenuation_min, dummy, self.SAB_attenuation_max, dummy, self.SAB_attenuation_step, dummy, dummy, dummy, self.sizer_SAB_attenuation = return_min_max_step_labeled(self, "Attenuation", unit = False)
         
         self.SAB_attenuation_delay, dummy, dummy, self.sizer_SAB_attenuation_delay, dummy, dummy = return_textbox_labeled(self, "Attenuation Delay")
         
