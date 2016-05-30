@@ -32,7 +32,7 @@ class NotebookDemo(wx.Notebook):
                              )
 
         # Create and add the second tab
-        self.tabRF = TabPanelSMB(self)
+        self.tabRF = TabPanelSMB(self, range_power = False)
         self.AddPage(self.tabRF, "Radio Frequency")
  
         self.tabPowerMeter = TabPanelPowerMeter(self)
@@ -115,9 +115,9 @@ class CalCableFrame(wx.Frame):
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_min")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_max")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_step")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_min")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_max")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_step")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_fixed")
         self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_IP")
         self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_Port")
@@ -279,7 +279,24 @@ class CalCableFrame(wx.Frame):
         dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
                 style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME)
         
-        measure_calibration_cable(SMB_RF, NRP2, SAB, synthetizer_frequency_min_unit, synthetizer_frequency_min, synthetizer_frequency_max_unit, synthetizer_frequency_max, synthetizer_frequency_step_unit, synthetizer_frequency_step, synthetizer_level_fixed, power_meter_make_zero, power_meter_make_zero_delay, power_meter_misure_number, power_meter_misure_delay, SAB_switch01_delay, SAB_switch02_delay, result_file_name, createprogressdialog = dialog)
+        measure_calibration_cable(SMB_RF, 
+                                  NRP2, 
+                                  SAB, 
+                                  synthetizer_frequency_min_unit, 
+                                  synthetizer_frequency_min, 
+                                  synthetizer_frequency_max_unit, 
+                                  synthetizer_frequency_max, 
+                                  synthetizer_frequency_step_unit, 
+                                  synthetizer_frequency_step, 
+                                  synthetizer_level_fixed, 
+                                  power_meter_make_zero, 
+                                  power_meter_make_zero_delay, 
+                                  power_meter_misure_number, 
+                                  power_meter_misure_delay, 
+                                  SAB_switch01_delay, 
+                                  SAB_switch02_delay, 
+                                  result_file_name, 
+                                  createprogressdialog = dialog)
  
         dialog.Destroy()
         filesettingname = result_file_name + "_calcable_" + return_now_postfix() + ".cfg"
