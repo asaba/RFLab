@@ -30,6 +30,30 @@ class unit_class(object):
     def return_unit_list(self):
         return [self.return_unit_str(self.Hz), self.return_unit_str(self.KHz), self.return_unit_str(self.MHz), self.return_unit_str(self.GHz)]
     
+    def return_unit_index_str(self, unit_str):
+        if unit_str.upper() == "Hz".upper():
+            return 0
+        elif unit_str.upper() == "KHz".upper():
+            return 1
+        elif unit_str.upper() == "MHz".upper():
+            return 2
+        elif unit_str.upper() == "GHz".upper():
+            return 3
+    
+    def return_unit_index_value(self, unit_value):
+        if unit_value == self.Hz:
+            return 0
+        elif unit_value == self.KHz:
+            return 1
+        elif unit_value == self.MHz:
+            return 2
+        elif unit_value == self.GHz:
+            return 3
+    def return_unit_index(self, unit_x):
+        if type(unit_x) is str:
+            return self.return_unit_index_str(unit_x)
+        else:
+            return self.return_unit_index_value(unit_x)
     def return_unit(self, unit_str):
         if unit_str.upper() == "Hz".upper():
             return self.Hz
