@@ -172,9 +172,18 @@ def measure_calibration_cable(SMB = SMB_RF,
             wx.MicroSleep(500)
             message = "{lo_freq}".format(lo_freq = current_frequency)
             newvalue = int(float(count)/maxcount * 100)
-            dialog.Update(newvalue, message)
+            if newvalue >= 100:
+                createprogressdialog = False
+                #dialog.Update(newvalue, message)
+                #wx.MicroSleep(500)
+                dialog.Close()
+            else:
+                dialog.Update(newvalue, message)
         
-
+        if f == frequency_range[-1]:
+            #safety turn Off
+            #dialog.Update(100, "Measure completed)
+            dialog.Destroy()
 
     #turn off RF
     SMB.write("OUTP OFF")
