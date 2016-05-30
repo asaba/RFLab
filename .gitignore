@@ -1,3 +1,16 @@
 *.class
 *.pyc
 *.pyo
+Cable_calibration_IF_20160516190559.csv
+Measure_TOTAL_20160518114427.csv
+test_cavo_2.cfg
+test_cavo.cfg
+test_spurius_02.cfg
+test_spurius_03.cfg
+test_spurius_04.cfg
+test_spurius_05.cfg
+test_spurius_graph_01.cfg
+test_spurius_graph_02.cfg
+test_spurius_graph_03.cfg
+test_spurius.cfg
+testpm5.cfg
