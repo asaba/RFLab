@@ -1,4 +1,5 @@
 eclipse.preferences.version=1
+encoding//measure_scripts/Cal100GHz.py=utf-8
 encoding//measure_scripts/CalibrazioneCavo.py=utf-8
 encoding//measure_scripts/CalibrazioneDummyCable.py=utf-8
 encoding//measure_scripts/IP1Cal.py=utf-8
