@@ -10,6 +10,19 @@ from numpy import array
 
 unit = unit_class()
 
+class frequency_range():
+    def __init__(self, r_max, r_min, r_step, r_unit):
+        self.max = r_max
+        self.min = r_min
+        self.step = r_step
+        self.unit = r_unit
+        
+class level_range():
+    def __init__(self, l_max, l_min, l_step):
+        self.max = l_max
+        self.min = l_min
+        self.step = l_step
+
 def calibrate(input_power, input_frequency, input_frequency_unit, calibration_table, calibration_function = None, calibration_function_unit= None, round_freq = False):
     #Correct input_power by calibration_table for input frequency
     #Return the tuple (calibrated_power, "CAL") if frequency in calibration table
