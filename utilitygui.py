@@ -98,9 +98,7 @@ def check_value_is_IP(value, value_text):
     except:
         value_invalid = True
     if value_invalid:
-        dlg = wx.MessageDialog(None, value_text + " invalid", 'Error "' + value_text + '"', wx.OK | wx.ICON_ERROR)
-        dlg.ShowModal()
-        return 0
+        error_message(value_text + " invalid", 'Error "' + value_text + '"')
     return 1
 
 def check_value_min_max(value, value_text, minimum=None, maximum=None):
@@ -118,10 +116,22 @@ def check_value_min_max(value, value_text, minimum=None, maximum=None):
             value_invalid = True
         
     if value_invalid:
-        dlg = wx.MessageDialog(None, value_text + " invalid", 'Error "' + value_text + '"', wx.OK | wx.ICON_ERROR)
-        dlg.ShowModal()
-        return 0
+        error_message(value_text + " invalid", 'Error "' + value_text + '"')
     return 1
+
+def check_steps_count(value_text, minimum, maximum, steps, counter):
+    
+    value_invalid = False
+    if counter >= abs(minimum - maximum)/steps:
+        value_invalid = True
+    if value_invalid:
+        error_message(value_text + " invalid", 'Error "' + value_text + '"')
+    return 1
+
+def error_message(body, header):
+    dlg = wx.MessageDialog(None, body, header, wx.OK | wx.ICON_ERROR)
+    dlg.ShowModal()
+    return 0
 
 def check_value_is_valid_file(value, value_text):
     value_invalid = False
@@ -136,9 +146,7 @@ def check_value_is_valid_file(value, value_text):
         except:
             value_invalid = True
     if value_invalid:
-        dlg = wx.MessageDialog(None, value_text + " invalid", 'Error "' + value_text + '"', wx.OK | wx.ICON_ERROR)
-        dlg.ShowModal()
-        return 0
+        error_message(value_text + " invalid", 'Error "' + value_text + '"')
     return 1
 
 def check_value_not_none(value, value_text):
@@ -148,9 +156,7 @@ def check_value_not_none(value, value_text):
     elif value == "":
         value_invalid = True
     if value_invalid:
-        dlg = wx.MessageDialog(None, value_text + " invalid", 'Error "' + value_text + '"', wx.OK | wx.ICON_ERROR)
-        dlg.ShowModal()
-        return 0
+        error_message(value_text + " invalid", 'Error "' + value_text + '"')
     return 1
     
 def resultError(parent = None):
