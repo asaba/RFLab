@@ -169,7 +169,7 @@ def return_usb_instrument(parent):
     --------------------------------------------------------------------------------------------
     |        |  label_com_port   | label_timeout       | label_baudrate  | label_search_button |
     | label  |-------------------|---------------------|-----------------|---------------------|
-    |        |  combobox_com_port| textcontrol_timeout | combobox_baud  | search_button       |
+    |        |  combobox_com_port| textcontrol_timeout | combobox_baud   | search_button       |
     --------------------------------------------------------------------------------------------
     label text is "Instrument USB"
     label_com_port text is "COM Port"
@@ -335,6 +335,10 @@ def return_min_max_step_labeled(parent, label, unit = False, single_unit = False
     if selected it'return also combobox_min, combobox_max, combobox_step, combobox_unit, button_cal or None
     """
     label = wx.StaticText(parent, id=wx.ID_ANY, label=label, size = (150,-1))
+    label_dummy_l = wx.StaticText(parent, id=wx.ID_ANY, label="", size = (150,-1))
+    Sizer_label = wx.BoxSizer(wx.VERTICAL)
+    Sizer_label.Add(label_dummy_l, 0, wx.ALL, 5)
+    Sizer_label.Add(label, 0, wx.ALL, 5)
     #min
     label_min = wx.StaticText(parent, id=wx.ID_ANY, label="Min", size = (100,-1))
     txt_min = wx.TextCtrl(parent, wx.ID_ANY)
@@ -402,12 +406,14 @@ def return_min_max_step_labeled(parent, label, unit = False, single_unit = False
     else:
         #unit
         button_cal = wx.Button(parent, 0, button_text)
-        Sizer_calc_sub = wx.BoxSizer(wx.HORIZONTAL)
+        label_dummy_b = wx.StaticText(parent, id=wx.ID_ANY, label="", size = (150,-1))
+        Sizer_calc_sub = wx.BoxSizer(wx.VERTICAL)
+        Sizer_calc_sub.Add(label_dummy_b, 0, wx.ALL, 5)
         Sizer_calc_sub.Add(button_cal, 0, wx.ALL, 5)
     
     
     Sizer   = wx.BoxSizer(wx.HORIZONTAL)
-    Sizer.Add(label, 0, wx.ALL, 5)
+    Sizer.Add(Sizer_label, 0, wx.ALL, 5)
     Sizer.Add(Sizer_min, 0, wx.ALL, 5)
     Sizer.Add(Sizer_max, 0, wx.ALL, 5)
     Sizer.Add(Sizer_step, 0, wx.ALL, 5)
