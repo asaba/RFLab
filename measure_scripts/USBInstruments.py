@@ -8,7 +8,7 @@ import serial
 import time
 
 class USBInstrument():
-    def __init__(self, comport, baudrate = 9600, timeout = 10):
+    def __init__(self, comport, baudrate = 9600, timeout = 5000):
         if comport:
             self.serialport = self.createserialport(comport, baudrate, timeout)
         else:
@@ -16,13 +16,12 @@ class USBInstrument():
     
     def createserialport(self, comport, baudrate, timeout):
         #return serialport for comunication
-        ser = serial.Serial(comport)
-        ser.setBaudrate(baudrate)
         if type(timeout) is str or type(timeout) is unicode:
-            ser.timeout = eval(timeout)
+            eval_timeout = eval(timeout)
         else:
-            ser.timeout = timeout
-        return ser
+            eval_timeout =  timeout
+        eval_timeout = eval_timeout / 1000
+        return serial.Serial(port=comport, baudrate=baudrate, timeout = eval_timeout)
     
     def openport(self):
         if not self.serialport.isOpen():
@@ -39,7 +38,7 @@ class USBInstrument():
 class USB_PM5(USBInstrument):
     #Extention to USB instrument for PM5 Power meter
     #ask to E1? command
-    def __init__(self, comport, baudrate = 9600, timeout = 10):
+    def __init__(self, comport, baudrate = 9600, timeout = 5000):
         USBInstrument.__init__(self, comport = comport, baudrate = baudrate, timeout = timeout)
 
     def write(self, command):
