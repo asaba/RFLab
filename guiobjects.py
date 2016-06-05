@@ -340,7 +340,7 @@ def return_min_max_step_labeled(parent, label, unit = False, single_unit = False
     Sizer_label.Add(label_dummy_l, 0, wx.ALL, 5)
     Sizer_label.Add(label, 0, wx.ALL, 5)
     #min
-    label_min = wx.StaticText(parent, id=wx.ID_ANY, label="Min", size = (100,-1))
+    label_min = wx.StaticText(parent, id=wx.ID_ANY, label="Min", size = (60,-1))
     txt_min = wx.TextCtrl(parent, wx.ID_ANY)
     if unit:
         combobox_min = wx.ComboBox(parent, -1, pos=(50, 170), size=(-1, -1), choices=unit_tmp.return_unit_list(), style=wx.CB_READONLY)
@@ -356,7 +356,7 @@ def return_min_max_step_labeled(parent, label, unit = False, single_unit = False
     Sizer_min.Add(label_min, 0, wx.ALL, 5)
     Sizer_min.Add(Sizer_min_sub, 0, wx.ALL, 5)
     #max
-    label_max = wx.StaticText(parent, id=wx.ID_ANY, label="Max", size = (100,-1))
+    label_max = wx.StaticText(parent, id=wx.ID_ANY, label="Max", size = (60,-1))
     txt_max = wx.TextCtrl(parent, wx.ID_ANY)
     if unit:
         combobox_max = wx.ComboBox(parent, -1, pos=(50, 170), size=(-1, -1), choices=unit_tmp.return_unit_list(), style=wx.CB_READONLY)
@@ -372,7 +372,7 @@ def return_min_max_step_labeled(parent, label, unit = False, single_unit = False
     Sizer_max.Add(label_max, 0, wx.ALL, 5)
     Sizer_max.Add(Sizer_max_sub, 0, wx.ALL, 5)
     #step
-    label_step = wx.StaticText(parent, id=wx.ID_ANY, label="Step", size = (100,-1))
+    label_step = wx.StaticText(parent, id=wx.ID_ANY, label="Step", size = (60,-1))
     txt_step = wx.TextCtrl(parent, wx.ID_ANY)
     if unit:
         combobox_step = wx.ComboBox(parent, -1, pos=(50, 170), size=(-1, -1), choices=unit_tmp.return_unit_list(), style=wx.CB_READONLY)
@@ -390,7 +390,7 @@ def return_min_max_step_labeled(parent, label, unit = False, single_unit = False
     
     if single_unit:
         #unit
-        label_unit = wx.StaticText(parent, id=wx.ID_ANY, label="Unit", size = (100,-1))
+        label_unit = wx.StaticText(parent, id=wx.ID_ANY, label="Unit", size = (60,-1))
         combobox_unit = wx.ComboBox(parent, -1, pos=(50, 170), size=(-1, -1), choices=unit_tmp.return_unit_list(), style=wx.CB_READONLY)
         Sizer_unit_sub = wx.BoxSizer(wx.HORIZONTAL)
         
@@ -406,7 +406,7 @@ def return_min_max_step_labeled(parent, label, unit = False, single_unit = False
     else:
         #unit
         button_cal = wx.Button(parent, 0, button_text)
-        label_dummy_b = wx.StaticText(parent, id=wx.ID_ANY, label="", size = (150,-1))
+        label_dummy_b = wx.StaticText(parent, id=wx.ID_ANY, label="", size = (60,-1))
         Sizer_calc_sub = wx.BoxSizer(wx.VERTICAL)
         Sizer_calc_sub.Add(label_dummy_b, 0, wx.ALL, 5)
         Sizer_calc_sub.Add(button_cal, 0, wx.ALL, 5)
