@@ -247,3 +247,16 @@ def convert_txt_to_csv(filename_txt, filename_csv, txt_separator=None):
         add_csv_row(writer_csv, row.split())
     f_csv.close()
     f.close()
+    
+    
+class generic_range():
+    def __init__(self, a_max, a_min, a_step):
+        self.max = a_max
+        self.min = a_min
+        self.step = a_step  
+
+
+class frequency_range(generic_range):
+    def __init__(self, a_max, a_min, a_step, a_unit):
+        super(generic_range, self ).__init__(self, a_max, a_min, a_step)
+        self.unit = a_unit
