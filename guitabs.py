@@ -13,7 +13,7 @@ from utilitygui import check_value_is_valid_file, check_value_min_max, browse_fi
 from measure_scripts.plotIP1graph import calculate_all_IP1, unit
 from measure_scripts.plotSpuriusCGraph import plot_spurius_graph, order_and_group_data
 from measure_scripts.csvutility import *
-from measure_scripts.graphutility import graph_axis_range, graph_types
+from measure_scripts.graphutility import Graph_Axis_Range, graph_types
 import serial.tools.list_ports
 import webbrowser
 
@@ -809,7 +809,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         #graph_x_step_auto = self.graph_x_step_auto.GetValue()
         graph_x_unit = unit.return_unit(self.graph_x_unit.GetValue()) or unit.MHz
         
-        graph_x = graph_axis_range(graph_x_max, graph_x_min, graph_x_step, graph_x_unit, graph_x_label)
+        graph_x = Graph_Axis_Range(graph_x_max, graph_x_min, graph_x_step, graph_x_unit, graph_x_label)
         
         
         graph_y_label = self.graph_y_label.GetValue()
@@ -839,7 +839,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         
         graph_y_unit = unit.return_unit(self.graph_y_unit.GetValue()) or unit.MHz
         
-        graph_y = graph_axis_range(graph_y_max, graph_y_min, graph_y_step, graph_y_unit, graph_y_label)
+        graph_y = Graph_Axis_Range(graph_y_max, graph_y_min, graph_y_step, graph_y_unit, graph_y_label)
         
         if check_steps_count("Y steps", minimum = graph_y_min, maximum = graph_y_max, steps=graph_y_step, counter = 50) == 0:
             return 0
