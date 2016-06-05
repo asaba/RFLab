@@ -122,7 +122,7 @@ def check_value_min_max(value, value_text, minimum=None, maximum=None):
 def check_steps_count(value_text, minimum, maximum, steps, counter):
     
     value_invalid = False
-    if counter >= abs(minimum - maximum)/steps:
+    if abs(minimum - maximum)/steps >= counter:
         value_invalid = True
     if value_invalid:
         error_message(value_text + " invalid", 'Error "' + value_text + '"')
