@@ -3,7 +3,7 @@ Created on 28/mag/2016
 
 @author: sabah
 '''
-from utility import frequency_range, unit_class
+from utility import Frequency_Range, unit_class
 import numpy as np
 
 
@@ -30,9 +30,9 @@ markerstyles = [None, "o", "v", "s", ]
 graph_types = {"Conversion Loss" : "LO", "Compression point" : "RF", "Harmonic Intermodulation Products" : "SP", "Spurious Distribution" : "SD"}
 
         
-class graph_axis_range(frequency_range):
+class Graph_Axis_Range(Frequency_Range):
     def __init__(self, a_max, a_min, a_step, a_unit, a_label):
-        super(frequency_range, self ).__init__(self, a_max, a_min, a_step, a_unit)
+        Frequency_Range.__init__(self, a_max, a_min, a_step, a_unit)
         self.label = a_label
         
     def set_default(self):
