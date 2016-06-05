@@ -333,7 +333,8 @@ def plot_3d_distribution(fig, data_table, x_index,
                                data_file_directory):
 
     ax = fig.add_subplot(111, projection='3d')
-    front_back_position = [x*10 for x in range(1, len(data_table)+2)] #same number of y ticks as list of value for couple n,m
+    
+    front_back_position = [x*10 for x in range(0, len(data_table))] #same number of y ticks as list of value for couple n,m
     color = ['r', 'g', 'b', 'y']
     yticklabels = [str(r[0][n_LO_index])+ ", " + str(r[0][m_RF_index]) for r in data_table]
     ax.set_yticks(front_back_position)
@@ -366,6 +367,7 @@ def plot_3d_distribution(fig, data_table, x_index,
     ax.set_zlabel(graph_z_label, **csfont_axislegend)
     fig.canvas.draw()
     ax.set_xlim3d(graph_x.min, graph_x.max)
+    ax.set_ylim3d(0, front_back_position[-1])
     zticklabels = ax.get_zticklabels()
     new_zticklabels = [str(eval(zt.get_text()) + SD_IF_Min_Level) for zt in zticklabels]
     ax.set_zticklabels(new_zticklabels, **csfont_axisticks)
