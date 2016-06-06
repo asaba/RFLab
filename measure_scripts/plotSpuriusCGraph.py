@@ -136,6 +136,7 @@ def order_and_group_data(data_file_name,
     graph_group_index = []
     x_index = power_RF_index
     y_index = power_IF_index
+    z_index = power_IF_index
     legend_index = [(power_LO_index, None, "", n_LO_index)]
     
     
@@ -171,7 +172,7 @@ def order_and_group_data(data_file_name,
         y_index = power_IF_index
         legend_index = [(power_LO_index, None, "", n_LO_index)]
     #data_table = splitSpuriusCfiletablevalue(file_table_result)
-    return splitSpuriusCfiletablevalueDict(data_file_name, graph_type, file_table_result, sort_data, group_level_01, SD_LO_Frequency = SD_LO_Frequency, SD_LO_Level = SD_LO_Level, SD_RF_Level = SD_RF_Level, SD_IF_Min_Level = SD_IF_Min_Level, savefile = savefile), data_file_directory, graph_group_index, x_index, y_index, legend_index
+    return splitSpuriusCfiletablevalueDict(data_file_name, graph_type, file_table_result, sort_data, group_level_01, SD_LO_Frequency = SD_LO_Frequency, SD_LO_Level = SD_LO_Level, SD_RF_Level = SD_RF_Level, SD_IF_Min_Level = SD_IF_Min_Level, savefile = savefile), data_file_directory, graph_group_index, x_index, y_index, z_index, legend_index
     
     
 def convert_x_y_axes(data_table, graph_x_unit, x_index, graph_y_unit, y_index):
@@ -228,21 +229,21 @@ def plot_spurius_graph(data_file_name,
                        graph_title, 
                        graph_x,
                        graph_y,
+                       graph_z,
                        SD_LO_Frequency,
                        SD_LO_Level,
                        SD_RF_Level,
-                       SD_IF_Min_Level,
                        IF_Frequency_selected = 1000):
     """
     data = dict{(n, m, Freq_LO, Level_LO, Level_RF): [Freq_unit_LO, Calib_LO, Freq_RF, Freq_unit_RF, Calib_RF, Freq_IF, Freq_unit_IF, Level_IF, Calib_IF, -(Level_RF - Level_IF)]}
     """
     
-    data_table, data_file_directory, graph_group_index, x_index, y_index, legend_index = order_and_group_data(data_file_name, 
+    data_table, data_file_directory, graph_group_index, x_index, y_index, z_index, legend_index = order_and_group_data(data_file_name, 
                        graph_type, 
                        SD_LO_Frequency = SD_LO_Frequency,
                        SD_LO_Level = SD_LO_Level,
                        SD_RF_Level = SD_RF_Level,
-                       SD_IF_Min_Level = SD_IF_Min_Level,
+                       SD_IF_Min_Level = graph_z.min,
                        IF_Frequency_selected = IF_Frequency_selected)
     
     data_table = convert_x_y_axes(data_table, graph_x.unit, x_index, graph_y.unit, y_index)
@@ -269,24 +270,26 @@ def plot_spurius_graph(data_file_name,
                            graph_group_index = graph_group_index,
                            x_index = x_index,
                            y_index = y_index,
+                           z_index = z_index,
                            legend_index = legend_index, 
                            graph_title = graph_title, 
                            graph_type = graph_type,
                            graph_x = graph_x,
                            graph_y = graph_y, 
-                           SD_IF_Min_Level = SD_IF_Min_Level,
+                           graph_z = graph_z,
                            data_file_directory = data_file_directory)
     if len(group_for_SD)>0:
         plot_spurius_C(table_value = group_for_SD,
                            graph_group_index = graph_group_index,
                            x_index = x_index,
                            y_index = y_index,
+                           z_index = z_index,
                            legend_index = legend_index, 
                            graph_title = graph_title, 
                            graph_type = graph_type,
                            graph_x = graph_x,
                            graph_y = graph_y,
-                           SD_IF_Min_Level = SD_IF_Min_Level,
+                           graph_z = graph_z,
                            data_file_directory = data_file_directory)
     return data_file_directory
 
@@ -294,12 +297,13 @@ def plot_spurius_C(table_value,
                    graph_group_index,
                    x_index,
                    y_index,
+                   z_index,
                    legend_index, 
                    graph_title, 
                    graph_type,
                    graph_x,
                    graph_y,
-                   SD_IF_Min_Level = -100,
+                   graph_z,
                    data_file_directory = ""):
     
     fig = plt.figure()
@@ -309,29 +313,31 @@ def plot_spurius_C(table_value,
                    graph_group_index = graph_group_index,
                    x_index = x_index,
                    y_index = y_index,
+                   z_index = z_index,
                    legend_index = legend_index,  
                    graph_title = graph_title, 
                    graph_type = graph_type,
                    graph_x = graph_x,
                    graph_y = graph_y, 
-                   SD_IF_Min_Level = SD_IF_Min_Level,
+                   graph_z = graph_z,
                    data_file_directory = data_file_directory)
     
     
-def plot_3d_distribution(fig, data_table, x_index,
+def plot_3d_distribution(fig, data_table, 
+                         x_index,
                                y_index,
+                               z_index,
                                legend_index, 
                                graph_title, 
                                graph_x,
                                graph_y,
-                               graph_z_label, 
-                               graph_z_min, 
-                               graph_z_max, 
-                               graph_z_step, 
-                               graph_z_unit,
-                               SD_IF_Min_Level,
+                               graph_z,
                                data_file_directory):
 
+    
+    bar_with = 5e+7 #Hz
+    bar_with_unit = unit.Hz
+    
     ax = fig.add_subplot(111, projection='3d')
     
     front_back_position = [x*10 for x in range(0, len(data_table))] #same number of y ticks as list of value for couple n,m
@@ -344,8 +350,8 @@ def plot_3d_distribution(fig, data_table, x_index,
     sort_data = [frequency_IF_index]
     for row_group in data_table:
         tmp_row_group = sorted(row_group, key=operator.itemgetter(*sort_data)) 
-        freq = [r[frequency_IF_index] for r in tmp_row_group]
-        level = [r[power_IF_index] - SD_IF_Min_Level for r in tmp_row_group]
+        freq = [unit.unit_conversion(r[frequency_IF_index], r[unit_IF_index], graph_x.unit)  for r in tmp_row_group]
+        level = [r[power_IF_index] - graph_z.min for r in tmp_row_group]
         freq_result = []
         level_result = []
         for f_index in range(len(freq)):
@@ -357,19 +363,25 @@ def plot_3d_distribution(fig, data_table, x_index,
         color_index += 1
         if color_index >= len(color):
             color_index = 0
-        ax.bar(freq_result, level_result, zs=front_back_position[fb_index], color = color[color_index], width  = 50, zdir='y', alpha=0.8)
+        ax.bar(freq_result, level_result, zs=front_back_position[fb_index], color = color[color_index], width  = unit.unit_conversion(bar_with, bar_with_unit, graph_x.unit), zdir='y', alpha=0.8)
         fb_index += 1
     
     plt.suptitle("Spuriuos Distribution", **csfont_suptitle)
     plt.title(graph_title, **csfont_title)
     ax.set_xlabel(graph_x.label, **csfont_axislegend)
     ax.set_ylabel(graph_y.label, **csfont_axislegend)
-    ax.set_zlabel(graph_z_label, **csfont_axislegend)
-    fig.canvas.draw()
+    ax.set_zlabel(graph_z.label, **csfont_axislegend)
+    
     ax.set_xlim3d(graph_x.min, graph_x.max)
+    ax.set_xticks(np.arange(graph_x.min, graph_x.max, graph_x.step))
     ax.set_ylim3d(0, front_back_position[-1])
+    new_zlimit = (graph_z.min - graph_z.min, graph_z.max - graph_z.min)
+    ax.set_zlim3d(new_zlimit)
+    zticks = np.arange(new_zlimit[0], new_zlimit[1], graph_z.step)
+    ax.set_zticks(zticks)
+    fig.canvas.draw()
     zticklabels = ax.get_zticklabels()
-    new_zticklabels = [str(eval(zt.get_text()) + SD_IF_Min_Level) for zt in zticklabels]
+    new_zticklabels = [str(eval(zt.get_text()) + graph_z.min) for zt in zticklabels]
     ax.set_zticklabels(new_zticklabels, **csfont_axisticks)
     #plt.gca().invert_zaxis()
     plt.show()
@@ -379,17 +391,13 @@ def plot_spurius_Single(fig, table_value,
                    graph_group_index,
                    x_index,
                    y_index,
+                   z_index,
                    legend_index, 
                    graph_title, 
                    graph_type,
                    graph_x,
                    graph_y,
-                   graph_z_label = "Output Power [dBm]", 
-                   graph_z_min = 0, 
-                   graph_z_max = 100, 
-                   graph_z_step = 10, 
-                   graph_z_unit = unit.MHz,
-                   SD_IF_Min_Level = -100,
+                   graph_z,
                    data_file_directory = ""):
     """
 
@@ -444,13 +452,17 @@ def plot_spurius_Single(fig, table_value,
         legend_title = "LO Power"
     elif graph_type == "SD":
         if not graph_x.label:
-            graph_x.label = 'IF Freq (MHz)'
+            graph_x.label = 'IF Freq ({unit})'.format(unit = unit.return_unit_str(table_value[0][0][x_index + 1]))
+        else:
+            graph_x.label = graph_x.label.format(unit = unit.return_unit_str(table_value[0][0][x_index + 1]))
         if not graph_y.label:
-            graph_y.label = "IF Power (dBm)"
+            graph_y.label = "Intermodulation"
+        if not graph_z.label:
+            graph_z.label = "IF Power (dBm)"
         if not graph_title:
             graph_sup_title = "Spurious Distribution"
         filter_1 = True
-        graph_title = "LO " + str(table_value[0][0][frequency_LO_index]) + unit.return_unit_str(table_value[0][0][unit_LO_index]) + " " + str(table_value[0][0][power_LO_index]) + "dBm" + " - RF " + str(table_value[0][0][power_RF_index]) + "dBm - cut " + str(SD_IF_Min_Level) + "dBm"
+        graph_title = "LO " + str(table_value[0][0][frequency_LO_index]) + unit.return_unit_str(table_value[0][0][unit_LO_index]) + " " + str(table_value[0][0][power_LO_index]) + "dBm" + " - RF " + str(table_value[0][0][power_RF_index]) + "dBm"
         legend_title = "Power LO"
         
     #split by RF_level or LO_level
@@ -469,16 +481,12 @@ def plot_spurius_Single(fig, table_value,
         plot_3d_distribution(fig, table_value,
                                x_index,
                                y_index,
+                               z_index,
                                legend_index, 
                                graph_title, 
                                graph_x,
                                graph_y,
-                               graph_z_label, 
-                               graph_z_min, 
-                               graph_z_max, 
-                               graph_z_step, 
-                               graph_z_unit,
-                               SD_IF_Min_Level,
+                               graph_z,
                                data_file_directory)
     else:
 
