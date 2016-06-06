@@ -28,7 +28,10 @@ class unit_class(object):
         self.GHz = 1e+9
         
     def return_unit_list(self):
-        return [self.return_unit_str(self.Hz), self.return_unit_str(self.KHz), self.return_unit_str(self.MHz), self.return_unit_str(self.GHz)]
+        return [self.return_unit_str(self.Hz), 
+                self.return_unit_str(self.KHz), 
+                self.return_unit_str(self.MHz), 
+                self.return_unit_str(self.GHz)]
     
     def return_unit_index_str(self, unit_str):
         if unit_str.upper() == "Hz".upper():
