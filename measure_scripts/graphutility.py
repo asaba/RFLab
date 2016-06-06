@@ -33,7 +33,12 @@ graph_types = {"Conversion Loss" : "LO", "Compression point" : "RF", "Harmonic I
 class Graph_Axis_Range(Frequency_Range):
     def __init__(self, a_max, a_min, a_step, a_unit, a_label):
         Frequency_Range.__init__(self, a_max, a_min, a_step, a_unit)
-        self.label = a_label
+        if a_label is None:
+            self.label = None
+        elif a_label == "":
+            self.label = None
+        else:
+            self.label = a_label
         
     def set_default(self):
         self.min = 100
