@@ -117,6 +117,7 @@ def check_value_min_max(value, value_text, minimum=None, maximum=None):
         
     if value_invalid:
         error_message(value_text + " invalid", 'Error "' + value_text + '"')
+        return 0
     return 1
 
 def check_steps_count(value_text, minimum, maximum, steps, counter):
