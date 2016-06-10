@@ -117,6 +117,13 @@ class unit_class(object):
             return value
         return self.unit_conversion(value, self.Hz, destination_unit)
     
+    def return_human_readable_str(self, value, initial_unit = 1):
+        if initial_unit == self.dB:
+            return str(value) + self.return_unit_str(self.dB)
+        else:
+            return str(self.unit_conversion(value, initial_unit, human_readable_frequency_unit)) + self.return_unit_str(human_readable_frequency_unit)
+        
+    
 def writelineonfilesettings(f, parameter, value):
     
     if type(value) is str or type(value) is unicode:
