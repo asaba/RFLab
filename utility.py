@@ -37,6 +37,7 @@ def buildfitsfileslist(rootpath):
 
 class unit_class(object):
     def __init__(self):
+        self.dBm = -2
         self.dB = -1
         self.Hz = 1
         self.KHz = 1000
@@ -44,14 +45,17 @@ class unit_class(object):
         self.GHz = 1e+9
         
     def return_unit_list(self):
-        return [self.return_unit_str(self.dB),
+        return [self.return_unit_str(self.dBm),
+                self.return_unit_str(self.dB),
                 self.return_unit_str(self.Hz), 
                 self.return_unit_str(self.KHz), 
                 self.return_unit_str(self.MHz), 
                 self.return_unit_str(self.GHz)]
     
     def return_unit_index_str(self, unit_str):
-        if unit_str.upper() == "dB".upper():
+        if unit_str.upper() == "dBm".upper():
+            return -2
+        elif unit_str.upper() == "dB".upper():
             return -1
         elif unit_str.upper() == "Hz".upper():
             return 0
@@ -63,23 +67,27 @@ class unit_class(object):
             return 3
     
     def return_unit_index_value(self, unit_value):
-        if unit_value == self.dB:
+        if unit_value == self.dBm:
             return 0
-        elif unit_value == self.Hz:
+        elif unit_value == self.dB:
             return 1
-        elif unit_value == self.KHz:
+        elif unit_value == self.Hz:
             return 2
-        elif unit_value == self.MHz:
+        elif unit_value == self.KHz:
             return 3
-        elif unit_value == self.GHz:
+        elif unit_value == self.MHz:
             return 4
+        elif unit_value == self.GHz:
+            return 5
     def return_unit_index(self, unit_x):
         if type(unit_x) is str:
             return self.return_unit_index_str(unit_x)
         else:
             return self.return_unit_index_value(unit_x)
     def return_unit(self, unit_str):
-        if unit_str.upper() == "dB".upper():
+        if unit_str.upper() == "dBm".upper():
+            return self.dBm
+        elif unit_str.upper() == "dB".upper():
             return self.dB
         elif unit_str.upper() == "Hz".upper():
             return self.Hz
@@ -91,7 +99,9 @@ class unit_class(object):
             return self.GHz
         
     def return_unit_str(self, unit_v):
-        if unit_v == self.dB:
+        if unit_v == self.dBm:
+            return "dBm"
+        elif unit_v == self.dB:
             return "dB"
         elif unit_v == self.Hz:
             return "Hz"
@@ -103,23 +113,23 @@ class unit_class(object):
             return "GHz"
         
     def unit_conversion(self, value, initial_unit, destination_unit):
-        if initial_unit == self.dB or destination_unit == self.dB:
+        if initial_unit < 0 or destination_unit <0:
             return value
         return value / (destination_unit/float(initial_unit))
     
     def convertion_to_base(self, value, initial_unit):
-        if initial_unit == self.dB:
+        if initial_unit < 0:
             return value
         return int(round(self.unit_conversion(value, initial_unit, self.Hz)))
     
     def convertion_from_base(self, value, destination_unit):
-        if destination_unit == self.dB:
+        if destination_unit < 0:
             return value
         return self.unit_conversion(value, self.Hz, destination_unit)
     
     def return_human_readable_str(self, value, initial_unit = 1):
-        if initial_unit == self.dB:
-            return str(value) + self.return_unit_str(self.dB)
+        if initial_unit < 0:
+            return str(value) + self.return_unit_str(initial_unit)
         else:
             return str(self.unit_conversion(value, initial_unit, human_readable_frequency_unit)) + self.return_unit_str(human_readable_frequency_unit)
         
