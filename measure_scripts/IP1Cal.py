@@ -147,7 +147,7 @@ def measure_IP1(SMB_RF = SMB_RF,
             if synthetizer_state == True:
                 f_value = str(f)
                 current_frequency = f_value + unit.return_unit_str(unit.Hz)  
-                current_frequency_human_readable = str(unit.convertion_from_base(f, human_readable_frequency_unit)) + unit.return_unit_str(human_readable_frequency_unit)  
+                current_frequency_human_readable = unit.return_human_readable_str(f)  
                 command = "FREQ " + current_frequency #Ex. FREQ 500kHz
                 SMB_RF.write(command)
                 for l in level_LO_range:

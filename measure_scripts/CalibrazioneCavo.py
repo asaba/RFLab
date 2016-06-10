@@ -140,7 +140,7 @@ def measure_calibration_cable(SMB = SMB_RF,
         #set SMB100A frequency
         f_value = str(f)
         current_frequency = f_value + unit.return_unit_str(unit.Hz) 
-        current_frequency_human_readable = str(unit.convertion_from_base(f, human_readable_frequency_unit)) + unit.return_unit_str(human_readable_frequency_unit)  
+        current_frequency_human_readable = unit.return_unit_str(f)  
         command = "FREQ " + current_frequency #Ex. FREQ 500kHz
         SMB.write(command)
         SMB.write("OUTP ON")

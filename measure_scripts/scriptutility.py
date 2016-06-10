@@ -88,7 +88,7 @@ class Frequency_Range(Generic_Range):
     def __init__(self, a_min, a_max, a_step, a_unit):
         Generic_Range.__init__(self, a_min, a_max, a_step)
         self.unit = a_unit
-        if self.unit == unit.dB:
+        if self.unit == unit.dB or self.unit == unit.dBm:
             self.based = True
         else:
             self.based = False
@@ -101,7 +101,7 @@ class Frequency_Range(Generic_Range):
             self.based = True
         
     def from_base(self):
-        if self.based and self.unit != unit.dB:
+        if self.based and self.unit != unit.dB and self.unit != unit.dBm:
             return Frequency_Range(unit.convertion_from_base(self.min, self.unit), unit.convertion_from_base(self.max, self.unit), unit.convertion_from_base(self.step, self.unit), self.unit)
         else:
             return self

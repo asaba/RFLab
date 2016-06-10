@@ -539,7 +539,7 @@ def plot_spurius_Single(fig, table_value,
             graph_sup_title = "Conversion Loss"
         else:
             graph_sup_title = graph_title
-        graph_title = "LO " + str(table_value[0][frequency_LO_index]) + unit.return_unit_str(table_value[0][unit_LO_index]) + " - RF " + str(table_value[0][power_RF_index]) + "dBm"
+        graph_title = "LO " + unit.return_human_readable_str(table_value[0][frequency_LO_index]) + " - RF " + unit.return_human_readable_str(table_value[0][power_RF_index], unit.dB)
         legend_title = "LO Power"
     elif graph_type == "RF":
         if not graph_x.label:

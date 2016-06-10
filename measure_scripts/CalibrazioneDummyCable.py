@@ -73,7 +73,7 @@ def create_calibration_cable(
     
     
     for f in frequency_range: #frequency loop
-        current_frequency_human_readable = str(unit.convertion_from_base(f, human_readable_frequency_unit)) + unit.return_unit_str(human_readable_frequency_unit)  
+        current_frequency_human_readable =  unit.return_human_readable_str(f)  
         data_now = str(datetime.datetime.now())       
         values.append([str(unit.convertion_from_base(f, frequency_output_unit)), unit.return_unit_str(frequency_output_unit), str(fixed_output_level), data_now])
 

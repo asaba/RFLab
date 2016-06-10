@@ -244,7 +244,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
         #set SMB100A frequency for LO
         f_LO_value = str(f_LO)
         current_lo_frequency = f_LO_value + unit.return_unit_str(unit.Hz)  
-        current_lo_frequency_human_readable = str(unit.convertion_from_base(f_LO, human_readable_frequency_unit)) + unit.return_unit_str(human_readable_frequency_unit)  
+        current_lo_frequency_human_readable = unit.return_human_readable_str(f_LO)  
         command = "FREQ " + current_lo_frequency #Ex. FREQ 500kHz
         SMB_LO.write(command)
         
@@ -268,7 +268,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
                     #set SMB100A frequency for RF
                     f_RF_value = str(f_RF)
                     current_rf_frequency = f_RF_value + unit.return_unit_str(unit.Hz)  
-                    current_rf_frequency_human_readable = str(unit.convertion_from_base(f_RF, human_readable_frequency_unit)) + unit.return_unit_str(human_readable_frequency_unit)  
+                    current_rf_frequency_human_readable = unit.return_human_readable_str(f_RF)  
                     command = "FREQ " + current_rf_frequency #Ex. FREQ 500kHz
                     SMB_RF.write(command)
                     

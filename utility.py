@@ -21,7 +21,7 @@ VERSION = 5.1
 
 inkscape_exec = "C:\\Program Files\\Inkscape\\inkscape.com"
 
-human_readable_frequency_unit = 1e+6 #MHz
+human_readable_frequency_unit = 1e+9 #GHz
 
 def return_now_postfix():
     return datetime.datetime.now().strftime("%Y%m%d%H%M%S")
