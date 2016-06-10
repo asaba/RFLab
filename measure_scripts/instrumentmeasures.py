@@ -32,7 +32,7 @@ def readNRP2(SAB, NRP2, misure_number, misure_delay, calibration_frequency, cali
             NRP2.write(command)
             NRP2.write("CAL:ZERO:AUTO ONCE")
             NRP2.write("*WAI")
-            NRP2.ask("CAL:ZERO:AUTO?")
+            NRP2.write("CAL:ZERO:AUTO?")
             #switch on cable
             SAB.write("SWT1 1")
             time.sleep(SAB_switch_delay) 

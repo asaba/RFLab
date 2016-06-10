@@ -11,7 +11,9 @@ import os
 from guitabs import TabPanelFSV, TabPanelPowerMeter, TabPanelSMB, TabPanelSpuriusSetup, TabPanelIP1CalcSetup, TabPanelSAB, TabPanelIP1PlotGraph
 from measure_scripts.IP1Cal import unit, SMB_RF, NRP2, SAB, measure_IP1
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument
-from utility import writelineonfilesettings, return_now_postfix
+from utility import writelineonfilesettings, return_now_postfix,\
+    Generic_Range
+from measure_scripts.scriptutility import Frequency_Range
 
 
 class NotebookDemo(wx.Notebook):
@@ -34,21 +36,11 @@ class NotebookDemo(wx.Notebook):
         self.tabPowerMeter = TabPanelPowerMeter(self)
         self.tabSAB = TabPanelSAB(self)
         self.tabIP1CalcSetting = TabPanelIP1CalcSetup(self)
-        self.tabIP1PlotGraph = TabPanelIP1PlotGraph(self)
         
         self.AddPage(self.tabRF, "Radio Frequency")
- 
-        
         self.AddPage(self.tabPowerMeter, "Power Meter")
-        
-        
         self.AddPage(self.tabSAB, "SwitchAttBox")
-        
-        
         self.AddPage(self.tabIP1CalcSetting, "Calculate IP1")
-        
-        
-        self.AddPage(self.tabIP1PlotGraph, "Graph IP1 plot")
  
 ########################################################################
 class IP1CalcFrame(wx.Frame):
@@ -110,12 +102,13 @@ class IP1CalcFrame(wx.Frame):
         self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_IP")
         self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_Port")
         self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_Timeout")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step")
+        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_min")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_max")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_step")
@@ -140,25 +133,7 @@ class IP1CalcFrame(wx.Frame):
         self.writelinesettings(filepointer, "self.notebook.tabSAB.SAB_switch02_delay")
         self.writelinesettings(filepointer, "self.notebook.tabSAB.SAB_switch03_delay")
         self.writelinesettings(filepointer, "self.notebook.tabIP1CalcSetting.result_file_name")         
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_title")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_label")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_min")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_max")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_step")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_label")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_min")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_max")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_step")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_label_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_min_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_max_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_step_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_label_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_min_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_max_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_step_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_animated")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.data_file_name")
+
     
     
     
@@ -199,30 +174,34 @@ class IP1CalcFrame(wx.Frame):
         synthetizer_state = self.notebook.tabRF.synthetizer_state.GetValue()
         
         
-        synthetizer_frequency_min_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_min_unit.GetValue())
-        if check_value_not_none(synthetizer_frequency_min_unit, "Minimum Frequency Unit") == 0:
-            return None
+        #synthetizer_frequency_min_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_min_unit.GetValue())
+        #if check_value_not_none(synthetizer_frequency_min_unit, "Minimum Frequency Unit") == 0:
+        #    return None
         synthetizer_frequency_min = self.notebook.tabRF.synthetizer_frequency_min.GetValue()
         if check_value_min_max(synthetizer_frequency_min, "Minimum Frequency", minimum = 0) == 0:
             return None
         else:
             synthetizer_frequency_min = eval(self.notebook.tabRF.synthetizer_frequency_min.GetValue())
-        synthetizer_frequency_max_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_max_unit.GetValue())
-        if check_value_not_none(synthetizer_frequency_max_unit, "Maximum Frequency Unit") == 0:
-            return None
+        #synthetizer_frequency_max_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_max_unit.GetValue())
+        #if check_value_not_none(synthetizer_frequency_max_unit, "Maximum Frequency Unit") == 0:
+        #    return None
         synthetizer_frequency_max = self.notebook.tabRF.synthetizer_frequency_max.GetValue()
         if check_value_min_max(synthetizer_frequency_max, "Maximum Frequency", minimum = 0) == 0:
             return None
         else:
             synthetizer_frequency_max = eval(self.notebook.tabRF.synthetizer_frequency_max.GetValue())
-        synthetizer_frequency_step_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_step_unit.GetValue())
-        if check_value_not_none(synthetizer_frequency_step_unit, "Frequency Step Unit") == 0:
-            return None
+        #synthetizer_frequency_step_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_step_unit.GetValue())
+        #if check_value_not_none(synthetizer_frequency_step_unit, "Frequency Step Unit") == 0:
+        #    return None
         synthetizer_frequency_step = self.notebook.tabRF.synthetizer_frequency_step.GetValue()
         if check_value_min_max(synthetizer_frequency_step, "Frequency Step") == 0:
             return None
         else:
             synthetizer_frequency_step = eval(self.notebook.tabRF.synthetizer_frequency_step.GetValue())
+        synthetizer_frequency_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_unit.GetValue())
+        if check_value_not_none(synthetizer_frequency_unit, "Frequency Unit") == 0:
+            return None
+        
         
         try:
             synthetizer_level_min = eval(self.notebook.tabRF.synthetizer_level_min.GetValue())
@@ -350,10 +329,32 @@ class IP1CalcFrame(wx.Frame):
             dlg.ShowModal()
             return 0
         
+        synthetizer_frequency = Frequency_Range(synthetizer_frequency_min, synthetizer_frequency_max, synthetizer_frequency_step, synthetizer_frequency_unit)
+        synthetizer_frequency.to_base()
+        synthetizer_level = Generic_Range(synthetizer_level_min, synthetizer_level_max, synthetizer_level_step)
+        SAB_attenuation = Generic_Range(SAB_attenuation_min, SAB_attenuation_max, SAB_attenuation_step)
         dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
                 style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME)
         
-        measure_IP1(SMB_RF, NRP2, SAB, synthetizer_state, synthetizer_frequency_min_unit, synthetizer_frequency_min, synthetizer_frequency_max_unit, synthetizer_frequency_max, synthetizer_frequency_step_unit, synthetizer_frequency_step, synthetizer_level_fixed, synthetizer_level_min, synthetizer_level_max, synthetizer_level_step, power_meter_make_zero, power_meter_make_zero_delay, power_meter_misure_number, power_meter_misure_delay, SAB_state, SAB_attenuation_min, SAB_attenuation_max, SAB_attenuation_step, SAB_attenuation_delay, SAB_switch01_delay, SAB_switch02_delay, calibration_cable_file_name, result_file_name, createprogressdialog = dialog)
+        measure_IP1(SMB_RF, 
+                    NRP2, 
+                    SAB, 
+                    synthetizer_state, 
+                    synthetizer_frequency,
+                    synthetizer_level_fixed, 
+                    synthetizer_level,
+                    power_meter_make_zero, 
+                    power_meter_make_zero_delay, 
+                    power_meter_misure_number, 
+                    power_meter_misure_delay, 
+                    SAB_state, 
+                    SAB_attenuation, 
+                    SAB_attenuation_delay, 
+                    SAB_switch01_delay, 
+                    SAB_switch02_delay, 
+                    calibration_cable_file_name, 
+                    result_file_name, 
+                    createprogressdialog = dialog)
         
         dialog.Destroy()
         filesettingname = result_file_name + "_calcable_" + return_now_postfix() + ".cfg"

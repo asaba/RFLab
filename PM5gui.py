@@ -12,7 +12,9 @@ from guitabs import TabPanelSMB, TabPanelPM5Setup, TabPanelPM5
 from measure_scripts.Cal100GHz import unit, measure_100GHz_cal, SMB_RF, PM5
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument,\
     create_USB_instrument
-from utility import writelineonfilesettings, return_now_postfix
+from utility import writelineonfilesettings, return_now_postfix,\
+    Generic_Range
+from measure_scripts.scriptutility import Frequency_Range
 
 
 
@@ -107,12 +109,13 @@ class CalPM5Frame(wx.Frame):
         self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_IP")
         self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_Port")
         self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_Timeout")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step")
+        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_min")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_max")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_step")
@@ -168,30 +171,33 @@ class CalPM5Frame(wx.Frame):
 
         syntetizer_instrType = self.notebook.tabRF.combobox_instrtype.GetValue()
         
-        synthetizer_frequency_min_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_min_unit.GetValue())
-        if check_value_not_none(synthetizer_frequency_min_unit, "Minimum Frequency Unit") == 0:
-            return None
+        #synthetizer_frequency_min_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_min_unit.GetValue())
+        #if check_value_not_none(synthetizer_frequency_min_unit, "Minimum Frequency Unit") == 0:
+        #    return None
         synthetizer_frequency_min = self.notebook.tabRF.synthetizer_frequency_min.GetValue()
         if check_value_min_max(synthetizer_frequency_min, "Minimum Frequency", minimum = 0) == 0:
             return None
         else:
             synthetizer_frequency_min = eval(self.notebook.tabRF.synthetizer_frequency_min.GetValue())
-        synthetizer_frequency_max_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_max_unit.GetValue())
-        if check_value_not_none(synthetizer_frequency_max_unit, "Maximum Frequency Unit") == 0:
-            return None
+        #synthetizer_frequency_max_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_max_unit.GetValue())
+        #if check_value_not_none(synthetizer_frequency_max_unit, "Maximum Frequency Unit") == 0:
+        #    return None
         synthetizer_frequency_max = self.notebook.tabRF.synthetizer_frequency_max.GetValue()
         if check_value_min_max(synthetizer_frequency_max, "Maximum Frequency", minimum = 0) == 0:
             return None
         else:
             synthetizer_frequency_max = eval(self.notebook.tabRF.synthetizer_frequency_max.GetValue())
-        synthetizer_frequency_step_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_step_unit.GetValue())
-        if check_value_not_none(synthetizer_frequency_step_unit, "Frequency Step Unit") == 0:
-            return None
+        #synthetizer_frequency_step_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_step_unit.GetValue())
+        #if check_value_not_none(synthetizer_frequency_step_unit, "Frequency Step Unit") == 0:
+        #    return None
         synthetizer_frequency_step = self.notebook.tabRF.synthetizer_frequency_step.GetValue()
         if check_value_min_max(synthetizer_frequency_step, "Frequency Step", minimum = 0) == 0:
             return None
         else:
             synthetizer_frequency_step = eval(self.notebook.tabRF.synthetizer_frequency_step.GetValue())
+        synthetizer_frequency_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_unit.GetValue())
+        if check_value_not_none(synthetizer_frequency_unit, "Frequency Unit") == 0:
+            return None
         
         try:
             synthetizer_level_min = eval(self.notebook.tabRF.synthetizer_level_min.GetValue())
@@ -260,11 +266,22 @@ class CalPM5Frame(wx.Frame):
             #dlg.ShowModal()
             #return 0
         
+        synthetizer_frequency = Frequency_Range(synthetizer_frequency_min, synthetizer_frequency_max, synthetizer_frequency_step, synthetizer_frequency_unit)
+        synthetizer_frequency.to_base()
+        synthetizer_level = Generic_Range(synthetizer_level_min, synthetizer_level_max, synthetizer_level_step)
         
         dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
                 style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME)
         #dialog =None
-        measure_100GHz_cal(SMB_LO, PM5, synthetizer_frequency_min_unit, synthetizer_frequency_min, synthetizer_frequency_max_unit, synthetizer_frequency_max, synthetizer_frequency_step_unit, synthetizer_frequency_step, synthetizer_level_min, synthetizer_level_max, synthetizer_level_step, calibration_file_LO, pm5_misure_number, pm5_misure_delay, result_file_name, createprogressdialog = dialog)
+        measure_100GHz_cal(SMB_LO, 
+                           PM5, 
+                           synthetizer_frequency, 
+                           synthetizer_level, 
+                           calibration_file_LO, 
+                           pm5_misure_number, 
+                           pm5_misure_delay, 
+                           result_file_name, 
+                           createprogressdialog = dialog)
 
         dialog.Destroy()
         filesettingname = result_file_name + "_calcable_" + return_now_postfix() + ".cfg"

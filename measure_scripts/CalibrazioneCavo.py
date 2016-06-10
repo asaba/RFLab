@@ -14,16 +14,18 @@ import numpy as np
 import time
 import datetime
 #from utility_v02 import save_data, save_settings
-from utility import save_data, save_settings, create_csv, unit_class, return_now_postfix
+from utility import save_data, save_settings, create_csv, unit_class, return_now_postfix, human_readable_frequency_unit
 import pyvisa
 #from utility import unit_class_my
 
 from debug import FSV_class, SMB_class, SAB_class, NRP2_class
 from instrumentmeasures import readNRP2
+import utility
+from scriptutility import Frequency_Range
 
 
 if "SAB" not in globals():
-    print("SAB not defined")
+    #print("SAB not defined")
     SAB = SAB_class()  
     SAB_delay = 0
 else:
@@ -34,14 +36,14 @@ else:
 #create dummy class and objects for debugging
 if "SMB_LO" not in globals() or "SMB_RF" not in globals():
 
-    print("SMB_LO or SMB_RF not defined")
+    #print("SMB_LO or SMB_RF not defined")
     SMB_LO = SMB_class()
     SMB_RF = SMB_class()
     
 
 if "NRP2" not in globals():
 
-    print("NRP2 not defined")
+    #print("NRP2 not defined")
     NRP2 = NRP2_class()
     NRP2_delay = 0
 else:
@@ -49,7 +51,7 @@ else:
 
 if "FSV" not in globals():
 
-    print("FSV not defined")
+    #print("FSV not defined")
     FSV = FSV_class()  
     FSV_delay = 0
 else:
@@ -65,12 +67,16 @@ unit = unit_class()
 #imposta i valori del sintetizzatore
 #0 dbm per la potenza fissa
 synthetizer_fix_power = 0 #dBm
-synthetizer_frequency_min_unit = unit.MHz
-synthetizer_frequency_min = 4600
-synthetizer_frequency_max_unit = unit.MHz
-synthetizer_frequency_max = 4700
-synthetizer_frequency_step_unit = unit.MHz
-synthetizer_frequency_step = 100
+#synthetizer_frequency_min_unit = unit.MHz
+#synthetizer_frequency_min = 4600
+#synthetizer_frequency_max_unit = unit.MHz
+#synthetizer_frequency_max = 4700
+#synthetizer_frequency_step_unit = unit.MHz
+#synthetizer_frequency_step = 100
+#synthetizer_frequency_unit = unit.MHz
+synthetizer_frequency = Frequency_Range(4600, 4700, 100, unit.MHz)
+synthetizer_frequency.to_base()
+
 
 power_meter_make_zero = "ON"
 power_meter_make_zero_delay = 10
@@ -88,12 +94,7 @@ result_file_name = "C:\\Users\\Labele\\Desktop\\Spurius\\LO_cal"
 def measure_calibration_cable(SMB = SMB_RF,
                     NRP2 = NRP2,
                     SAB = SAB,
-                    synthetizer_frequency_min_unit = synthetizer_frequency_min_unit,
-                    synthetizer_frequency_min = synthetizer_frequency_min,
-                    synthetizer_frequency_max_unit = synthetizer_frequency_max_unit,
-                    synthetizer_frequency_max = synthetizer_frequency_max,
-                    synthetizer_frequency_step_unit = synthetizer_frequency_step_unit,
-                    synthetizer_frequency_step = synthetizer_frequency_step,
+                    synthetizer_frequency = synthetizer_frequency,
                     synthetizer_fix_power = synthetizer_fix_power, #dBm
                     power_meter_make_zero = power_meter_make_zero,
                     power_meter_make_zero_delay = power_meter_make_zero_delay,
@@ -125,11 +126,11 @@ def measure_calibration_cable(SMB = SMB_RF,
     command = "POW " + str(synthetizer_fix_power)
     SMB.write(command)
     
-    synthetizer_frequency_min = unit.unit_conversion(synthetizer_frequency_min, synthetizer_frequency_min_unit, synthetizer_frequency_min_unit)
-    synthetizer_frequency_max = unit.unit_conversion(synthetizer_frequency_max, synthetizer_frequency_max_unit, synthetizer_frequency_min_unit)
-    synthetizer_frequency_step = unit.unit_conversion(synthetizer_frequency_step, synthetizer_frequency_step_unit, synthetizer_frequency_min_unit)
+    #synthetizer_frequency_min = unit.convertion_to_base(synthetizer_frequency_min, synthetizer_frequency_unit)
+    #synthetizer_frequency_max = unit.convertion_to_base(synthetizer_frequency_max, synthetizer_frequency_unit)
+    #synthetizer_frequency_step = unit.convertion_to_base(synthetizer_frequency_step, synthetizer_frequency_unit)
     
-    frequency_range = np.arange(synthetizer_frequency_min, synthetizer_frequency_max + synthetizer_frequency_step, synthetizer_frequency_step)
+    frequency_range = synthetizer_frequency.return_range()
 
     maxcount = len(frequency_range)
     count = 0
@@ -138,30 +139,14 @@ def measure_calibration_cable(SMB = SMB_RF,
     for f in frequency_range: #frequency loop
         #set SMB100A frequency
         f_value = str(f)
-        current_frequency = f_value + unit.return_unit_str(synthetizer_frequency_min_unit) 
+        current_frequency = f_value + unit.return_unit_str(unit.Hz) 
+        current_frequency_human_readable = str(unit.convertion_from_base(f, human_readable_frequency_unit)) + unit.return_unit_str(human_readable_frequency_unit)  
         command = "FREQ " + current_frequency #Ex. FREQ 500kHz
         SMB.write(command)
-        
-        ##make zero, switch on load
-        #command="SENS1:FREQ:FIX " +  current_frequency #Ex. FREQ 500kHz
-        ##print(command)
-        #NRP2.write(command)
-        #SAB.write("SWT1 0")
-        #time.sleep(SAB_switch_01_delay)
-        #NRP2.write("CAL:ZERO:AUTO ONCE")
-        ##NRP2.ask("CAL:ZERO:AUTO?")
-        #time.sleep(power_meter_make_zero_delay)
-        ##NRP2.write("*WAI")
-        ##NRP2.ask("CAL:ZERO:AUTO?")
-        
-        ##switch on cable
-        #SAB.write("SWT1 1")
-        #time.sleep(SAB_switch_01_delay) 
-        ##turn on RF
         SMB.write("OUTP ON")
         time.sleep(2) 
         data_now = str(datetime.datetime.now())       
-        values.append([f_value, unit.return_unit_str(synthetizer_frequency_min_unit)] + readNRP2(SAB, NRP2, power_meter_misure_number, power_meter_misure_delay, f, synthetizer_frequency_min_unit, SAB_switch_01_delay, make_zero = True) + [data_now])
+        values.append([f_value, unit.return_unit_str(unit.Hz)] + readNRP2(SAB, NRP2, power_meter_misure_number, power_meter_misure_delay, f, unit.Hz, SAB_switch_01_delay, make_zero = True) + [data_now])
         #turn off RF
         SMB.write("OUTP OFF")
         
@@ -170,7 +155,7 @@ def measure_calibration_cable(SMB = SMB_RF,
         if not createprogressdialog is None:
             import wx
             wx.MicroSleep(500)
-            message = "{lo_freq}".format(lo_freq = current_frequency)
+            message = "{lo_freq}".format(lo_freq = current_frequency_human_readable)
             newvalue = int(float(count)/maxcount * 100)
             if newvalue >= 100:
                 createprogressdialog = False

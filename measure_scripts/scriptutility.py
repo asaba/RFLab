@@ -4,24 +4,11 @@ Created on 07/mag/2016
 @author: sabah
 '''
 
-from utility import unit_class, csv
+from utility import unit_class, csv, Generic_Range
 from scipy.interpolate import UnivariateSpline
-from numpy import array
+from numpy import array, arange
 
 unit = unit_class()
-
-class frequency_range():
-    def __init__(self, r_max, r_min, r_step, r_unit):
-        self.max = r_max
-        self.min = r_min
-        self.step = r_step
-        self.unit = r_unit
-        
-class level_range():
-    def __init__(self, l_max, l_min, l_step):
-        self.max = l_max
-        self.min = l_min
-        self.step = l_step
 
 def calibrate(input_power, input_frequency, input_frequency_unit, calibration_table, calibration_function = None, calibration_function_unit= None, round_freq = False):
     #Correct input_power by calibration_table for input frequency
@@ -84,15 +71,37 @@ def readcalibrationfile(filename):
     
 def calibrationfilefunction(calibrationresult):
     #return the spline function for calibration of cable
-    #return None, unit.MHz
+    #return None, unit.Hz
     if calibrationresult is []:
-        return None, unit.MHz
+        return None, unit.Hz
     x_curve = []
     y_curve = []
     #if len()
     calibration_unit = unit.return_unit(calibrationresult[0][1])  
     for row in calibrationresult:
-        x_curve.append(eval(row[0].replace(",", ".")))
+        x_curve.append(unit.convertion_to_base(eval(row[0].replace(",", ".")), calibration_unit))
         y_curve.append(eval(row[2].replace(",", ".")))
     
-    return UnivariateSpline(array(x_curve), array(y_curve), s=0), calibration_unit
+    return UnivariateSpline(array(x_curve), array(y_curve), s=0), unit.Hz
+
+class Frequency_Range(Generic_Range):
+    def __init__(self, a_min, a_max, a_step, a_unit):
+        Generic_Range.__init__(self, a_min, a_max, a_step)
+        self.unit = a_unit
+        if self.unit == unit.dB:
+            self.based = True
+        else:
+            self.based = False
+        
+    def to_base(self):
+        if not self.based:
+            self.max = unit.convertion_to_base(self.max, self.unit)
+            self.min = unit.convertion_to_base(self.min, self.unit)
+            self.step = unit.convertion_to_base(self.step, self.unit)
+            self.based = True
+        
+    def from_base(self):
+        if self.based and self.unit != unit.dB:
+            return Frequency_Range(unit.convertion_from_base(self.min, self.unit), unit.convertion_from_base(self.max, self.unit), unit.convertion_from_base(self.step, self.unit), self.unit)
+        else:
+            return self

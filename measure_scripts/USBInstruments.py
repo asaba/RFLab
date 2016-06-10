@@ -46,7 +46,7 @@ class USB_PM5(USBInstrument):
             try:
                 self.serialport.openport()
             except:
-                print("write: Error Opening Port")
+                pass
             #a = self.serialport.IsOpen()
             #if a == False:
             #    self.serialport.openport()
@@ -55,12 +55,24 @@ class USB_PM5(USBInstrument):
                 self.write_hr(38, 1, 2, 37)
             except:
                 pass
-    
+        elif command == "?VC":
+            self.write_3(b"?", b"V", b"C", chr(0), chr(0), chr(0), chr(0))
+        elif command == "?D1":
+            self.write_3(b"?", b"D", b"1", chr(0), chr(0), chr(0), chr(0))
     def read(self):
         #time.sleep(1)
         try:
-            line = self.serialport.read(14)
-            return line[1:]
+            line = self.serialport.read(6)
+            if ord(line[0]) == 171:
+                line = line + self.serialport.read(14 -6)
+                print("Comunication Error 171 (0xAB)")
+                return "0"
+            elif ord(line[0]) == 85:
+                line = line + self.serialport.read(14 -6)
+                return line[1:]
+            else:
+                return line
+            
         except:
             print("read: Error reading from serial")
             return "0"
@@ -69,6 +81,7 @@ class USB_PM5(USBInstrument):
         self.write(command)
         time.sleep(1)
         result = self.read()
+        self.closeport()
         return result
     
     def write_bytes(self, *args):

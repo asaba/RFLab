@@ -13,28 +13,47 @@ Created on 10/ott/2015
 
 
 import csv
+import os
 import datetime
+from numpy import arange
 
-VERSION = 4.0
+VERSION = 5.1
+
+inkscape_exec = "C:\\Program Files\\Inkscape\\inkscape.com"
+
+human_readable_frequency_unit = 1e+6 #MHz
 
 def return_now_postfix():
     return datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
+def buildfitsfileslist(rootpath):
+    result = []
+    for root, dirs, files in os.walk(rootpath):
+        for name in files:
+            if name[-4:] == ".svg":
+                result.append(os.path.join(root, name))
+    return result
+
+
 class unit_class(object):
     def __init__(self):
+        self.dB = -1
         self.Hz = 1
         self.KHz = 1000
         self.MHz = 1e+6
         self.GHz = 1e+9
         
     def return_unit_list(self):
-        return [self.return_unit_str(self.Hz), 
+        return [self.return_unit_str(self.dB),
+                self.return_unit_str(self.Hz), 
                 self.return_unit_str(self.KHz), 
                 self.return_unit_str(self.MHz), 
                 self.return_unit_str(self.GHz)]
     
     def return_unit_index_str(self, unit_str):
-        if unit_str.upper() == "Hz".upper():
+        if unit_str.upper() == "dB".upper():
+            return -1
+        elif unit_str.upper() == "Hz".upper():
             return 0
         elif unit_str.upper() == "KHz".upper():
             return 1
@@ -44,21 +63,25 @@ class unit_class(object):
             return 3
     
     def return_unit_index_value(self, unit_value):
-        if unit_value == self.Hz:
+        if unit_value == self.dB:
             return 0
-        elif unit_value == self.KHz:
+        elif unit_value == self.Hz:
             return 1
-        elif unit_value == self.MHz:
+        elif unit_value == self.KHz:
             return 2
-        elif unit_value == self.GHz:
+        elif unit_value == self.MHz:
             return 3
+        elif unit_value == self.GHz:
+            return 4
     def return_unit_index(self, unit_x):
         if type(unit_x) is str:
             return self.return_unit_index_str(unit_x)
         else:
             return self.return_unit_index_value(unit_x)
     def return_unit(self, unit_str):
-        if unit_str.upper() == "Hz".upper():
+        if unit_str.upper() == "dB".upper():
+            return self.dB
+        elif unit_str.upper() == "Hz".upper():
             return self.Hz
         elif unit_str.upper() == "KHz".upper():
             return self.KHz
@@ -68,7 +91,9 @@ class unit_class(object):
             return self.GHz
         
     def return_unit_str(self, unit_v):
-        if unit_v == self.Hz:
+        if unit_v == self.dB:
+            return "dB"
+        elif unit_v == self.Hz:
             return "Hz"
         elif unit_v == self.KHz:
             return "KHz"
@@ -78,7 +103,19 @@ class unit_class(object):
             return "GHz"
         
     def unit_conversion(self, value, initial_unit, destination_unit):
-        return value / (destination_unit/initial_unit)
+        if initial_unit == self.dB or destination_unit == self.dB:
+            return value
+        return value / (destination_unit/float(initial_unit))
+    
+    def convertion_to_base(self, value, initial_unit):
+        if initial_unit == self.dB:
+            return value
+        return int(round(self.unit_conversion(value, initial_unit, self.Hz)))
+    
+    def convertion_from_base(self, value, destination_unit):
+        if destination_unit == self.dB:
+            return value
+        return self.unit_conversion(value, self.Hz, destination_unit)
     
 def writelineonfilesettings(f, parameter, value):
     
@@ -253,13 +290,21 @@ def convert_txt_to_csv(filename_txt, filename_csv, txt_separator=None):
     
     
 class Generic_Range(object):
-    def __init__(self, a_max, a_min, a_step):
+    def __init__(self, a_min, a_max, a_step):
         self.max = a_max
         self.min = a_min
         self.step = a_step  
+    
+    def return_arange(self, step_correction=True):
+        if step_correction:
+            return arange(self.min, self.max + self.step, self.step)
+        else:
+            return arange(self.min, self.max, self.step)
+    
+    def return_range(self, step_correction=True):
+        if step_correction:
+            return range(self.min, self.max + self.step, self.step)
+        else:
+            return range(self.min, self.max, self.step)
 
 
-class Frequency_Range(Generic_Range):
-    def __init__(self, a_max, a_min, a_step, a_unit):
-        Generic_Range.__init__(self, a_max, a_min, a_step)
-        self.unit = a_unit

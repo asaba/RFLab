@@ -19,7 +19,7 @@ unit = unit_class()
 csfont = {'fontname':'Times New Roman'}
 
 if "TSC" not in globals():
-    print("TSC not defined")
+    #print("TSC not defined")
     TSC = TSC_class()  
     TSC_delay = 0
 else:

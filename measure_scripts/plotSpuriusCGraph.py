@@ -13,6 +13,8 @@ Created on 08/mag/2016
 #Harmonic 1000MHz (LO = 5000MHz; RF = 3000MHz)
 
 
+import subprocess
+import time
 import csv
 import numpy as np
 from scipy.interpolate import UnivariateSpline
@@ -29,7 +31,9 @@ from utility import create_csv, create_csv, unit_class, return_now_postfix
 import os.path
 from csvutility import frequency_LO_index, unit_LO_index, power_LO_index, is_LO_calibrated_index, frequency_RF_index, unit_RF_index, power_RF_index, is_RF_calibrated_index, frequency_IF_index, unit_IF_index, power_IF_index, is_IF_calibrated_index, n_LO_index, m_RF_index, conversion_loss, csv_file_header
 from measure_scripts.csvutility import frequency_IF_index, frequency_LO_index
-from graphutility import styles, linecolors, markerstyles, csfont_axislegend, csfont_axisticks, csfont_legendlines, csfont_legendtitle, csfont_suptitle, csfont_title
+from graphutility import styles, linecolors, markerstyles, csfont_axislegend, csfont_axisticks, csfont_legendlines, csfont_legendtitle, csfont_suptitle, csfont_title, styles_generic_XY
+from measure_scripts.graphutility import graph_types, generic_graph_types
+from plotXYgraph import plot_XY_Single
 
 unit = unit_class()
 
@@ -37,7 +41,32 @@ unit = unit_class()
 final = []
 final2 = []
 
-
+def openGenericTxtfile(filename, skip_first_row = 0):
+    #open the output file and return the table of value without header
+    #the table format is: [[value, value, ... value], [value, value, ... value], ... , [value, value, ... value]]
+    #return table_of_values, uniform_unit, output_path_file
+    #return empty table if error
+    result = []
+    try:
+        with open(filename, 'r') as txtfile:
+            for row in txtfile.readlines():
+                result.append(row.split())
+        #remove separator and header take unit value
+        result_eval = []
+        row_skiped_len = len(result[skip_first_row])
+        first_column = result[0][1]
+        for row in result[skip_first_row:]:
+            #uniform unit and convert string to value
+            if len(row) == row_skiped_len:
+                if row[0] == "freq":
+                    #new series
+                    first_column = row[1]
+                else:
+                    result_eval.append([first_column] + [eval(token.replace(",", ".")) for token in row])
+        
+        return result_eval, unit.Hz, os.path.dirname(filename)
+    except:
+        return [], unit.Hz, None
 
 
 def openSpuriusfile(filename):
@@ -56,24 +85,24 @@ def openSpuriusfile(filename):
         for row in result[2:]:
             #uniform unit and convert string to value
             
-            result_eval.append([eval(row[frequency_LO_index].replace(",", ".")),
-                                unit.return_unit(row[unit_LO_index]),
+            result_eval.append([unit.convertion_to_base(eval(row[frequency_LO_index].replace(",", ".")), unit.return_unit(row[unit_LO_index])),
+                                unit.Hz,
                                 eval(row[power_LO_index].replace(",", ".")),
                                 row[is_LO_calibrated_index],
-                                unit.unit_conversion(eval(row[frequency_RF_index].replace(",", ".")), unit.return_unit(row[unit_RF_index]), unit.return_unit(row[unit_LO_index])),
-                                unit.return_unit(row[unit_LO_index]),
+                                unit.convertion_to_base(eval(row[frequency_RF_index].replace(",", ".")), unit.return_unit(row[unit_RF_index])),
+                                unit.Hz,
                                 eval(row[power_RF_index].replace(",", ".")),
                                 row[is_RF_calibrated_index],
-                                round(unit.unit_conversion(eval(row[frequency_IF_index].replace(",", ".")), unit.return_unit(row[unit_IF_index]), unit.return_unit(row[unit_LO_index])), 0),
-                                unit.return_unit(row[unit_LO_index]),
+                                unit.convertion_to_base(eval(row[frequency_IF_index].replace(",", ".")), unit.return_unit(row[unit_IF_index])),
+                                unit.Hz,
                                 eval(row[power_IF_index].replace(",", ".")),
                                 row[is_IF_calibrated_index],
                                 eval(row[n_LO_index].replace(",", ".")),
                                 eval(row[m_RF_index].replace(",", "."))])
         
-        return result_eval, unit.return_unit(result[1][1]), os.path.dirname(filename)
+        return result_eval, unit.Hz, os.path.dirname(filename)
     except:
-        return [], unit.MHz, None
+        return [], unit.Hz, None
 
 def splitSpuriusCfiletablevalueDict(data_file_name, graph_type, table_value, sort_data, group_level_01, SD_LO_Frequency, SD_LO_Level, SD_RF_Level, SD_IF_Min_Level, savefile = True):
     """
@@ -89,8 +118,11 @@ def splitSpuriusCfiletablevalueDict(data_file_name, graph_type, table_value, sor
     
     #add columnd -(power_RF - power_IF)
     table_result = []
-    for row in table_value:
-        table_result.append(row + [-(row[power_RF_index] - row[power_IF_index])])
+    if graph_type in graph_types.values():
+        for row in table_value:
+            table_result.append(row + [-(row[power_RF_index] - row[power_IF_index])])
+    elif graph_type in generic_graph_types.values():
+        table_result = table_value
     
     if savefile:
         filepointer = open(data_file_name.split(".")[0] + "_" + graph_type + "_" + return_now_postfix() + ".csv", "wb")
@@ -102,13 +134,22 @@ def splitSpuriusCfiletablevalueDict(data_file_name, graph_type, table_value, sor
     #last_tupla = (table_result[0][n_LO_index], table_result[0][m_RF_index], table_result[0][frequency_LO_index], table_result[0][power_LO_index])
     for row in table_result[1:]:
         if graph_type == "SD" and row[power_LO_index] == SD_LO_Level and row[power_RF_index] == SD_RF_Level and row[power_IF_index]>SD_IF_Min_Level:
-            if row[frequency_LO_index] == unit.unit_conversion(SD_LO_Frequency, unit.MHz, row[unit_LO_index]):
-                current_tupla = tuple([row[index] for index in group_level_01])
-                if last_tupla == current_tupla:
-                    group_result[-1].append(row[:])
-                else:
-                    last_tupla = current_tupla
-                    group_result.append([row[:]])
+            if row[frequency_LO_index] == SD_LO_Frequency:
+
+                    current_tupla = tuple([row[index] for index in group_level_01])
+                    if last_tupla == current_tupla:
+                        group_result[-1].append(row[:])
+                    else:
+                        last_tupla = current_tupla
+                        group_result.append([row[:]])
+        elif graph_type == "GG":
+            current_tupla = tuple([row[index] for index in group_level_01])
+            if last_tupla == current_tupla:
+                group_result[-1].append(row[:])
+            else:
+                last_tupla = current_tupla
+                group_result.append([row[:]])
+            #group_result[-1].append(row[:])
         elif graph_type in ["LO", "RF", "SP"]:
             current_tupla = tuple([row[index] for index in group_level_01])
             if last_tupla == current_tupla:
@@ -130,7 +171,11 @@ def order_and_group_data(data_file_name,
     """
     data = dict{(n, m, Freq_LO, Level_LO, Level_RF): [Freq_unit_LO, Calib_LO, Freq_RF, Freq_unit_RF, Calib_RF, Freq_IF, Freq_unit_IF, Level_IF, Calib_IF, -(Level_RF - Level_IF)]}
     """
-    file_table_result, unit_value, data_file_directory = openSpuriusfile(data_file_name)
+    if graph_type in graph_types.values():
+        file_table_result, unit_value, data_file_directory = openSpuriusfile(data_file_name)
+    elif graph_type in generic_graph_types.values():
+        file_table_result, unit_value, data_file_directory = openGenericTxtfile(data_file_name, skip_first_row = 1)
+        
     sort_data = []
     group_level_01 = []
     graph_group_index = []
@@ -149,32 +194,57 @@ def order_and_group_data(data_file_name,
         graph_group_index = [power_LO_index]
         x_index = frequency_IF_index
         y_index = conversion_loss
-        legend_index = [(power_LO_index, None, "", n_LO_index)]
+        legend_index = [(power_LO_index, unit.dB, "", n_LO_index)]
+    if graph_type == "GG":
+        #sort_data: sort_data[-1] is the x axes
+        sort_data = [0, 1]
+        #a graph for each tupla
+        group_level_01 = []
+        #a row for each tupla
+        graph_group_index = [0]
+        x_index = 1
+        y_index = 2
+        legend_index = [(0, -1, "", 0)]
     elif graph_type == "RF":
         sort_data = [n_LO_index, m_RF_index, frequency_LO_index, frequency_RF_index,  power_LO_index, power_RF_index]
         group_level_01 = [n_LO_index, m_RF_index, frequency_LO_index, frequency_RF_index]
         graph_group_index = [power_LO_index]
         x_index = power_RF_index
         y_index = power_IF_index
-        legend_index = [(power_LO_index, None, "", n_LO_index)]
+        legend_index = [(power_LO_index, unit.dB, "", n_LO_index)]
     elif graph_type == "SP":
-        sort_data = [frequency_IF_index, frequency_LO_index, frequency_RF_index,  power_LO_index, power_RF_index]
+        sort_data = [frequency_IF_index, frequency_LO_index, frequency_RF_index,  power_LO_index, power_RF_index] #, n_LO_index, m_RF_index]
         group_level_01 = [frequency_IF_index, frequency_LO_index, frequency_RF_index]
         graph_group_index = [power_LO_index]
         x_index = power_RF_index
         y_index = power_IF_index
-        legend_index = [(power_LO_index, None, "", n_LO_index)]
+        legend_index = [(power_LO_index, unit.dB, "", n_LO_index)]
     elif graph_type == "SD":
         sort_data = [n_LO_index, m_RF_index, power_LO_index, power_RF_index, power_IF_index]
         group_level_01 = [n_LO_index, m_RF_index, power_LO_index, power_RF_index]
         graph_group_index = [power_LO_index]
         x_index = frequency_IF_index
         y_index = power_IF_index
-        legend_index = [(power_LO_index, None, "", n_LO_index)]
+        legend_index = [(power_LO_index, unit.dB, "", n_LO_index)]
     #data_table = splitSpuriusCfiletablevalue(file_table_result)
     return splitSpuriusCfiletablevalueDict(data_file_name, graph_type, file_table_result, sort_data, group_level_01, SD_LO_Frequency = SD_LO_Frequency, SD_LO_Level = SD_LO_Level, SD_RF_Level = SD_RF_Level, SD_IF_Min_Level = SD_IF_Min_Level, savefile = savefile), data_file_directory, graph_group_index, x_index, y_index, z_index, legend_index
     
     
+def convert_x_y_axes_generic(data_table, graph_x_unit, x_index, graph_y_unit, y_index):
+    result_eval = [[] for x in range(len(data_table))]
+    k = 0
+    for group in data_table:
+        j = 0
+        for row in group:
+            new_row = [row[0]]
+            #to generilize !!!!
+            new_row.append(unit.unit_conversion(row[x_index], unit.Hz, graph_x_unit))
+            new_row.append(row[y_index])
+            result_eval[k].append(new_row)
+            j += 1
+        k += 1
+    return result_eval
+
 def convert_x_y_axes(data_table, graph_x_unit, x_index, graph_y_unit, y_index):
     result_eval = [[] for x in range(len(data_table))]
     k = 0
@@ -246,7 +316,10 @@ def plot_spurius_graph(data_file_name,
                        SD_IF_Min_Level = graph_z.min,
                        IF_Frequency_selected = IF_Frequency_selected)
     
-    data_table = convert_x_y_axes(data_table, graph_x.unit, x_index, graph_y.unit, y_index)
+    #if graph_type in graph_types.values():
+    #    data_table = convert_x_y_axes(data_table, graph_x.unit, x_index, graph_y.unit, y_index)
+    #elif graph_type in generic_graph_types.values():
+    #    data_table = convert_x_y_axes_generic(data_table, graph_x.unit, x_index, graph_y.unit, y_index)
     
     data_file_directory = os.path.join(data_file_directory, "_".join([graph_type, return_now_postfix()]))
     if not os.path.exists(data_file_directory):
@@ -256,6 +329,7 @@ def plot_spurius_graph(data_file_name,
             print("Error creating " + data_file_directory)
             return 0
     group_for_SD = []
+    group_for_GG = []
     for row_grouped in data_table:
         plot_this = False
         if (graph_type == "RF" or graph_type == "LO") and (row_grouped[0][n_LO_index] == 1 or row_grouped[0][n_LO_index] == -1) and (row_grouped[0][m_RF_index] == 1 or row_grouped[0][m_RF_index] == -1):
@@ -264,6 +338,9 @@ def plot_spurius_graph(data_file_name,
             plot_this = True
         elif graph_type == "SD" and row_grouped[0][n_LO_index] != 1 and row_grouped[0][n_LO_index] != -1 and row_grouped[0][m_RF_index] != 1 and row_grouped[0][m_RF_index] != -1:
             group_for_SD.append(row_grouped[:])
+            plot_this = False
+        elif graph_type == "GG":
+            group_for_GG = row_grouped[:]
             plot_this = False
         if plot_this:
             plot_spurius_C(table_value = row_grouped,
@@ -285,6 +362,20 @@ def plot_spurius_graph(data_file_name,
                            y_index = y_index,
                            z_index = z_index,
                            legend_index = legend_index, 
+                           graph_title = graph_title, 
+                           graph_type = graph_type,
+                           graph_x = graph_x,
+                           graph_y = graph_y,
+                           graph_z = graph_z,
+                           data_file_directory = data_file_directory)
+    if len(group_for_GG)>0:
+        plot_XY_Single(fig, table_value = group_for_GG,
+                           graph_group_index = graph_group_index,
+                           x_index = x_index,
+                           y_index = y_index,
+                           z_index = z_index,
+                           legend_index = legend_index, 
+                           legend_title = "",
                            graph_title = graph_title, 
                            graph_type = graph_type,
                            graph_x = graph_x,
@@ -323,6 +414,25 @@ def plot_spurius_C(table_value,
                    data_file_directory = data_file_directory)
     
     
+    
+def filter_spurius_on_harmonic(data_rows):
+    result = []
+    for row in data_rows:
+        #exclude the spurius with the same frequency of intermodulation of LO and RF
+        freq_LO = unit.unit_conversion(row[frequency_LO_index], row[unit_LO_index], row[unit_IF_index]) 
+        freq_RF = unit.unit_conversion(row[frequency_RF_index], row[unit_RF_index], row[unit_IF_index]) 
+        freq_IF = row[frequency_IF_index]
+        n = row[n_LO_index]
+        m = row[m_RF_index]
+        spurius_freq = freq_IF
+        harmonic_freq = [1 * freq_LO -1 * freq_RF, 1 * freq_LO + 1 * freq_RF, -1 * freq_LO -1 * freq_RF, -1 * freq_LO + 1 * freq_RF]
+        
+        if not spurius_freq in harmonic_freq:
+            result.append(row[:])
+        else:
+            print(row)
+    return result
+    
 def plot_3d_distribution(fig, data_table, 
                          x_index,
                                y_index,
@@ -344,20 +454,29 @@ def plot_3d_distribution(fig, data_table,
     color = ['r', 'g', 'b', 'y']
     yticklabels = [str(r[0][n_LO_index])+ ", " + str(r[0][m_RF_index]) for r in data_table]
     ax.set_yticks(front_back_position)
-    ax.set_yticklabels(yticklabels)
+    ax.set_yticklabels(yticklabels, **csfont_axislegend)
     color_index = 0
     fb_index = 0
     sort_data = [frequency_IF_index]
     for row_group in data_table:
         tmp_row_group = sorted(row_group, key=operator.itemgetter(*sort_data)) 
+        tmp_row_group = filter_spurius_on_harmonic(tmp_row_group)
         freq = [unit.unit_conversion(r[frequency_IF_index], r[unit_IF_index], graph_x.unit)  for r in tmp_row_group]
         level = [r[power_IF_index] - graph_z.min for r in tmp_row_group]
         freq_result = []
         level_result = []
         for f_index in range(len(freq)):
             if freq[f_index] >= graph_x.min and freq[f_index] <= graph_x.max:
-                freq_result.append(freq[f_index])
-                level_result.append(level[f_index])
+                #exclude the spurius with the same frequency of intermodulation of LO and RF
+                freq_LO = unit.unit_conversion(row_group[0][frequency_LO_index], row_group[0][unit_LO_index], graph_x.unit) 
+                freq_RF = unit.unit_conversion(row_group[0][frequency_RF_index], row_group[0][unit_RF_index], graph_x.unit) 
+                freq_IF = freq[f_index]
+                n = row_group[0][n_LO_index]
+                m = row_group[0][m_RF_index]
+                spurius_freq = n * freq_LO + m * freq_RF
+                if spurius_freq != freq_IF:
+                    freq_result.append(freq[f_index])
+                    level_result.append(level[f_index])
         #ref = min(level)
         #level = [l - ref for l in level]
         color_index += 1
@@ -411,11 +530,11 @@ def plot_spurius_Single(fig, table_value,
     
     if graph_type == "LO":
         if not graph_x.label:
-            graph_x.label = 'IF Freq (' + unit.return_unit_str(table_value[0][x_index + 1])  +  ')'
+            graph_x.label = 'IF Freq (' + unit.return_unit_str(graph_x.unit)   +  ')'
         else:
-            graph_x.label = graph_x.label.format(unit = unit.return_unit_str(table_value[0][x_index + 1]))
+            graph_x.label = graph_x.label.format(unit = unit.return_unit_str(graph_x.unit))
         if not graph_y.label:
-            graph_y.label = "IF Power Loss (dBm)"
+            graph_y.label = 'IF Power Loss (' + unit.return_unit_str(graph_x.unit)   +  ')'
         if not graph_title:
             graph_sup_title = "Conversion Loss"
         else:
@@ -426,7 +545,7 @@ def plot_spurius_Single(fig, table_value,
         if not graph_x.label:
             graph_x.label = 'RF Power (dBm)'
         else:
-            graph_x.label = graph_x.label.format(unit = "dBm")
+            graph_x.label = graph_x.label.format(unit = unit.return_unit_str(graph_x.unit))
         if not graph_y.label:
             graph_y.label = "IF Power (dBm)"
         if not graph_title:
@@ -574,8 +693,10 @@ def plot_spurius_Single(fig, table_value,
         #line_ani = animation.FuncAnimation(fig, update_sprius_line, 100,  fargs=(curves_data, curves, spl), interval=interval, blit=False, repeat=False)
         #plt.show()
         
+        save_file_name = os.path.join(data_file_directory, "Graph_" + graph_title)
+        plt.savefig(save_file_name + ".png", dpi=200)
+        plt.savefig(save_file_name + ".svg")
         
-        plt.savefig(os.path.join(data_file_directory, "Graph_" + graph_title + ".png"))
         
 
 fig = None

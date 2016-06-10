@@ -8,8 +8,9 @@ Created on 26/dic/2015
 import wx
 import os
 
-from guitabs import TabPanelFSV, TabPanelPowerMeter, TabPanelSMB, TabPanelSpuriusSetup, TabPanelCalCableSetup, TabPanelCalDummyCableSetup, TabPanelSAB
+from guitabs import TabPanelFSV, TabPanelPowerMeter, TabPanelSpuriusSetup, TabPanelCalCableSetup, TabPanelCalDummyCableSetup
 from measure_scripts.CalibrazioneDummyCable import unit, create_calibration_cable
+from measure_scripts.scriptutility import Frequency_Range
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK
 from utility import writelineonfilesettings, return_now_postfix
 
@@ -84,12 +85,13 @@ class CalDummyCableFrame(wx.Frame):
                         
     def savesettings(self, filepointer):
         
-        self.writelinesettings(filepointer, "self.notebook.tabCalDummyCableSetting.frequency_min_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabCalDummyCableSetting.frequency_min_unit")
         self.writelinesettings(filepointer, "self.notebook.tabCalDummyCableSetting.frequency_min")
-        self.writelinesettings(filepointer, "self.notebook.tabCalDummyCableSetting.frequency_max_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabCalDummyCableSetting.frequency_max_unit")
         self.writelinesettings(filepointer, "self.notebook.tabCalDummyCableSetting.frequency_max")
-        self.writelinesettings(filepointer, "self.notebook.tabCalDummyCableSetting.frequency_step_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabCalDummyCableSetting.frequency_step_unit")
         self.writelinesettings(filepointer, "self.notebook.tabCalDummyCableSetting.frequency_step")
+        self.writelinesettings(filepointer, "self.notebook.tabCalDummyCableSetting.frequency_unit")
         #self.writelinesettings(f, "self.notebook.tabCalDummyCableSetting.level_min")
         #self.writelinesettings(f, "self.notebook.tabCalDummyCableSetting.level_max")
         #self.writelinesettings(f, "self.notebook.tabCalDummyCableSetting.level_step")
@@ -125,9 +127,9 @@ class CalDummyCableFrame(wx.Frame):
             frequency_min = eval(self.notebook.tabCalDummyCableSetting.frequency_min.GetValue())
         
         #"Minimum Frequency Unit"
-        frequency_min_unit = unit.return_unit(self.notebook.tabCalDummyCableSetting.frequency_min_unit.GetValue())
-        if check_value_not_none(frequency_min_unit, "Minimum Frequency Unit") == 0:
-            return None
+        #frequency_min_unit = unit.return_unit(self.notebook.tabCalDummyCableSetting.frequency_min_unit.GetValue())
+        #if check_value_not_none(frequency_min_unit, "Minimum Frequency Unit") == 0:
+        #    return None
         
         #"Maximum Frequency"
         frequency_max = self.notebook.tabCalDummyCableSetting.frequency_max.GetValue()
@@ -137,9 +139,9 @@ class CalDummyCableFrame(wx.Frame):
             frequency_max = eval(self.notebook.tabCalDummyCableSetting.frequency_max.GetValue())
         
         #"Maximum Frequency Unit"
-        frequency_max_unit = unit.return_unit(self.notebook.tabCalDummyCableSetting.frequency_max_unit.GetValue())
-        if check_value_not_none(frequency_max_unit, "Maximum Frequency Unit") == 0:
-            return None
+        #frequency_max_unit = unit.return_unit(self.notebook.tabCalDummyCableSetting.frequency_max_unit.GetValue())
+        #if check_value_not_none(frequency_max_unit, "Maximum Frequency Unit") == 0:
+        #    return None
         
         #"Frequency Step"
         frequency_step = self.notebook.tabCalDummyCableSetting.frequency_step.GetValue()
@@ -149,8 +151,8 @@ class CalDummyCableFrame(wx.Frame):
             frequency_step = eval(self.notebook.tabCalDummyCableSetting.frequency_step.GetValue())
         
         #"Frequency Step Unit"
-        frequency_step_unit = unit.return_unit(self.notebook.tabCalDummyCableSetting.frequency_step_unit.GetValue())
-        if check_value_not_none(frequency_step_unit, "Frequency Step Unit") == 0:
+        frequency_unit = unit.return_unit(self.notebook.tabCalDummyCableSetting.frequency_unit.GetValue())
+        if check_value_not_none(frequency_unit, "Frequency Unit") == 0:
             return None
         
         #"Output Frequency unit"
@@ -167,10 +169,17 @@ class CalDummyCableFrame(wx.Frame):
         
         result_file_name = self.notebook.tabCalDummyCableSetting.result_file_name.GetValue()
         
+        frequency = Frequency_Range(frequency_min, frequency_max, frequency_step, frequency_unit)
+        frequency.to_base()
+        
         dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
                 style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME)
         
-        result = create_calibration_cable(frequency_min_unit, frequency_min, frequency_max_unit, frequency_max, frequency_step_unit, frequency_step, output_level, output_frequency_unit, result_file_name, createprogressdialog = dialog)
+        result = create_calibration_cable(frequency, 
+                                          output_level, 
+                                          output_frequency_unit, 
+                                          result_file_name, 
+                                          createprogressdialog = dialog)
         
         dialog.Destroy()
         filesettingname = result_file_name + "_caldummycable_" + return_now_postfix() + ".cfg"

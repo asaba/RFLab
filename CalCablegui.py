@@ -10,6 +10,7 @@ import os
 
 from guitabs import TabPanelFSV, TabPanelPowerMeter, TabPanelSMB, TabPanelSpuriusSetup, TabPanelCalCableSetup, TabPanelSAB
 from measure_scripts.CalibrazioneCavo import unit, measure_calibration_cable, SMB_RF, NRP2, SAB
+from measure_scripts.scriptutility import Frequency_Range
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument
 from utility import writelineonfilesettings, return_now_postfix
 
@@ -38,7 +39,7 @@ class NotebookDemo(wx.Notebook):
         self.tabPowerMeter = TabPanelPowerMeter(self)
         self.AddPage(self.tabPowerMeter, "Power Meter")
         
-        self.tabSAB = TabPanelSAB(self)
+        self.tabSAB = TabPanelSAB(self, attenutation = False, switches = True)
         self.AddPage(self.tabSAB, "SwitchAttBox")
         
         self.tabCalCableSetting = TabPanelCalCableSetup(self)
@@ -109,12 +110,13 @@ class CalCableFrame(wx.Frame):
         self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_IP")
         self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_Port")
         self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_Timeout")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step")
+        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_unit")
         #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_min")
         #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_max")
         #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_step")
@@ -167,30 +169,34 @@ class CalCableFrame(wx.Frame):
 
         syntetizer_instrType = self.notebook.tabRF.combobox_instrtype.GetValue()
         
-        synthetizer_frequency_min_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_min_unit.GetValue())
-        if check_value_not_none(synthetizer_frequency_min_unit, "Minimum Frequency Unit") == 0:
-            return None
+        #synthetizer_frequency_min_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_min_unit.GetValue())
+        #if check_value_not_none(synthetizer_frequency_min_unit, "Minimum Frequency Unit") == 0:
+        #    return None
         synthetizer_frequency_min = self.notebook.tabRF.synthetizer_frequency_min.GetValue()
         if check_value_min_max(synthetizer_frequency_min, "Minimum Frequency", minimum = 0) == 0:
             return None
         else:
             synthetizer_frequency_min = eval(self.notebook.tabRF.synthetizer_frequency_min.GetValue())
-        synthetizer_frequency_max_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_max_unit.GetValue())
-        if check_value_not_none(synthetizer_frequency_max_unit, "Maximum Frequency Unit") == 0:
-            return None
+        #synthetizer_frequency_max_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_max_unit.GetValue())
+        #if check_value_not_none(synthetizer_frequency_max_unit, "Maximum Frequency Unit") == 0:
+        #    return None
         synthetizer_frequency_max = self.notebook.tabRF.synthetizer_frequency_max.GetValue()
         if check_value_min_max(synthetizer_frequency_max, "Maximum Frequency", minimum = 0) == 0:
             return None
         else:
             synthetizer_frequency_max = eval(self.notebook.tabRF.synthetizer_frequency_max.GetValue())
-        synthetizer_frequency_step_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_step_unit.GetValue())
-        if check_value_not_none(synthetizer_frequency_step_unit, "Frequency Step Unit") == 0:
-            return None
+        #synthetizer_frequency_step_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_step_unit.GetValue())
+        #if check_value_not_none(synthetizer_frequency_step_unit, "Frequency Step Unit") == 0:
+        #    return None
         synthetizer_frequency_step = self.notebook.tabRF.synthetizer_frequency_step.GetValue()
         if check_value_min_max(synthetizer_frequency_step, "Frequency Step", minimum = 0) == 0:
             return None
         else:
             synthetizer_frequency_step = eval(self.notebook.tabRF.synthetizer_frequency_step.GetValue())
+        synthetizer_frequency_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_unit.GetValue())
+        if check_value_not_none(synthetizer_frequency_unit, "Frequency Unit") == 0:
+            return None
+        
         
         try:
             synthetizer_level_fixed = eval(self.notebook.tabRF.synthetizer_level_fixed.GetValue())
@@ -279,15 +285,13 @@ class CalCableFrame(wx.Frame):
         dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
                 style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME)
         
+        synthetizer_frequency = Frequency_Range(synthetizer_frequency_min, synthetizer_frequency_max, synthetizer_frequency_step, synthetizer_frequency_unit)
+        synthetizer_frequency.to_base()
+        
         measure_calibration_cable(SMB_RF, 
                                   NRP2, 
                                   SAB, 
-                                  synthetizer_frequency_min_unit, 
-                                  synthetizer_frequency_min, 
-                                  synthetizer_frequency_max_unit, 
-                                  synthetizer_frequency_max, 
-                                  synthetizer_frequency_step_unit, 
-                                  synthetizer_frequency_step, 
+                                  synthetizer_frequency, 
                                   synthetizer_level_fixed, 
                                   power_meter_make_zero, 
                                   power_meter_make_zero_delay, 

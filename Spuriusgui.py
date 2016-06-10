@@ -7,12 +7,14 @@ Created on 26/dic/2015
 #import images
 import wx
 import os
-from guitabs import TabPanelFSV, TabPanelPowerMeter, TabPanelSMB, TabPanelSpuriusSetup, TabPanelSpuriusCPlotGraph
+from guitabs import TabPanelFSV, TabPanelPowerMeter, TabPanelSMB, TabPanelSpuriusSetup, TabPanelSpuriusCPlotGraph, TabPanelGenericPlotGraph
 from measure_scripts.Spurius import unit, measure_LNA_spurius, SMB_LO, SMB_RF, NRP2, FSV
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument
-from utility import writelineonfilesettings, return_now_postfix
+from utility import writelineonfilesettings, return_now_postfix,\
+    Generic_Range
 import pyvisa
 import webbrowser
+from measure_scripts.scriptutility import Frequency_Range
 
 ########################################################################
 class NotebookDemo(wx.Notebook):
@@ -35,50 +37,18 @@ class NotebookDemo(wx.Notebook):
         #tabOne.SetBackgroundColour("Gray")
         self.AddPage(self.tabLO, "Local oscillator")
  
-        ## Show how to put an image on one of the notebook tabs,
-        ## first make the image list:
-        #il = wx.ImageList(16, 16)
-        #idx1 = il.Add(images.Smiles.GetBitmap())
-        #self.AssignImageList(il)
- 
-        ## now put an image on the first tab we just created:
-        #self.SetPageImage(0, idx1)
- 
         # Create and add the second tab
         self.tabRF = TabPanelSMB(self)
         self.AddPage(self.tabRF, "Radio Frequency")
         
         self.tabFSV = TabPanelFSV(self)
         self.AddPage(self.tabFSV, "Spectrum Analyser")
- 
-        #self.tabPowerMeter = TabPanelPowerMeter(self)
-        #self.AddPage(self.tabPowerMeter, "Power Meter")
         
         self.tabSpuriusSetting = TabPanelSpuriusSetup(self)
         self.AddPage(self.tabSpuriusSetting, "Spurius Calculation")
         
         
-        self.tabSpuriusPlotGraph = TabPanelSpuriusCPlotGraph(self)
-        self.AddPage(self.tabSpuriusPlotGraph, "Graph Spurius plot")
-        # Create and add the third tab
-        #self.AddPage(TabPanel(self), "TabThree")
- 
-        #self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChanged)
-        #self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGING, self.OnPageChanging)
- 
-#    def OnPageChanged(self, event):
-#        old = event.GetOldSelection()
-#        new = event.GetSelection()
-#        sel = self.GetSelection()
-#        print 'OnPageChanged,  old:%d, new:%d, sel:%d\n' % (old, new, sel)
-#        event.Skip()
- 
-#    def OnPageChanging(self, event):
-#        old = event.GetOldSelection()
-#        new = event.GetSelection()
-#        sel = self.GetSelection()
-#        print 'OnPageChanging, old:%d, new:%d, sel:%d\n' % (old, new, sel)
-#        event.Skip()
+        
  
  
 ########################################################################
@@ -142,30 +112,32 @@ class SpuriusFrame(wx.Frame):
         self.writelinesettings(filepointer, "self.notebook.tabLO.instrument_txt_IP")
         self.writelinesettings(filepointer, "self.notebook.tabLO.instrument_txt_Port")
         self.writelinesettings(filepointer, "self.notebook.tabLO.instrument_txt_Timeout")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_min_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_min_unit")
         self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_min")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_max_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_max_unit")
         self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_max")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_step_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_step_unit")
         self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_step")
+        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_unit")
         self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_level_min")
         self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_level_max")
         self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_level_step")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_level_fixed")
+        #self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_level_fixed")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_state")
         self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_IP")
         self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_Port")
         self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_Timeout")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step_unit")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step")
+        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_unit")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_min")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_max")
         self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_step")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_fixed")
+        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_fixed")
         #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_IP")
         #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_Port")
         #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_Timeout")
@@ -208,27 +180,7 @@ class SpuriusFrame(wx.Frame):
         self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.calibration_file_IF")
         self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.result_file_name")
         
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_label")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_min")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_max")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_step")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_label")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_min")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_max")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_step")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_label_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_min_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_max_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_step_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_label_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_min_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_max_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_step_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.data_file_name")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_title")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_type")
+        
         
 
     def OnSaveSettings(self, event):
@@ -274,9 +226,9 @@ class SpuriusFrame(wx.Frame):
         
         synthetizer_LO_state = self.notebook.tabLO.synthetizer_state.GetValue()
         
-        synthetizer_LO_frequency_min_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_min_unit.GetValue())
-        if check_value_not_none(synthetizer_LO_frequency_min_unit, "Minimum LO Frequency Unit") == 0:
-            return None
+        #synthetizer_LO_frequency_min_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_min_unit.GetValue())
+        #if check_value_not_none(synthetizer_LO_frequency_min_unit, "Minimum LO Frequency Unit") == 0:
+        #    return None
         
         synthetizer_LO_frequency_min = self.notebook.tabLO.synthetizer_frequency_min.GetValue()
         if check_value_min_max(synthetizer_LO_frequency_min, "Minimum LO Frequency", minimum = 0) == 0:
@@ -285,9 +237,9 @@ class SpuriusFrame(wx.Frame):
             synthetizer_LO_frequency_min = eval(self.notebook.tabLO.synthetizer_frequency_min.GetValue())
         
         
-        synthetizer_LO_frequency_max_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_max_unit.GetValue())
-        if check_value_not_none(synthetizer_LO_frequency_max_unit, "Maximum LO Frequency Unit") == 0:
-            return None
+        #synthetizer_LO_frequency_max_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_max_unit.GetValue())
+        #if check_value_not_none(synthetizer_LO_frequency_max_unit, "Maximum LO Frequency Unit") == 0:
+        #    return None
         
         synthetizer_LO_frequency_max = self.notebook.tabLO.synthetizer_frequency_max.GetValue()
         if check_value_min_max(synthetizer_LO_frequency_max, "Maximum LO Frequency", minimum = 0) == 0:
@@ -295,8 +247,12 @@ class SpuriusFrame(wx.Frame):
         else:
             synthetizer_LO_frequency_max = eval(self.notebook.tabLO.synthetizer_frequency_max.GetValue())
             
-        synthetizer_LO_frequency_step_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_step_unit.GetValue())
-        if check_value_not_none(synthetizer_LO_frequency_step_unit, "LO Step Frequency Unit") == 0:
+        #synthetizer_LO_frequency_step_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_step_unit.GetValue())
+        #if check_value_not_none(synthetizer_LO_frequency_step_unit, "LO Step Frequency Unit") == 0:
+        #    return None
+        
+        synthetizer_LO_frequency_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_unit.GetValue())
+        if check_value_not_none(synthetizer_LO_frequency_unit, "LO Frequency Unit") == 0:
             return None
         
         synthetizer_LO_frequency_step = self.notebook.tabLO.synthetizer_frequency_step.GetValue()
@@ -337,9 +293,9 @@ class SpuriusFrame(wx.Frame):
         synthetizer_RF_instrType = self.notebook.tabRF.combobox_instrtype.GetValue()
         
         synthetizer_RF_state = self.notebook.tabRF.synthetizer_state.GetValue()
-        synthetizer_RF_frequency_min_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_min_unit.GetValue())
-        if check_value_not_none(synthetizer_RF_frequency_min_unit, "Minimum RF Frequency Unit") == 0:
-            return None
+        #synthetizer_RF_frequency_min_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_min_unit.GetValue())
+        #if check_value_not_none(synthetizer_RF_frequency_min_unit, "Minimum RF Frequency Unit") == 0:
+        #    return None
         
         synthetizer_RF_frequency_min = self.notebook.tabRF.synthetizer_frequency_min.GetValue()
         if check_value_min_max(synthetizer_RF_frequency_min, "Minimum RF Frequency", minimum = 0) == 0:
@@ -348,9 +304,9 @@ class SpuriusFrame(wx.Frame):
             synthetizer_RF_frequency_min = eval(self.notebook.tabRF.synthetizer_frequency_min.GetValue())
         
         
-        synthetizer_RF_frequency_max_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_max_unit.GetValue())
-        if check_value_not_none(synthetizer_RF_frequency_max_unit, "Maximum RF Frequency Unit") == 0:
-            return None
+        #synthetizer_RF_frequency_max_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_max_unit.GetValue())
+        #if check_value_not_none(synthetizer_RF_frequency_max_unit, "Maximum RF Frequency Unit") == 0:
+        #    return None
         
         synthetizer_RF_frequency_max = self.notebook.tabRF.synthetizer_frequency_max.GetValue()
         if check_value_min_max(synthetizer_RF_frequency_max, "Maximum RF Frequency", minimum = 0) == 0:
@@ -358,9 +314,9 @@ class SpuriusFrame(wx.Frame):
         else:
             synthetizer_RF_frequency_max = eval(self.notebook.tabRF.synthetizer_frequency_max.GetValue())
             
-        synthetizer_RF_frequency_step_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_step_unit.GetValue())
-        if check_value_not_none(synthetizer_RF_frequency_step_unit, "RF Step Frequency Unit") == 0:
-            return None
+        #synthetizer_RF_frequency_step_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_step_unit.GetValue())
+        #if check_value_not_none(synthetizer_RF_frequency_step_unit, "RF Step Frequency Unit") == 0:
+        #    return None
         
         synthetizer_RF_frequency_step = self.notebook.tabRF.synthetizer_frequency_step.GetValue()
         if check_value_min_max(synthetizer_RF_frequency_step, "RF Step Frequency", minimum = 0) == 0:
@@ -368,6 +324,9 @@ class SpuriusFrame(wx.Frame):
         else:
             synthetizer_RF_frequency_step = eval(self.notebook.tabRF.synthetizer_frequency_step.GetValue())
             
+        synthetizer_RF_frequency_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_unit.GetValue())
+        if check_value_not_none(synthetizer_RF_frequency_unit, "RF Frequency Unit") == 0:
+            return None
             
         try:
             synthetizer_RF_level_min = eval(self.notebook.tabRF.synthetizer_level_min.GetValue())
@@ -385,30 +344,6 @@ class SpuriusFrame(wx.Frame):
         else:
             synthetizer_RF_level_step = eval(self.notebook.tabRF.synthetizer_level_step.GetValue())
             
-        #power_meter_IP = self.notebook.tabRF.instrument_txt_IP.GetValue()
-        #if check_value_is_IP(power_meter_IP, "LO Synthetizer IP") == 0:
-        #    return None
-        
-        #power_meter_Port = self.notebook.tabRF.instrument_txt_Port.GetValue()
-        #if check_value_min_max(power_meter_Port, "LO Synthetizer Port", minimum = 0) == 0:
-        #    return None
-        
-        #power_meter_Timeout = self.notebook.tabRF.instrument_txt_Timeout.GetValue()
-        #if check_value_min_max(power_meter_Timeout, "LO Synthetizer Timeout", minimum = 0) == 0:
-        #    return None
-            
-        #power_meter_instrType = self.notebook.tabPowerMeter.combobox_instrtype.GetValue()
-            
-        #power_meter_state = self.notebook.tabPowerMeter.power_meter_state.GetValue()
-        #power_meter_misure_number = self.notebook.tabPowerMeter.power_meter_misure_number.GetValue()
-        
-        
-        #power_meter_misure_delay = self.notebook.tabPowerMeter.power_meter_misure_delay.GetValue() #seconds
-        #if check_value_min_max(power_meter_misure_delay, "Measure Delay", minimum = 0) == 0:
-        #    return None
-        #else:
-        #    power_meter_misure_delay = eval(self.notebook.tabPowerMeter.power_meter_misure_delay.GetValue())
-        
         spectrum_analyzer_IP = self.notebook.tabFSV.instrument_txt_IP.GetValue()
         if check_value_is_IP(spectrum_analyzer_IP, "LO Synthetizer IP") == 0:
             return None
@@ -488,7 +423,8 @@ class SpuriusFrame(wx.Frame):
             return None
         
         spectrum_analyzer_frequency_marker_unit = unit.return_unit(self.notebook.tabFSV.spectrum_analyzer_frequency_marker_unit.GetValue())
-        if check_value_not_none(synthetizer_RF_frequency_max_unit, "Marker Frequency Unit") == 0:
+        #to check
+        if check_value_not_none(synthetizer_RF_frequency_unit, "Marker Frequency Unit") == 0:
             return None
         
         FSV_delay = self.notebook.tabFSV.FSV_delay.GetValue()
@@ -589,36 +525,28 @@ class SpuriusFrame(wx.Frame):
             dlg.ShowModal()
             return 0
 
+        synthetizer_LO_frequency = Frequency_Range(synthetizer_LO_frequency_min, synthetizer_LO_frequency_max, synthetizer_LO_frequency_step, synthetizer_LO_frequency_unit)
+        synthetizer_LO_frequency.to_base()
+        synthetizer_LO_level = Generic_Range(synthetizer_LO_level_min, synthetizer_LO_level_max, synthetizer_LO_level_step)
+        synthetizer_RF_frequency = Frequency_Range(synthetizer_RF_frequency_min, synthetizer_RF_frequency_max, synthetizer_RF_frequency_step, synthetizer_RF_frequency_unit)
+        synthetizer_RF_frequency.to_base()
+        synthetizer_RF_level = Generic_Range(synthetizer_RF_level_min, synthetizer_RF_level_max, synthetizer_RF_level_step)
+        m_RF = Generic_Range(m_min_RF, m_max_RF, m_step_RF)
+        n_LO = Generic_Range(n_min_LO, n_max_LO, n_step_LO)
+        
+
         dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
                 style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME)
 
         spurius_filename = measure_LNA_spurius(SMB_LO, 
                             SMB_RF, 
-                            #NRP2, 
                             FSV, 
                             synthetizer_LO_state, 
-                            synthetizer_LO_frequency_min_unit, 
-                            synthetizer_LO_frequency_min, 
-                            synthetizer_LO_frequency_max_unit, 
-                            synthetizer_LO_frequency_max, 
-                            synthetizer_LO_frequency_step_unit, 
-                            synthetizer_LO_frequency_step, 
-                            synthetizer_LO_level_min, 
-                            synthetizer_LO_level_max, 
-                            synthetizer_LO_level_step, 
+                            synthetizer_LO_frequency, 
+                            synthetizer_LO_level, 
                             synthetizer_RF_state, 
-                            synthetizer_RF_frequency_min_unit, 
-                            synthetizer_RF_frequency_min, 
-                            synthetizer_RF_frequency_max_unit, 
-                            synthetizer_RF_frequency_max, 
-                            synthetizer_RF_frequency_step_unit, 
-                            synthetizer_RF_frequency_step, 
-                            synthetizer_RF_level_min, 
-                            synthetizer_RF_level_max, 
-                            synthetizer_RF_level_step, 
-                            #power_meter_state, 
-                            #power_meter_misure_number, 
-                            #power_meter_misure_delay, 
+                            synthetizer_RF_frequency, 
+                            synthetizer_RF_level, 
                             spectrum_analyzer_state, 
                             spectrum_analyzer_sweep_points, 
                             spectrum_analyzer_resolution_bandwidth, 
@@ -636,12 +564,8 @@ class SpuriusFrame(wx.Frame):
                             threshold_power, 
                             spectrum_analyzer_frequency_marker_unit, 
                             FSV_delay, 
-                            m_min_RF,
-                            m_max_RF,
-                            m_step_RF, 
-                            n_min_LO,
-                            n_max_LO, 
-                            n_step_LO,
+                            m_RF,
+                            n_LO,
                             IF_low, 
                             IF_low_unit, 
                             IF_high, 
@@ -671,7 +595,7 @@ class SpuriusFrame(wx.Frame):
         self.savesettings(f)
         f.close()
         try:
-            webbrowser.open(spurius_filename)
+            webbrowser.open(os.path.dirname(spurius_filename))
         except:
             pass
         

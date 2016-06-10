@@ -65,16 +65,12 @@ def create_USB_instrument(com_port, timeout, baudrate, TEST_MODE = False, instru
 
 def check_USB_instrument_comunication(instrument_COM, instrument_Timeout, instrument_Baud):
     
-    INST = create_USB_instrument(instrument_COM, instrument_Timeout, instrument_Baud)
-    #self.instrument_label.SetLabel(INST.ask("*IDN?"))
-    result = INST.ask("E1?")
-    INST.closeport()
-    return (1, result)
-    
     try:
         INST = create_USB_instrument(instrument_COM, instrument_Timeout, instrument_Baud)
         #self.instrument_label.SetLabel(INST.ask("*IDN?"))
-        result = INST.ask("E1?")
+        result = INST.ask("?D1")
+        #result = INST.ask("E1?")
+        #result = INST.ask("?VC")
         INST.closeport()
         return (1, result)
     except:

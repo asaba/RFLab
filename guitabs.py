@@ -13,9 +13,11 @@ from utilitygui import check_value_is_valid_file, check_value_min_max, browse_fi
 from measure_scripts.plotIP1graph import calculate_all_IP1, unit
 from measure_scripts.plotSpuriusCGraph import plot_spurius_graph, order_and_group_data
 from measure_scripts.csvutility import *
-from measure_scripts.graphutility import Graph_Axis_Range, graph_types
+from measure_scripts.graphutility import Graph_Axis_Range, graph_types, generic_graph_types
 import serial.tools.list_ports
 import webbrowser
+import subprocess
+from utility import inkscape_exec, buildfitsfileslist
 
 
 
@@ -52,7 +54,10 @@ class InstrumentUSBPanelClass(wx.Panel):
             
     def OnTestInstrument(self, event):
         dummy, response = check_USB_instrument_comunication(self.instrument_combobox_com_port.GetValue(), eval(self.instrument_txt_timeout.GetValue()), self.instrument_combobox_baud.GetValue())
-        self.instrument_label.SetLabel(response)
+        response = [ord(x) for x in response]
+        #response = [response[3], response[2]]
+        response = response[3] << 8 + response[2]
+        self.instrument_label.SetLabel(str(response))
 
 class SetupPanelClass(wx.Panel):
     
@@ -75,9 +80,10 @@ class PlotGraphPanelClass(wx.Panel):
     #input Data File
     #Graph Title
     
-    def __init__(self, parent):
+    def __init__(self, parent, input_file_wildcard = "*.csv"):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
         self.data_file_name, self.data_file_name_button, dummy, self.sizer_data_file_name = return_file_browse(self, "Data File")
+        self.wildcard = input_file_wildcard
         self.data_file_name_button.Bind(wx.EVT_BUTTON, self.File_browser_DataFile)
         
         #Graph Title
@@ -85,7 +91,7 @@ class PlotGraphPanelClass(wx.Panel):
         
     
     def File_browser_DataFile(self, event):
-        browse_file(self, self.data_file_name)
+        browse_file(self, self.data_file_name, wildcard = self.wildcard)
         
 class TabPanelContinousVoltageSetup(SetupPanelClass):
     """
@@ -122,7 +128,8 @@ class TabPanelCalDummyCableSetup(SetupPanelClass):
         #synthetizer_LO_frequency_step = 200
         #self.frequency_step, self.frequency_step_unit, dummy, self.sizer_frequency_step, dummy, dummy = return_textbox_labeled(self, "Frequency Step", unit= True)
         
-        self.frequency_min, self.frequency_min_unit, self.frequency_max, self.frequency_max_unit, self.frequency_step, self.frequency_step_unit, dummy, dummy, self.sizer_frequency = return_min_max_step_labeled(self, "Frequency", unit = True)
+        #self.frequency_min, self.frequency_min_unit, self.frequency_max, self.frequency_max_unit, self.frequency_step, self.frequency_step_unit, dummy, dummy, self.sizer_frequency = return_min_max_step_labeled(self, "Frequency", unit = True)
+        self.frequency_min, dummy, self.frequency_max, dummy, self.frequency_step, dummy, self.frequency_unit, dummy, self.sizer_frequency = return_min_max_step_labeled(self, "Frequency", unit = False, single_unit = True)
         
         #synthetizer_LO_level_min = 6 #dBm
         self.output_level, dummy, dummy, self.sizer_output_level, dummy, dummy = return_textbox_labeled(self, "Output Power Level")
@@ -385,45 +392,24 @@ class TabPanelSMB(InstrumentPanelClass):
         #synthetizer_LO_state = "ON"
         self.synthetizer_state, self.sizer_synthetizer_state = return_checkbox_labeled(self, "State")
         
-        #synthetizer_LO_frequency_min = 4600
-        ##self.synthetizer_frequency_min, self.synthetizer_frequency_min_unit, dummy, self.sizer_synthetizer_frequency_min, dummy, dummy = return_textbox_labeled(self, "Minimum Frequency", unit= True)
-
-        #synthetizer_LO_frequency_max = 5000
-        ##self.synthetizer_frequency_max, self.synthetizer_frequency_max_unit, dummy, self.sizer_synthetizer_frequency_max, dummy, dummy = return_textbox_labeled(self, "Maximum Frequency", unit= True)
+        #self.synthetizer_frequency_min, self.synthetizer_frequency_min_unit, self.synthetizer_frequency_max, self.synthetizer_frequency_max_unit, self.synthetizer_frequency_step, self.synthetizer_frequency_step_unit, dummy, dummy, self.sizer_synthetizer_frequency = return_min_max_step_labeled(self, "Frequency", unit = True)
         
-        #synthetizer_LO_frequency_step = 200
-        ##self.synthetizer_frequency_step, self.synthetizer_frequency_step_unit, dummy, self.sizer_synthetizer_frequency_step, dummy, dummy = return_textbox_labeled(self, "Frequency Step", unit= True)
+        self.synthetizer_frequency_min, dummy, self.synthetizer_frequency_max, dummy, self.synthetizer_frequency_step, dummy, self.synthetizer_frequency_unit, dummy, self.sizer_synthetizer_frequency = return_min_max_step_labeled(self, "Frequency", unit = False, single_unit = True)
         
-        self.synthetizer_frequency_min, self.synthetizer_frequency_min_unit, self.synthetizer_frequency_max, self.synthetizer_frequency_max_unit, self.synthetizer_frequency_step, self.synthetizer_frequency_step_unit, dummy, dummy, self.sizer_synthetizer_frequency = return_min_max_step_labeled(self, "Frequency", unit = True)
-        
-        
-        #synthetizer_LO_level_min = 6 #dBm
-        #self.synthetizer_level_min, dummy, dummy, self.sizer_synthetizer_level_min, dummy, dummy = return_textbox_labeled(self, "Minimum Power Level")
-        
-        
-        #synthetizer_LO_level_max = 15
-        #self.synthetizer_level_max, dummy, dummy, self.sizer_synthetizer_level_max, dummy, dummy = return_textbox_labeled(self, "Mamimum Power Level")
-        
-        #synthetizer_LO_level_step = 3
         #self.synthetizer_level_step, dummy, dummy, self.sizer_synthetizer_level_step, dummy, dummy = return_textbox_labeled(self, "Power Level Step")
         if range_power:
             self.synthetizer_level_min, dummy, self.synthetizer_level_max, dummy, self.synthetizer_level_step, dummy, dummy, dummy, self.sizer_synthetizer_level = return_min_max_step_labeled(self, "Level", unit = False)
-        
-        self.synthetizer_level_fixed, dummy, dummy, self.sizer_synthetizer_level_fixed, dummy, dummy = return_textbox_labeled(self, "Fixed Power Level")
+        else:
+            self.synthetizer_level_fixed, dummy, dummy, self.sizer_synthetizer_level_fixed, dummy, dummy = return_textbox_labeled(self, "Fixed Power Level")
         
         sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
         sizer.Add(self.instrument_test_sizer, 0, wx.ALL, 5)
         sizer.Add(self.sizer_synthetizer_state, 0, wx.ALL, 5)
-        #sizer.Add(self.sizer_synthetizer_frequency_min, 0, wx.ALL, 5)
-        #sizer.Add(self.sizer_synthetizer_frequency_max, 0, wx.ALL, 5)
-        #sizer.Add(self.sizer_synthetizer_frequency_step, 0, wx.ALL, 5)
         sizer.Add(self.sizer_synthetizer_frequency, 0, wx.ALL, 5)
-        #sizer.Add(self.sizer_synthetizer_level_min, 0, wx.ALL, 5)
-        #sizer.Add(self.sizer_synthetizer_level_max, 0, wx.ALL, 5)
-        #sizer.Add(self.sizer_synthetizer_level_step, 0, wx.ALL, 5)
         if range_power:
             sizer.Add(self.sizer_synthetizer_level, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_synthetizer_level_fixed, 0, wx.ALL, 5)
+        else:
+            sizer.Add(self.sizer_synthetizer_level_fixed, 0, wx.ALL, 5)
 
  
         self.SetSizer(sizer)
@@ -449,9 +435,9 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
     Tab for Plot XY Graph ex. IP1, Spurius, ...
     """
     
-    def __init__(self, parent, animated = False, z_axes = False):
+    def __init__(self, parent, animated = False, z_axes = False, input_file_wildcard = "*.csv"):
         
-        PlotGraphPanelClass.__init__(self, parent=parent)
+        PlotGraphPanelClass.__init__(self, parent=parent, input_file_wildcard = input_file_wildcard)
         
         self.graph_x_label, dummy, dummy, self.sizer_graph_x_label, dummy, dummy = return_textbox_labeled(self, "X Axes Label")
         self.graph_x_min, dummy, self.graph_x_max, dummy, self.graph_x_step, dummy, self.graph_x_unit, self.grap_x_calc_button, self.sizer_graph_x = return_min_max_step_labeled(self, "X Axes", unit = False, single_unit = True, button_text = "Calculate")
@@ -529,6 +515,9 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
         else:
             graph_x_step = eval(self.graph_x_step.GetValue())
         #graph_x_step_auto = self.graph_x_step_auto.GetValue()
+        graph_x_unit = unit.return_unit(self.graph_x_unit.GetValue()) or unit.MHz
+        
+        
         graph_y_label = self.graph_y_label.GetValue()
         #graph_y_label_auto = self.graph_y_label_auto.GetValue()
         
@@ -550,10 +539,21 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
         else:
             graph_y_step = eval(self.graph_y_step.GetValue())
         #graph_y_step_auto = self.graph_y_step_auto.GetValue()
-            
+        graph_y_unit = unit.return_unit(self.graph_y_unit.GetValue()) or unit.MHz
+        
         graph_animated = self.graph_animated.GetValue()
         
-        calculate_all_IP1(data_file_name, graph_title, graph_x_label, graph_x_min, graph_x_max, graph_x_step, graph_y_label, graph_y_min, graph_y_max, graph_y_step, graph_animated)
+        graph_x = Graph_Axis_Range(graph_x_min, graph_x_max, graph_x_step, graph_x_unit, graph_x_label)
+        graph_x.to_base()
+        
+        graph_y = Graph_Axis_Range(graph_y_min, graph_y_max, graph_y_step, graph_y_unit, graph_y_label)
+        graph_y.to_base()
+        
+        calculate_all_IP1(data_file_name, 
+                          graph_title, 
+                          graph_x,
+                          graph_y, 
+                          graph_animated)
         #self.instrument_label.SetLabel(response)
 
 
@@ -678,38 +678,39 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
             self.x_index = frequency_IF_index
             self.x_unit_index = unit_IF_index
             self.y_index = conversion_loss
-            self.y_unit_index = None
+            self.y_unit_index = unit.dB
             self.z_index = power_IF_index
-            self.z_unit_index = None
+            self.z_unit_index = unit.dB
             self.row_data_filter = [(n_LO_index, "in", [1, -1]), (m_RF_index, "in", [1, -1])]
         elif self.graph_type_value == "RF":
             self.x_index = power_RF_index
-            self.x_unit_index = None
+            self.x_unit_index = unit.dB
             self.y_index = power_IF_index
-            self.y_unit_index = None
+            self.y_unit_index = unit.dB
             self.z_index = power_IF_index
-            self.z_unit_index = None
+            self.z_unit_index = unit.dB
             self.row_data_filter = [(n_LO_index, "in", [1, -1]), (m_RF_index, "in", [1, -1])]
         elif self.graph_type_value == "SP":
             self.x_index = power_RF_index
-            self.x_unit_index = None
+            self.x_unit_index = unit.dB
             self.y_index = power_IF_index
-            self.y_unit_index = None
+            self.y_unit_index = unit.dB
             self.z_index = power_IF_index
-            self.z_unit_index = None
-            dlg = wx.TextEntryDialog(self, "Insert Spurius Frequency")
+            self.z_unit_index = unit.dB
+            dlg = wx.TextEntryDialog(self, "Insert Spurius Frequencies (MHz) - comma separated")
             dlg.ShowModal()
             result = dlg.GetValue()
             dlg.Destroy()
             IF_Frequency_selected = eval("[" + result + "]")
+            IF_Frequency_selected = [unit.convertion_to_base(x, unit.MHz) for x in IF_Frequency_selected]
             self.row_data_filter = [(n_LO_index, "not in", [1, -1]), (m_RF_index, "not in", [1, -1])]
         elif self.graph_type_value == "SD":
             self.x_index = frequency_IF_index
             self.x_unit_index = unit_IF_index
             self.y_index = power_IF_index
-            self.y_unit_index = None
+            self.y_unit_index = unit.dB
             self.z_index = power_IF_index
-            self.z_unit_index = None
+            self.z_unit_index = unit.dB
             graph_z_min = self.graph_z_min.GetValue()
             if check_value_min_max(graph_z_min, "Graph Z min", minimum = None) == 0:
                 return []
@@ -719,7 +720,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
             dlg.ShowModal()
             SD_LO_Frequency = dlg.GetValue()
             dlg.Destroy()
-            SD_LO_Frequency = eval(SD_LO_Frequency)
+            SD_LO_Frequency = unit.convertion_to_base(eval(SD_LO_Frequency), unit.MHz)
             dlg = wx.TextEntryDialog(self, "Insert LO Level (dBm)")
             dlg.ShowModal()
             SD_LO_Level = dlg.GetValue()
@@ -768,9 +769,293 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         else:
             graph_x_step = eval(self.graph_x_step.GetValue())
         #graph_x_step_auto = self.graph_x_step_auto.GetValue()
+        graph_x_unit = unit.return_unit(self.graph_x_unit.GetValue()) or unit.Hz
+        
+        graph_x = Graph_Axis_Range(graph_x_min, graph_x_max, graph_x_step, graph_x_unit, graph_x_label)
+        graph_x.to_base()
+        
+        
+        #graph_y_label_auto = self.graph_y_label_auto.GetValue()
+        
+        if check_steps_count("X steps", minimum = graph_x_min, maximum = graph_x_max, steps=graph_x_step, counter = 50) == 0:
+            return 0
+        
+        graph_y_label = self.graph_y_label.GetValue()
+        
+        graph_y_min = self.graph_y_min.GetValue()
+        if check_value_min_max(graph_y_min, "Graph Y min", minimum = None) == 0:
+            return None
+        else:
+            graph_y_min = eval(self.graph_y_min.GetValue())
+        #graph_y_min_auto = self.graph_y_min_auto.GetValue()
+        graph_y_max = self.graph_y_max.GetValue()
+        if check_value_min_max(graph_y_max, "Graph Y max", minimum = None) == 0:
+            return None
+        else:
+            graph_y_max = eval(self.graph_y_max.GetValue())
+        #graph_y_max_auto = self.graph_y_max_auto.GetValue()
+        graph_y_step = self.graph_y_step.GetValue()
+        if check_value_min_max(graph_y_step, "Graph Y step", minimum = 0) == 0:
+            return None
+        else:
+            graph_y_step = eval(self.graph_y_step.GetValue())
+        #graph_y_step_auto = self.graph_y_step_auto.GetValue()
+        
+        graph_y_unit = unit.return_unit(self.graph_y_unit.GetValue()) or unit.Hz
+        
+        graph_y = Graph_Axis_Range(graph_y_min, graph_y_max, graph_y_step, graph_y_unit, graph_y_label)
+        graph_y.to_base()
+        
+        graph_z_label = self.graph_z_label.GetValue()
+        
+        if self.graph_type_value == "SD":
+            graph_z_min = self.graph_z_min.GetValue()
+            if check_value_min_max(graph_z_min, "Graph Z min", minimum = None) == 0:
+                return None
+            else:
+                graph_z_min = eval(self.graph_z_min.GetValue())
+            graph_z_max = self.graph_z_max.GetValue()
+            if check_value_min_max(graph_z_max, "Graph Z max", minimum = None) == 0:
+                return None
+            else:
+                graph_z_max = eval(self.graph_z_max.GetValue())
+            graph_z_step = self.graph_z_step.GetValue()
+            if check_value_min_max(graph_z_step, "Graph Z step", minimum = 0) == 0:
+                return None
+            else:
+                graph_z_step = eval(self.graph_z_step.GetValue())
+            
+            graph_z_unit = unit.return_unit(self.graph_z_unit.GetValue()) or unit.Hz
+            
+            graph_z = Graph_Axis_Range(graph_z_min, graph_z_max, graph_z_step, graph_z_unit, graph_z_label)
+            graph_z.to_base()
+            
+            if check_steps_count("Z steps", minimum = graph_z_min, maximum = graph_z_max, steps=graph_z_step, counter = 50) == 0:
+                return 0
+        else:
+            graph_z = Graph_Axis_Range(0, 0, 0, unit.Hz, "")
+        
+        IF_Frequency_selected = [0]
+        SD_LO_Frequency = 0
+        SD_LO_Level = 0
+        SD_RF_Level = 0
+        if self.graph_type_value == "SP":
+            dlg = wx.TextEntryDialog(self, "Insert Spurius Frequencies (MHz) - comma separated")
+            dlg.ShowModal()
+            result = dlg.GetValue()
+            dlg.Destroy()
+            IF_Frequency_selected = eval("[" + result + "]")
+            IF_Frequency_selected = [unit.convertion_to_base(x, unit.MHz) for x in IF_Frequency_selected]
+        elif self.graph_type_value == "SD":
+            dlg = wx.TextEntryDialog(self, "Insert LO Frequency (MHz)")
+            dlg.ShowModal()
+            SD_LO_Frequency = dlg.GetValue()
+            dlg.Destroy()
+            dlg = wx.TextEntryDialog(self, "Insert LO Level (dBm)")
+            dlg.ShowModal()
+            SD_LO_Level = dlg.GetValue()
+            dlg.Destroy()
+            dlg = wx.TextEntryDialog(self, "Insert RF Level (dBm)")
+            dlg.ShowModal()
+            SD_RF_Level = dlg.GetValue()
+            dlg.Destroy()
+            SD_LO_Frequency = unit.convertion_to_base(eval(SD_LO_Frequency), unit.MHz) 
+            SD_LO_Level = eval(SD_LO_Level)
+            SD_RF_Level = eval(SD_RF_Level)
+        
+        
+        for frequency_IF_filter  in IF_Frequency_selected:
+            result_folder = plot_spurius_graph(self.data_file_name_value, 
+                           self.graph_type_value, 
+                           graph_title, 
+                           graph_x,
+                           graph_y,
+                           graph_z,
+                           SD_LO_Frequency = SD_LO_Frequency,
+                           SD_LO_Level = SD_LO_Level,
+                           SD_RF_Level = SD_RF_Level,
+                           IF_Frequency_selected = frequency_IF_filter)
+            
+        try:
+            last_svg = ""
+            for svg_file in buildfitsfileslist(result_folder):
+                last_svg = svg_file
+                execute = [inkscape_exec, "-f", svg_file, '-M',  svg_file[:-4] + '.emf']
+                print("saving " + svg_file[:-4] + '.emf')
+                subprocess.call(execute)
+        except:
+            print("Error saving " + last_svg)
+        try:
+            if self.graph_type_value != "SD":
+                webbrowser.open(result_folder)
+        except:
+            pass
+        #self.instrument_label.SetLabel(response)
+        
+        #webbrowser.open('/home/test/test_folder')
+
+
+class TabPanelGenericPlotGraph(XYPlotGraphPanelClass):
+    """
+    Tab for Plot IP1 Graph
+    """
+    
+    def __init__(self, parent):
+        
+        XYPlotGraphPanelClass.__init__(self, parent=parent, animated = False, z_axes = False, input_file_wildcard = "*.txt")
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.graph_type, self.sizer_graph_type = return_comboBox(self, "Graph type", choices_list = generic_graph_types.keys())
+
+        self.plot_button, self.sizer_plot_button = return_simple_button(self, "Plot Graph", "Start")
+        self.plot_button.Bind(wx.EVT_BUTTON, self.OnPlotGraph)
+        self.x_index = 0
+        self.y_index = 0
+        #self.z_index = 0
+        self.row_data_filter = []
+        self.grap_y_calc_button.param_to_calc = {"combobox": "self.graph_y_unit", "index" : "self.y_index", "textbox_min" : "self.graph_y_min", "textbox_max" : "self.graph_y_max", "filter" : "self.row_data_filter", "unit_index" : "self.y_unit_index"}
+        self.grap_x_calc_button.param_to_calc = {"combobox": "self.graph_x_unit", "index" : "self.x_index", "textbox_min" : "self.graph_x_min", "textbox_max" : "self.graph_x_max", "filter" : "self.row_data_filter", "unit_index" : "self.x_unit_index"}
+        #self.grap_z_calc_button.param_to_calc = {"combobox": "self.graph_z_unit", "index" : "self.z_index", "textbox_min" : "self.graph_z_min", "textbox_max" : "self.graph_z_max", "filter" : "self.row_data_filter", "unit_index" : "self.z_unit_index"}
+        #self.grap_x_max_calc_button.param_to_calc = {"combobox": "self.graph_x_unit", "type": "max", "index" : "self.x_index", "textbox" : "self.graph_x_max", "filter" : "self.row_data_filter", "unit_index" : "self.x_unit_index"}
+        
+        
+        self.grap_y_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcAuto)
+        self.grap_x_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcAuto)
+        #self.grap_z_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcAuto)
+        #self.grap_x_max_calc_button.Bind(wx.EVT_BUTTON, self.OnCalcAuto)
+        #input Data File
+        #Graph Title
+        
+
+        self.graph_x_label.ChangeValue("IF Frequency ({unit})")
+        self.graph_x_min.ChangeValue("100")
+        self.graph_x_max.ChangeValue("3000")
+        self.graph_x_step.ChangeValue("100")
+        self.graph_y_label.ChangeValue("IF Power Loss (dBm)")
+        self.graph_y_min.ChangeValue("-20")
+        self.graph_y_max.ChangeValue("0")
+        self.graph_y_step.ChangeValue("2")
+
+        sizer.Add(self.sizer_data_file_name, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_type, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_title, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_x_label, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_x, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_y_label, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_graph_y, 0, wx.ALL, 5)
+        #sizer.Add(self.sizer_graph_z_label, 0, wx.ALL, 5)
+        #sizer.Add(self.sizer_graph_z, 0, wx.ALL, 5)
+        #sizer.Add(self.sizer_graph_animated, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_plot_button, 0, wx.ALL, 5)
+ 
+        self.SetSizer(sizer)
+    
+    def check_values(self):
+        self.data_file_name_value = self.data_file_name.GetValue()
+        
+        if check_value_is_valid_file(self.data_file_name_value, "Generic graph data file") == 0:
+            return 0
+        
+        self.graph_type_value = self.graph_type.GetValue()
+        if self.graph_type_value in generic_graph_types.keys():
+            self.graph_type_value = generic_graph_types[self.graph_type_value]
+        else:
+            error_message("Graph type not selected", "Graph type error")
+            return 0
+        
+    def OnCalcAuto(self, event):
+        pass
+        #button = event.GetEventObject()
+
+        #param_to_calc = button.param_to_calc #{"type": "max", "index" : "self.x_index", "textbox" : "self.graph_y_max", "unit_index" : "self.x_unit_index",}
+
+        #m = []
+        #tmp_unit = unit.return_unit_str(unit.MHz) 
+        #for row in self.return_list_of_row():
+        #    for d in row:
+        #        if self.check_filter(d, eval(param_to_calc["filter"])):
+        #            m.append(d[eval(param_to_calc["index"])])
+        #            if eval(param_to_calc["unit_index"]) is not None:
+        #                tmp_unit = unit.return_unit_str(d[eval(param_to_calc["unit_index"])])
+        #if len(m) > 0:
+        #    eval(param_to_calc["textbox_max"]).ChangeValue(str(max(m)))
+        #    eval(param_to_calc["textbox_min"]).ChangeValue(str(min(m)))
+        #    eval(param_to_calc["combobox"]).SetSelection(unit.return_unit_index(tmp_unit))
+    
+    def check_filter(self, row, row_filter):
+        result = True
+        for f in row_filter:
+            index = f[0]
+            filter_type = f[1]
+            filter_value = f[2]
+            if filter_type == "in":
+                if row[index] in filter_value:
+                    pass
+                else:
+                    return False
+            elif filter_type == "not in":
+                if row[index] not in filter_value:
+                    pass
+                else:
+                    return False
+        return result
+    
+    def return_list_of_row(self):
+        if self.check_values() == 0:
+            return []
+        
+        IF_Frequency_selected = [0]
+        SD_LO_Frequency = 0
+        SD_LO_Level = 0
+        SD_RF_Level = 0
+
+        if self.graph_type_value == "GG":
+            self.x_index = frequency_IF_index
+            self.x_unit_index = unit_IF_index
+            self.y_index = conversion_loss
+            self.y_unit_index = None
+            self.row_data_filter = [(n_LO_index, "in", [1, -1]), (m_RF_index, "in", [1, -1])]
+        
+        data_table, dummy, dummy, dummy, dummy, dummy, dummy = order_and_group_data(data_file_name = self.data_file_name_value, 
+                       graph_type = self.graph_type_value, 
+                       SD_LO_Frequency = SD_LO_Frequency,
+                       SD_LO_Level = SD_LO_Level,
+                       SD_RF_Level = SD_RF_Level,
+                       SD_IF_Min_Level = None,
+                       IF_Frequency_selected = IF_Frequency_selected, 
+                       savefile = False)
+        return data_table
+
+    
+    def OnPlotGraph(self, event):
+        result = [0]
+        if self.check_values() == 0:
+            return 0
+        graph_title = self.graph_title.GetValue()
+        graph_x_label = self.graph_x_label.GetValue()
+        #graph_x_label_auto = self.graph_x_label_auto.GetValue()
+        graph_x_min = self.graph_x_min.GetValue()
+        if check_value_min_max(graph_x_min, "Graph X min", minimum = None) == 0:
+            return None
+        else:
+            graph_x_min = eval(self.graph_x_min.GetValue())
+        #graph_x_min_auto = self.graph_x_min_auto.GetValue()
+        
+        graph_x_max = self.graph_x_max.GetValue()
+        if check_value_min_max(graph_x_max, "Graph X max", minimum = None) == 0:
+            return None
+        else:
+            graph_x_max = eval(self.graph_x_max.GetValue())
+        #graph_x_max_auto = self.graph_x_max_auto.GetValue()
+        graph_x_step = self.graph_x_step.GetValue()
+        if check_value_min_max(graph_x_step, "Graph X step", minimum = 0) == 0:
+            return None
+        else:
+            graph_x_step = eval(self.graph_x_step.GetValue())
+        #graph_x_step_auto = self.graph_x_step_auto.GetValue()
         graph_x_unit = unit.return_unit(self.graph_x_unit.GetValue()) or unit.MHz
         
-        graph_x = Graph_Axis_Range(graph_x_max, graph_x_min, graph_x_step, graph_x_unit, graph_x_label)
+        graph_x = Graph_Axis_Range(graph_x_min, graph_x_max, graph_x_step, graph_x_unit, graph_x_label)
         
         
         
@@ -802,78 +1087,40 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         
         graph_y_unit = unit.return_unit(self.graph_y_unit.GetValue()) or unit.MHz
         
-        graph_y = Graph_Axis_Range(graph_y_max, graph_y_min, graph_y_step, graph_y_unit, graph_y_label)
+        graph_y = Graph_Axis_Range(graph_y_min, graph_y_max, graph_y_step, graph_y_unit, graph_y_label)
         
-        graph_z_label = self.graph_z_label.GetValue()
-        
-        graph_z_min = self.graph_z_min.GetValue()
-        if check_value_min_max(graph_z_min, "Graph Z min", minimum = None) == 0:
-            return None
-        else:
-            graph_z_min = eval(self.graph_z_min.GetValue())
-        graph_z_max = self.graph_z_max.GetValue()
-        if check_value_min_max(graph_z_max, "Graph Z max", minimum = None) == 0:
-            return None
-        else:
-            graph_z_max = eval(self.graph_z_max.GetValue())
-        graph_z_step = self.graph_z_step.GetValue()
-        if check_value_min_max(graph_z_step, "Graph Z step", minimum = 0) == 0:
-            return None
-        else:
-            graph_z_step = eval(self.graph_z_step.GetValue())
-        
-        graph_z_unit = unit.return_unit(self.graph_z_unit.GetValue()) or unit.MHz
-        
-        graph_z = Graph_Axis_Range(graph_z_max, graph_z_min, graph_z_step, graph_z_unit, graph_z_label)
-        
-        
-        if check_steps_count("Z steps", minimum = graph_z_min, maximum = graph_z_max, steps=graph_z_step, counter = 50) == 0:
-            return 0
+        graph_z = Graph_Axis_Range(0, 0, 0, unit.MHz, "")
         
         IF_Frequency_selected = [0]
         SD_LO_Frequency = 0
         SD_LO_Level = 0
         SD_RF_Level = 0
-        if self.graph_type_value == "SP":
-            dlg = wx.TextEntryDialog(self, "Insert Spurius Frequency")
-            dlg.ShowModal()
-            result = dlg.GetValue()
-            dlg.Destroy()
-            IF_Frequency_selected = eval("[" + result + "]")
-        elif self.graph_type_value == "SD":
-            dlg = wx.TextEntryDialog(self, "Insert LO Frequency (MHz)")
-            dlg.ShowModal()
-            SD_LO_Frequency = dlg.GetValue()
-            dlg.Destroy()
-            dlg = wx.TextEntryDialog(self, "Insert LO Level (dBm)")
-            dlg.ShowModal()
-            SD_LO_Level = dlg.GetValue()
-            dlg.Destroy()
-            dlg = wx.TextEntryDialog(self, "Insert RF Level (dBm)")
-            dlg.ShowModal()
-            SD_RF_Level = dlg.GetValue()
-            dlg.Destroy()
-            SD_LO_Frequency = eval(SD_LO_Frequency)
-            SD_LO_Level = eval(SD_LO_Level)
-            SD_RF_Level = eval(SD_RF_Level)
-        
-        
-        for frequency_IF_filter  in IF_Frequency_selected:
-            result_folder = plot_spurius_graph(self.data_file_name_value, 
-                           self.graph_type_value, 
-                           graph_title, 
-                           graph_x,
-                           graph_y,
-                           graph_z,
-                           SD_LO_Frequency = SD_LO_Frequency,
-                           SD_LO_Level = SD_LO_Level,
-                           SD_RF_Level = SD_RF_Level,
-                           IF_Frequency_selected = frequency_IF_filter)
-            try:
-                if self.graph_type_value != "SD":
-                    webbrowser.open(result_folder)
-            except:
-                pass
+
+        result_folder = plot_spurius_graph(self.data_file_name_value, 
+                       self.graph_type_value, 
+                       graph_title, 
+                       graph_x,
+                       graph_y,
+                       graph_z,
+                       SD_LO_Frequency = SD_LO_Frequency,
+                       SD_LO_Level = SD_LO_Level,
+                       SD_RF_Level = SD_RF_Level,
+                       IF_Frequency_selected = 0)
+            
+        try:
+            last_svg = ""
+            for svg_file in buildfitsfileslist(result_folder):
+                last_svg = svg_file
+                execute = [inkscape_exec, "-f", svg_file, '-M',  svg_file[:-4] + '.emf']
+                print("saving " + svg_file[:-4] + '.emf')
+                subprocess.call(execute)
+        except:
+            print("Error saving " + last_svg)
+        try:
+            if self.graph_type_value != "SD":
+                webbrowser.open(result_folder)
+        except:
+            pass
         #self.instrument_label.SetLabel(response)
         
         #webbrowser.open('/home/test/test_folder')
@@ -884,7 +1131,7 @@ class TabPanelSAB(InstrumentPanelClass):
     Tab for Power Meter
     """
     
-    def __init__(self, parent):
+    def __init__(self, parent, attenutation = True, switches = True):
         
         InstrumentPanelClass.__init__(self, parent=parent)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -892,35 +1139,28 @@ class TabPanelSAB(InstrumentPanelClass):
         #power_meter_state = "ON"
         self.SAB_state, self.sizer_SAB_state = return_checkbox_labeled(self, "State")
 
-        #power_meter_misure_number = 1
-        #self.SAB_attenuation_min, dummy, dummy, self.sizer_SAB_attenuation_min, dummy, dummy = return_textbox_labeled(self, "Minimun Attenuation Value")
+        if attenutation:
+            self.SAB_attenuation_min, dummy, self.SAB_attenuation_max, dummy, self.SAB_attenuation_step, dummy, dummy, dummy, self.sizer_SAB_attenuation = return_min_max_step_labeled(self, "Attenuation", unit = False)
+            self.SAB_attenuation_delay, dummy, dummy, self.sizer_SAB_attenuation_delay, dummy, dummy = return_textbox_labeled(self, "Attenuation Delay")
         
-        #self.SAB_attenuation_max, dummy, dummy, self.sizer_SAB_attenuation_max, dummy, dummy = return_textbox_labeled(self, "Maximum Attenuation Value")
-        
-        #self.SAB_attenuation_step, dummy, dummy, self.sizer_SAB_attenuation_step, dummy, dummy = return_textbox_labeled(self, "Attenuation Step")
-        
-        self.SAB_attenuation_min, dummy, self.SAB_attenuation_max, dummy, self.SAB_attenuation_step, dummy, dummy, dummy, self.sizer_SAB_attenuation = return_min_max_step_labeled(self, "Attenuation", unit = False)
-        
-        self.SAB_attenuation_delay, dummy, dummy, self.sizer_SAB_attenuation_delay, dummy, dummy = return_textbox_labeled(self, "Attenuation Delay")
-        
-        #power_meter_misure_delay = 1 #seconds
-        self.SAB_switch01_delay, dummy, dummy, self.sizer_SAB_switch01_delay, dummy, dummy = return_textbox_labeled(self, "Switch 1 delay (s)")
-        
-        self.SAB_switch02_delay, dummy, dummy, self.sizer_SAB_switch02_delay, dummy, dummy = return_textbox_labeled(self, "Switch 2 delay (s)")
-        
-        self.SAB_switch03_delay, dummy, dummy, self.sizer_SAB_switch03_delay, dummy, dummy = return_textbox_labeled(self, "Switch 3 delay (s)")
+        if switches:
+            #power_meter_misure_delay = 1 #seconds
+            self.SAB_switch01_delay, dummy, dummy, self.sizer_SAB_switch01_delay, dummy, dummy = return_textbox_labeled(self, "Switch 1 delay (s)")
+            
+            self.SAB_switch02_delay, dummy, dummy, self.sizer_SAB_switch02_delay, dummy, dummy = return_textbox_labeled(self, "Switch 2 delay (s)")
+            
+            self.SAB_switch03_delay, dummy, dummy, self.sizer_SAB_switch03_delay, dummy, dummy = return_textbox_labeled(self, "Switch 3 delay (s)")
 
         sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
         sizer.Add(self.instrument_test_sizer, 0, wx.ALL, 5)
         sizer.Add(self.sizer_SAB_state, 0, wx.ALL, 5)
-        #sizer.Add(self.sizer_SAB_attenuation_min, 0, wx.ALL, 5)
-        #sizer.Add(self.sizer_SAB_attenuation_max, 0, wx.ALL, 5)
-        #sizer.Add(self.sizer_SAB_attenuation_step, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_SAB_attenuation, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_SAB_attenuation_delay, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_SAB_switch01_delay, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_SAB_switch02_delay, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_SAB_switch03_delay, 0, wx.ALL, 5)
+        if attenutation:
+            sizer.Add(self.sizer_SAB_attenuation, 0, wx.ALL, 5)
+            sizer.Add(self.sizer_SAB_attenuation_delay, 0, wx.ALL, 5)
+        if switches:
+            sizer.Add(self.sizer_SAB_switch01_delay, 0, wx.ALL, 5)
+            sizer.Add(self.sizer_SAB_switch02_delay, 0, wx.ALL, 5)
+            sizer.Add(self.sizer_SAB_switch03_delay, 0, wx.ALL, 5)
  
         self.SetSizer(sizer)
         

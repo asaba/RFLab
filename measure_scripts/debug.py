@@ -55,7 +55,7 @@ class FSV_class():
 
     def ask(self, command):
         if command == "CALC:MARK:X?":
-            return str(uniform(1000000, 5000000)) #unit HZ
+            return str(int(round(uniform(1000000, 5000000)))) #unit HZ
         elif command == "CALC:MARK:Y?":
             return str(uniform(-12, 10))
 
