@@ -22,6 +22,17 @@ csfont_axislegend = {'fontname':'Times New Roman', "fontsize":"14"}
 csfont_axisticks = {'fontname':'Times New Roman', "fontsize":"12"}
 csfont_annotation = {'fontname':'Times New Roman', "fontsize":"12"}
 
+fontsizerange = range(9, 24)
+
+font_styles = {
+                "suptitle" : {'fontname':'Times New Roman', "fontsize":"20"},
+                "title" : {'fontname':'Times New Roman', "fontsize":"14"},
+                "legendtitle" : {'fontname':'Times New Roman', "fontsize":"14"},
+                "legendlines" : {'fontname':'Times New Roman', "fontsize":"10"},
+                "axislegend" : {'fontname':'Times New Roman', "fontsize":"14"},
+                "axisticks" : {'fontname':'Times New Roman', "fontsize":"12"},
+                "annotation" : {'fontname':'Times New Roman', "fontsize":"12"}}
+
 
 styles = [("o", "b"), ("v", "g"), ("s", "r"), ("s", "c"), ("8", "m"), ("d", "y"), ("*", "k"),
           ("o", "b"), ("o", "g"), ("o", "r"), ("o", "c"), ("o", "m"), ("o", "y"), ("o", "k"),
