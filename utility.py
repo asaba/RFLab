@@ -17,11 +17,11 @@ import os
 import datetime
 from numpy import arange
 
-VERSION = 5.1
+VERSION = "5.5"
 
 inkscape_exec = "C:\\Program Files\\Inkscape\\inkscape.com"
 
-human_readable_frequency_unit = 1e+9 #GHz
+human_readable_frequency_unit = int(1e+9) #GHz
 
 def return_now_postfix():
     return datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -41,8 +41,8 @@ class unit_class(object):
         self.dB = -1
         self.Hz = 1
         self.KHz = 1000
-        self.MHz = 1e+6
-        self.GHz = 1e+9
+        self.MHz = int(1e+6)
+        self.GHz = int(1e+9)
         
     def return_unit_list(self):
         return [self.return_unit_str(self.dBm),
@@ -131,7 +131,7 @@ class unit_class(object):
         if initial_unit < 0:
             return str(value) + self.return_unit_str(initial_unit)
         else:
-            return str(self.unit_conversion(value, initial_unit, human_readable_frequency_unit)) + self.return_unit_str(human_readable_frequency_unit)
+            return str(self.unit_conversion(value, initial_unit, human_readable_frequency_unit)) + " " + self.return_unit_str(human_readable_frequency_unit)
         
     
 def writelineonfilesettings(f, parameter, value):
@@ -324,4 +324,39 @@ class Generic_Range(object):
         else:
             return range(self.min, self.max, self.step)
 
+def return_max_min_from_data_table_row(data_table_row, x_index, y_index = None, z_index = None):
+    x_list = []
+    y_list = []
+    z_list = []
+    
+    for row in data_table_row:
+        x_list.append(row[x_index])
+        if y_index is not None:
+            y_list.append(row[y_index])
+        if z_index is not None:
+            z_list.append(row[z_index])
+            
+    if len(y_list) == 0:
+        y_list = [None]
+    if len(z_list) == 0:
+        z_list = [None]
+            
+    return max(x_list), min(x_list), max(y_list), min(y_list), max(z_list), min(z_list)
+
+def return_max_min_from_data_table(data_table, x_index, y_index = None, z_index = None):
+    x_u_list = []
+    x_d_list = []
+    y_u_list = [None]
+    y_d_list = [None]
+    z_u_list = [None]
+    z_d_list = [None]
+    for data_table_row in data_table:
+        x_u, x_d, y_u, y_d, z_u, z_d = return_max_min_from_data_table_row(data_table_row, x_index, y_index, z_index)
+        x_u_list.append(x_u)
+        x_d_list.append(x_d)
+        y_u_list.append(y_u)
+        y_d_list.append(y_d)
+        z_u_list.append(z_u)
+        z_d_list.append(z_d)
+    return max(x_u_list), min(x_d_list), max(y_u_list), min(y_d_list), max(z_u_list), min(z_d_list)
 
