@@ -34,7 +34,7 @@ class MainFrame(wx.Frame):
     def __init__(self, parent):
         """Constructor"""
         wx.Frame.__init__(self, parent, wx.ID_ANY,
-                          "Microware Lab Measure v {version}".format(version = str(VERSION)),
+                          "Microware Lab Measure v {version}".format(version = VERSION),
                           size=(380,360)
                           )
         self.panel = wx.Panel(self)
@@ -42,15 +42,15 @@ class MainFrame(wx.Frame):
         self.btn_cal_cable = wx.Button(self.panel, 0, 'Calibrate Cable')
         self.btn_cal_cable.Bind(wx.EVT_BUTTON, self.OnCalCable)
         
-        self.btn_cal_dummy_cable = wx.Button(self.panel, 0, 'Create Dummy Cable Calibration')
-        self.btn_cal_dummy_cable.Bind(wx.EVT_BUTTON, self.OnCalDummyCable)
+        #self.btn_cal_dummy_cable = wx.Button(self.panel, 0, 'Create Dummy Cable Calibration')
+        #self.btn_cal_dummy_cable.Bind(wx.EVT_BUTTON, self.OnCalDummyCable)
         
         #check if spurius calculation is present
         self.btn_calc_spurius = wx.Button(self.panel, 0, 'Calculate Spurius')
         self.btn_calc_spurius.Bind(wx.EVT_BUTTON, self.OnCalcSpurius)
         
-        self.btn_calc_IP1 = wx.Button(self.panel, 0, 'Calculate IP1')
-        self.btn_calc_IP1.Bind(wx.EVT_BUTTON, self.OnCalcIP1)
+        #self.btn_calc_IP1 = wx.Button(self.panel, 0, 'Calculate IP1')
+        #self.btn_calc_IP1.Bind(wx.EVT_BUTTON, self.OnCalcIP1)
         
         self.btn_continous_measure = wx.Button(self.panel, 0, 'Countinous Measure')
         self.btn_continous_measure.Bind(wx.EVT_BUTTON, self.OnCalcContinousMeasure)
@@ -69,9 +69,9 @@ class MainFrame(wx.Frame):
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.btn_cal_cable, 0, wx.ALL|wx.EXPAND, 5)
-        sizer.Add(self.btn_cal_dummy_cable, 0, wx.ALL|wx.EXPAND, 5)
+        #sizer.Add(self.btn_cal_dummy_cable, 0, wx.ALL|wx.EXPAND, 5)
         sizer.Add(self.btn_calc_spurius, 0, wx.ALL|wx.EXPAND, 5)
-        sizer.Add(self.btn_calc_IP1, 0, wx.ALL|wx.EXPAND, 5)
+        #sizer.Add(self.btn_calc_IP1, 0, wx.ALL|wx.EXPAND, 5)
         sizer.Add(self.btn_continous_measure, 0, wx.ALL|wx.EXPAND, 5)
         sizer.Add(self.btn_calc_adev, 0, wx.ALL|wx.EXPAND, 5)
         sizer.Add(self.btn_calc_pm5, 0, wx.ALL|wx.EXPAND, 5)
@@ -94,11 +94,11 @@ class MainFrame(wx.Frame):
         calcableapp.MainLoop()
         #Check all values
 
-    def OnCalDummyCable(self, event):
-        caldummycableapp = wx.App()
-        frame = CalDummyCableFrame()
-        caldummycableapp.MainLoop()
-        #Check all values
+    #def OnCalDummyCable(self, event):
+    #    caldummycableapp = wx.App()
+    #    frame = CalDummyCableFrame()
+    #    caldummycableapp.MainLoop()
+    #    #Check all values
     
     def OnCalcSpurius(self, event):
         calcspuriusapp = wx.App()
