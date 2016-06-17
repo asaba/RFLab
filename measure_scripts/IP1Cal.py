@@ -199,7 +199,7 @@ def measure_IP1(SMB_RF = SMB_RF,
     save_data("txt", result_file_name, values, power_meter_misure_number, unit.return_unit_str(unit.Hz))
     save_data("csv", result_file_name, values, power_meter_misure_number, unit.return_unit_str(unit.Hz))
 
-
+    return result_file_name
 
 if __name__ == "__main__":
     sys.exit(measure_IP1(SMB_RF = SMB_RF, NRP2 = NRP2, SAB = SAB))
