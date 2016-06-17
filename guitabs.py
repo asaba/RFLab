@@ -8,18 +8,21 @@ import wx
 import os
 
 from guiobjects import return_checkbox_labeled, return_spinctrl, return_textbox_labeled, return_comboBox_unit, return_file_browse, return_instrument, return_test_instrument, return_simple_button, return_min_max_step_labeled, return_spinctrl_min_max, return_comboBox, return_usb_instrument
-from utilitygui import check_instrument_comunication, check_USB_instrument_comunication
-from utilitygui import check_value_is_valid_file, check_value_min_max, browse_file, check_steps_count, error_message
+from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument, browse_file, check_steps_count, error_message, check_instrument_comunication, check_USB_instrument_comunication
 from measure_scripts.plotIP1graph import calculate_all_IP1, unit
 from measure_scripts.plotSpuriusCGraph import plot_spurius_graph, order_and_group_data
 from measure_scripts.csvutility import *
+import matplotlib.pyplot as plt
 from measure_scripts.graphutility import Graph_Axis_Range, graph_types, generic_graph_types
 import serial.tools.list_ports
 import webbrowser
 import subprocess
-from utility import inkscape_exec, buildfitsfileslist
+from utility import inkscape_exec, buildfitsfileslist, return_max_min_from_data_table_row
+from measure_scripts.instrumentmeasures import readFSV_sweep, FSV_reset_setup
+from measure_scripts.plotXYgraph import plot_XY_Single, build_table_value_from_x_y
+from measure_scripts.Spurius import spectrum_analyzer_IF_relative_level_enable
 
-
+fig1=None
 
 class InstrumentPanelClass(wx.Panel):
     
@@ -27,6 +30,7 @@ class InstrumentPanelClass(wx.Panel):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
         self.instrument_txt_IP, self.instrument_txt_Port, self.instrument_txt_Timeout, self.combobox_instrtype, self.instrument_sizer = return_instrument(self)
         self.instrument_test_button, self.instrument_label, self.instrument_test_sizer  = return_test_instrument(self)
+        self.instrument_enable_status, self.instrument_enable_status_sizer = return_checkbox_labeled(self, "Instrument Status")
         self.instrument_test_button.Bind(wx.EVT_BUTTON, self.OnTestInstrument)
     
     def OnTestInstrument(self, event):
@@ -67,13 +71,14 @@ class SetupPanelClass(wx.Panel):
         self.result_file_name_button.Bind(wx.EVT_BUTTON, self.File_browser_Out)
     
     def File_browser_Out(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*", wx.SAVE)
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            self.result_file_name.SetValue(path)
-        else:
-            self.result_file_name.SetValue("")
-        dlg.Destroy()
+        browse_file(self, self.result_file_name, wildcard = "*", mode = wx.SAVE)
+        #dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*", wx.SAVE)
+        #if dlg.ShowModal() == wx.ID_OK:
+        #    path = dlg.GetPath()
+        #    self.result_file_name.SetValue(path)
+        #else:
+        #    self.result_file_name.SetValue("")
+        #dlg.Destroy()
         
 class PlotGraphPanelClass(wx.Panel):
     
@@ -162,7 +167,12 @@ class TabPanelCalCableSetup(SetupPanelClass):
         SetupPanelClass.__init__(self, parent=parent)
         sizer = wx.BoxSizer(wx.VERTICAL)
         
+        self.output_level, dummy, self.create_dummycable_cb, self.sizer_output_level, dummy, dummy = return_textbox_labeled(self, "Output Power Level (Dummy Cable)", enabled = True, enable_text = "Create Dummy Cable")
+        
+        
         sizer.Add(self.sizer_result_file_name, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_output_level, 0, wx.ALL, 5)
+        
  
         self.SetSizer(sizer)
         
@@ -288,7 +298,7 @@ class TabPanelFSV(InstrumentPanelClass):
         sizer = wx.BoxSizer(wx.VERTICAL)
         
         #spectrum_analyzer_state = "ON"
-        self.spectrum_analyzer_state, self.sizer_spectrum_analyzer_state = return_checkbox_labeled(self, "State")
+        #self.spectrum_analyzer_state, self.sizer_spectrum_analyzer_state = return_checkbox_labeled(self, "State")
         
         #spectrum_analyzer_sweep_points = 1001
         self.spectrum_analyzer_sweep_points, dummy, dummy, self.sizer_spectrum_analyzer_sweep_points, dummy, dummy = return_textbox_labeled(self, "Sweep points")
@@ -323,12 +333,16 @@ class TabPanelFSV(InstrumentPanelClass):
         #threshold_power = 30 #dB 
         self.threshold_power, dummy, dummy, self.sizer_threshold_power, dummy, dummy = return_textbox_labeled(self, "Threshould")
         
+        self.spectrum_analyzer_central_frequency, self.spectrum_analyzer_central_frequency_unit, dummy, self.sizer_spectrum_analyzer_central_frequency, self.spectrum_analyzer_central_frequency_button, dummy = return_textbox_labeled(self, "Central Frequency", unit = True, enabled = False, enable_text = "", read = True, button_text = "Plot display")
+        self.spectrum_analyzer_central_frequency_button.Bind(wx.EVT_BUTTON, self.OnPlotSpectrum)
+        
         #FSV_delay = 1
         self.FSV_delay, dummy, dummy, self.sizer_FSV_delay, dummy, dummy = return_textbox_labeled(self, "Measure delay (s)")
-
+        
         sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
         sizer.Add(self.instrument_test_sizer, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_spectrum_analyzer_state, 0, wx.ALL, 5)
+        sizer.Add(self.instrument_enable_status_sizer, 0, wx.ALL, 5)
+        #sizer.Add(self.sizer_spectrum_analyzer_state, 0, wx.ALL, 5)
         sizer.Add(self.sizer_spectrum_analyzer_sweep_points, 0, wx.ALL, 5)
         sizer.Add(self.sizer_spectrum_analyzer_resolution_bandwidth, 0, wx.ALL, 5)
         sizer.Add(self.sizer_spectrum_analyzer_video_bandwidth, 0, wx.ALL, 5)
@@ -343,12 +357,179 @@ class TabPanelFSV(InstrumentPanelClass):
         sizer.Add(self.sizer_spectrum_analyzer_IF_relative_level, 0, wx.ALL, 5)
         sizer.Add(self.sizer_threshold_power, 0, wx.ALL, 5)
         sizer.Add(self.sizer_FSV_delay, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_spectrum_analyzer_central_frequency, 0, wx.ALL, 5)
  
         self.SetSizer(sizer)
         
-    def OnPlotSpectrum(self):
+    def OnPlotSpectrum(self, event):
         #Function to plot the spectrum for actual parameters
-        pass
+        self.testmode = False
+        try:
+            if self.Parent.GrandParent.runmodeitem.IsChecked():
+                dlg = wx.MessageDialog(None, 'Test mode. Instruments comunication disabled', "Test mode",  wx.OK | wx.ICON_ERROR)
+                dlg.ShowModal()
+                self.testmode = True
+        except:
+            pass
+        
+        spectrum_analyzer_IP = self.instrument_txt_IP.GetValue()
+        if check_value_is_IP(spectrum_analyzer_IP, "LO Synthetizer IP") == 0:
+            return None
+        
+        spectrum_analyzer_Port = self.instrument_txt_Port.GetValue()
+        if check_value_min_max(spectrum_analyzer_Port, "LO Synthetizer Port", minimum = 0) == 0:
+            return None
+        
+        spectrum_analyzer_Timeout = self.instrument_txt_Timeout.GetValue()
+        if check_value_min_max(spectrum_analyzer_Timeout, "LO Synthetizer Timeout", minimum = 0) == 0:
+            return None
+        
+        spectrum_analyzer_instrType = self.combobox_instrtype.GetValue()
+        
+        spectrum_analyzer_state = self.instrument_enable_status.GetValue()
+        
+        
+        if spectrum_analyzer_state:
+            spectrum_analyzer_sweep_points = self.spectrum_analyzer_sweep_points.GetValue()
+            if check_value_min_max(spectrum_analyzer_sweep_points, "Sweep points", minimum = 0) == 0:
+                return None
+            else:
+                spectrum_analyzer_sweep_points = eval(self.spectrum_analyzer_sweep_points.GetValue())
+            
+            
+            spectrum_analyzer_resolution_bandwidth = self.spectrum_analyzer_resolution_bandwidth.GetValue()
+            if check_value_min_max(spectrum_analyzer_resolution_bandwidth, "Resolution Bandwidth", minimum = 0) == 0:
+                return None
+            else:
+                spectrum_analyzer_resolution_bandwidth = eval(self.spectrum_analyzer_resolution_bandwidth.GetValue())
+            
+            spectrum_analyzer_resolution_bandwidth_unit = unit.return_unit(self.spectrum_analyzer_resolution_bandwidth_unit.GetValue())
+            if check_value_not_none(spectrum_analyzer_resolution_bandwidth_unit, "Resolution Bandwidth Unit") == 0:
+                return None
+            
+            spectrum_analyzer_video_bandwidth = self.spectrum_analyzer_video_bandwidth.GetValue()
+            if check_value_min_max(spectrum_analyzer_video_bandwidth, "Video Bandwidth", minimum = 0) == 0:
+                return None
+            else:
+                spectrum_analyzer_video_bandwidth = eval(self.spectrum_analyzer_video_bandwidth.GetValue())
+            
+            spectrum_analyzer_video_bandwidth_unit = unit.return_unit(self.spectrum_analyzer_video_bandwidth_unit.GetValue())
+            if check_value_not_none(spectrum_analyzer_video_bandwidth_unit, "Video Bandwidth Unit") == 0:
+                return None
+            
+            spectrum_analyzer_frequency_span = self.spectrum_analyzer_frequency_span.GetValue()
+            if check_value_min_max(spectrum_analyzer_frequency_span, "Frequency Span", minimum = 0) == 0:
+                return None
+            else:
+                spectrum_analyzer_frequency_span = eval(self.spectrum_analyzer_frequency_span.GetValue())
+            
+            spectrum_analyzer_frequency_span_unit = unit.return_unit(self.spectrum_analyzer_frequency_span_unit.GetValue())
+            if check_value_not_none(spectrum_analyzer_frequency_span_unit, "Frequency Span Unit") == 0:
+                return None
+            
+            ##spectrum_analyzer_harmonic_number = spectrum_analyzer_harmonic_number
+            #spectrum_analyzer_attenuation = self.notebook.tabFSV.spectrum_analyzer_attenuation.GetValue()
+            #if check_value_not_none(spectrum_analyzer_attenuation, "Attenuation") == 0:
+            #    return None
+            
+            gainAmplifier = self.gainAmplifier.GetValue() #dB
+            if check_value_not_none(gainAmplifier, "Gain Amplifier") == 0:
+                return None
+            
+            spectrum_analyzer_IF_atten_enable = self.spectrum_analyzer_IF_atten_enable.GetValue()
+            spectrum_analyzer_IF_atten = self.spectrum_analyzer_IF_atten.GetValue()
+            if check_value_not_none(spectrum_analyzer_IF_atten, "Attenuation") == 0:
+                return None
+            
+            spectrum_analyzer_IF_relative_level = self.spectrum_analyzer_IF_relative_level.GetValue()
+            if check_value_not_none(spectrum_analyzer_IF_relative_level, "Relative Power Level") == 0:
+                return None
+            
+            spectrum_analyzer_IF_relative_level_enable = self.spectrum_analyzer_IF_relative_level_enable.GetValue()
+            
+            
+            threshold_power = self.threshold_power.GetValue() #dB 
+            if check_value_not_none(threshold_power, "Threshold Power Level") == 0:
+                return None
+            
+            spectrum_analyzer_frequency_marker_unit = unit.return_unit(self.spectrum_analyzer_frequency_marker_unit.GetValue())
+            #to check
+            if check_value_not_none(spectrum_analyzer_frequency_marker_unit, "Marker Frequency Unit") == 0:
+                return None
+            
+            FSV_delay = self.FSV_delay.GetValue()
+            if check_value_min_max(FSV_delay, "FSV measure delay", minimum = 0) == 0:
+                return None
+            else:
+                FSV_delay = eval(self.FSV_delay.GetValue()) 
+            
+            spectrum_analyzer_central_frequency = self.spectrum_analyzer_central_frequency.GetValue()
+            if check_value_min_max(spectrum_analyzer_central_frequency, "Central Frequency", minimum = 0) == 0:
+                return None
+            else:
+                spectrum_analyzer_video_bandwidth = eval(self.spectrum_analyzer_video_bandwidth.GetValue())
+            
+            
+            spectrum_analyzer_central_frequency_unit = unit.return_unit(self.spectrum_analyzer_central_frequency_unit.GetValue())
+            #to check
+            if check_value_not_none(spectrum_analyzer_central_frequency_unit, "Central Frequency Unit") == 0:
+                return None
+            
+        
+        try:
+            FSV = create_instrument(spectrum_analyzer_IP, spectrum_analyzer_Port, eval(spectrum_analyzer_Timeout), spectrum_analyzer_instrType, TEST_MODE = self.testmode, instrument_class = "FSV", enable_state = spectrum_analyzer_state)
+        except:
+            dlg = wx.MessageDialog(None, "Spectrum analiser comunication error", 'Error Spectrum analiser', wx.OK | wx.ICON_ERROR)
+            dlg.ShowModal()
+            return 0
+        
+        FSV_reset_setup(FSV, spectrum_analyzer_sweep_points, 
+                    spectrum_analyzer_resolution_bandwidth, 
+                    spectrum_analyzer_resolution_bandwidth_unit, 
+                    spectrum_analyzer_video_bandwidth, 
+                    spectrum_analyzer_video_bandwidth_unit, 
+                    spectrum_analyzer_frequency_span, 
+                    spectrum_analyzer_frequency_span_unit, 
+                    spectrum_analyzer_IF_atten_enable, 
+                    spectrum_analyzer_IF_atten, 
+                    spectrum_analyzer_IF_relative_level_enable, 
+                    spectrum_analyzer_IF_relative_level)
+        
+        
+        table_value = build_table_value_from_x_y(*readFSV_sweep(FSV, 
+                                                              FSV_delay, 
+                                                              spectrum_analyzer_central_frequency, 
+                                                              spectrum_analyzer_central_frequency_unit))
+        
+        x_max, x_min, y_max, y_min, z_max, z_min = return_max_min_from_data_table_row(table_value, 0, 2, None)
+        
+        axis_x_legend = "CF {central_frequency} {central_frequency_unit} -  - Span {span} {span_unit}".format(central_frequency = str(spectrum_analyzer_central_frequency),
+                                                                                                              central_frequency_unit = unit.return_unit_str(spectrum_analyzer_central_frequency_unit),
+                                                                                                              span = str(spectrum_analyzer_frequency_span),
+                                                                                                              span_unit = unit.return_unit_str(spectrum_analyzer_frequency_span_unit))
+
+        axis_y_legend = "Ref.Level {ref_level} dBm  - Attenuation {attenuation} dB".format(ref_level = str(spectrum_analyzer_IF_relative_level) if spectrum_analyzer_IF_relative_level_enable else "0",
+                                                                                           attenuation = str(spectrum_analyzer_IF_atten) if spectrum_analyzer_IF_atten_enable else "0",)
+        graph_x = Graph_Axis_Range(x_min, x_max, (x_max-x_min)/10, unit.Hz, axis_x_legend)
+        graph_y = Graph_Axis_Range(y_min, y_max, (y_max-y_min)/10, unit.dB, axis_y_legend)
+        graph_z = Graph_Axis_Range(0, 0 , 1, unit.Hz)
+        
+        fig = plt.figure()
+        
+        plot_XY_Single(fig1, table_value, 
+                       graph_group_index = [1], 
+                       x_index = 0, 
+                       y_index = 2, 
+                       z_index = None, 
+                       legend_index = [(0, -1, "", 0)], 
+                       legend_title = None, 
+                       graph_title = "SA Sweep",
+                       graph_type = "GG", 
+                       graph_x = graph_x, 
+                       graph_y = graph_y, 
+                       graph_z = graph_z,
+                       save = False)
+        
 
 
 class TabPanelPM5(InstrumentUSBPanelClass):
@@ -362,7 +543,7 @@ class TabPanelPM5(InstrumentUSBPanelClass):
         sizer = wx.BoxSizer(wx.VERTICAL)
         
         #pm5_state = "ON"
-        self.pm5_state, self.sizer_pm5_state = return_checkbox_labeled(self, "State")
+        #self.pm5_state, self.sizer_pm5_state = return_checkbox_labeled(self, "State")
         #power_meter_misure_number = 1
         self.pm5_misure_number, self.sizer_pm5_misure_number = return_spinctrl(self, "Measures")
         
@@ -372,7 +553,7 @@ class TabPanelPM5(InstrumentUSBPanelClass):
         
         sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
         sizer.Add(self.instrument_test_sizer, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_pm5_state, 0, wx.ALL, 5)
+        sizer.Add(self.instrument_enable_status_sizer, 0, wx.ALL, 5)
         sizer.Add(self.sizer_pm5_misure_number, 0, wx.ALL, 5)
         sizer.Add(self.sizer_pm5_misure_delay, 0, wx.ALL, 5)
 
@@ -390,7 +571,7 @@ class TabPanelSMB(InstrumentPanelClass):
         sizer = wx.BoxSizer(wx.VERTICAL)
         
         #synthetizer_LO_state = "ON"
-        self.synthetizer_state, self.sizer_synthetizer_state = return_checkbox_labeled(self, "State")
+        #self.synthetizer_state, self.sizer_synthetizer_state = return_checkbox_labeled(self, "State")
         
         #self.synthetizer_frequency_min, self.synthetizer_frequency_min_unit, self.synthetizer_frequency_max, self.synthetizer_frequency_max_unit, self.synthetizer_frequency_step, self.synthetizer_frequency_step_unit, dummy, dummy, self.sizer_synthetizer_frequency = return_min_max_step_labeled(self, "Frequency", unit = True)
         
@@ -404,7 +585,7 @@ class TabPanelSMB(InstrumentPanelClass):
         
         sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
         sizer.Add(self.instrument_test_sizer, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_synthetizer_state, 0, wx.ALL, 5)
+        sizer.Add(self.instrument_enable_status_sizer, 0, wx.ALL, 5)
         sizer.Add(self.sizer_synthetizer_frequency, 0, wx.ALL, 5)
         if range_power:
             sizer.Add(self.sizer_synthetizer_level, 0, wx.ALL, 5)
@@ -469,13 +650,7 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
         #Graph Title
 
         self.graph_x_label.ChangeValue("Input Power (dBm)")
-        #self.graph_x_min.ChangeValue("-40")
-        #self.graph_x_max.ChangeValue("10")
-        #self.graph_x_step.ChangeValue("5")
         self.graph_y_label.ChangeValue("Output Power (dBm)")
-        #self.graph_y_min.ChangeValue("-30")
-        #self.graph_y_max.ChangeValue("20")
-        #self.graph_y_step.ChangeValue("5")
 
         sizer.Add(self.sizer_data_file_name, 0, wx.ALL, 5)
         sizer.Add(self.sizer_graph_title, 0, wx.ALL, 5)
@@ -543,6 +718,15 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
         
         graph_animated = self.graph_animated.GetValue()
         
+        dlg = wx.TextEntryDialog(self, "Insert Spurius Frequencies (MHz) - comma separated")
+        dlg.ShowModal()
+        result = dlg.GetValue()
+        dlg.Destroy()
+        IF_Frequency_selected = eval("[" + result + "]")
+        IF_Frequency_selected = [unit.convertion_to_base(x, unit.MHz) for x in IF_Frequency_selected]
+        
+        
+        
         graph_x = Graph_Axis_Range(graph_x_min, graph_x_max, graph_x_step, graph_x_unit, graph_x_label)
         graph_x.to_base()
         
@@ -553,6 +737,7 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
                           graph_title, 
                           graph_x,
                           graph_y, 
+                          IF_Frequency_selected,
                           graph_animated)
         #self.instrument_label.SetLabel(response)
 
@@ -575,9 +760,24 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         self.y_index = 0
         self.z_index = 0
         self.row_data_filter = []
-        self.grap_y_calc_button.param_to_calc = {"combobox": "self.graph_y_unit", "index" : "self.y_index", "textbox_min" : "self.graph_y_min", "textbox_max" : "self.graph_y_max", "filter" : "self.row_data_filter", "unit_index" : "self.y_unit_index"}
-        self.grap_x_calc_button.param_to_calc = {"combobox": "self.graph_x_unit", "index" : "self.x_index", "textbox_min" : "self.graph_x_min", "textbox_max" : "self.graph_x_max", "filter" : "self.row_data_filter", "unit_index" : "self.x_unit_index"}
-        self.grap_z_calc_button.param_to_calc = {"combobox": "self.graph_z_unit", "index" : "self.z_index", "textbox_min" : "self.graph_z_min", "textbox_max" : "self.graph_z_max", "filter" : "self.row_data_filter", "unit_index" : "self.z_unit_index"}
+        self.grap_y_calc_button.param_to_calc = {"combobox": "self.graph_y_unit", 
+                                                 "index" : "self.y_index", 
+                                                 "textbox_min" : "self.graph_y_min", 
+                                                 "textbox_max" : "self.graph_y_max", 
+                                                 "filter" : "self.row_data_filter", 
+                                                 "unit_index" : "self.y_unit_index"}
+        self.grap_x_calc_button.param_to_calc = {"combobox": "self.graph_x_unit", 
+                                                 "index" : "self.x_index", 
+                                                 "textbox_min" : "self.graph_x_min", 
+                                                 "textbox_max" : "self.graph_x_max", 
+                                                 "filter" : "self.row_data_filter", 
+                                                 "unit_index" : "self.x_unit_index"}
+        self.grap_z_calc_button.param_to_calc = {"combobox": "self.graph_z_unit", 
+                                                 "index" : "self.z_index", 
+                                                 "textbox_min" : "self.graph_z_min", 
+                                                 "textbox_max" : "self.graph_z_max", 
+                                                 "filter" : "self.row_data_filter", 
+                                                 "unit_index" : "self.z_unit_index"}
         #self.grap_x_max_calc_button.param_to_calc = {"combobox": "self.graph_x_unit", "type": "max", "index" : "self.x_index", "textbox" : "self.graph_x_max", "filter" : "self.row_data_filter", "unit_index" : "self.x_unit_index"}
         
         
@@ -589,11 +789,11 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         #Graph Title
         
 
-        self.graph_x_label.ChangeValue("IF Frequency (MHz)")
+        self.graph_x_label.ChangeValue("IF Frequency ({unit})")
         self.graph_x_min.ChangeValue("100")
         self.graph_x_max.ChangeValue("3000")
         self.graph_x_step.ChangeValue("100")
-        self.graph_y_label.ChangeValue("IF Power Loss (dBm)")
+        self.graph_y_label.ChangeValue("IF Power Loss ({unit})")
         self.graph_y_min.ChangeValue("-20")
         self.graph_y_max.ChangeValue("0")
         self.graph_y_step.ChangeValue("2")
@@ -634,7 +834,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         param_to_calc = button.param_to_calc #{"type": "max", "index" : "self.x_index", "textbox" : "self.graph_y_max", "unit_index" : "self.x_unit_index",}
 
         m = []
-        tmp_unit = unit.return_unit_str(unit.MHz) 
+        tmp_unit = unit.return_unit_str(unit.dBm) 
         for row in self.return_list_of_row():
             for d in row:
                 if self.check_filter(d, eval(param_to_calc["filter"])):
@@ -678,25 +878,25 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
             self.x_index = frequency_IF_index
             self.x_unit_index = unit_IF_index
             self.y_index = conversion_loss
-            self.y_unit_index = unit.dB
+            self.y_unit_index = None
             self.z_index = power_IF_index
-            self.z_unit_index = unit.dB
+            self.z_unit_index = None
             self.row_data_filter = [(n_LO_index, "in", [1, -1]), (m_RF_index, "in", [1, -1])]
         elif self.graph_type_value == "RF":
             self.x_index = power_RF_index
-            self.x_unit_index = unit.dB
+            self.x_unit_index = None
             self.y_index = power_IF_index
-            self.y_unit_index = unit.dB
+            self.y_unit_index = None
             self.z_index = power_IF_index
-            self.z_unit_index = unit.dB
+            self.z_unit_index = None
             self.row_data_filter = [(n_LO_index, "in", [1, -1]), (m_RF_index, "in", [1, -1])]
         elif self.graph_type_value == "SP":
             self.x_index = power_RF_index
-            self.x_unit_index = unit.dB
+            self.x_unit_index = None
             self.y_index = power_IF_index
-            self.y_unit_index = unit.dB
+            self.y_unit_index = None
             self.z_index = power_IF_index
-            self.z_unit_index = unit.dB
+            self.z_unit_index = None
             dlg = wx.TextEntryDialog(self, "Insert Spurius Frequencies (MHz) - comma separated")
             dlg.ShowModal()
             result = dlg.GetValue()
@@ -708,9 +908,9 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
             self.x_index = frequency_IF_index
             self.x_unit_index = unit_IF_index
             self.y_index = power_IF_index
-            self.y_unit_index = unit.dB
+            self.y_unit_index = None
             self.z_index = power_IF_index
-            self.z_unit_index = unit.dB
+            self.z_unit_index = None
             graph_z_min = self.graph_z_min.GetValue()
             if check_value_min_max(graph_z_min, "Graph Z min", minimum = None) == 0:
                 return []
@@ -1137,7 +1337,7 @@ class TabPanelSAB(InstrumentPanelClass):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         #power_meter_state = "ON"
-        self.SAB_state, self.sizer_SAB_state = return_checkbox_labeled(self, "State")
+        #self.SAB_state, self.sizer_SAB_state = return_checkbox_labeled(self, "State")
 
         if attenutation:
             self.SAB_attenuation_min, dummy, self.SAB_attenuation_max, dummy, self.SAB_attenuation_step, dummy, dummy, dummy, self.sizer_SAB_attenuation = return_min_max_step_labeled(self, "Attenuation", unit = False)
@@ -1153,7 +1353,7 @@ class TabPanelSAB(InstrumentPanelClass):
 
         sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
         sizer.Add(self.instrument_test_sizer, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_SAB_state, 0, wx.ALL, 5)
+        sizer.Add(self.instrument_enable_status_sizer, 0, wx.ALL, 5)
         if attenutation:
             sizer.Add(self.sizer_SAB_attenuation, 0, wx.ALL, 5)
             sizer.Add(self.sizer_SAB_attenuation_delay, 0, wx.ALL, 5)
@@ -1176,7 +1376,7 @@ class TabPanelTSC(InstrumentPanelClass):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         #power_meter_state = "ON"
-        self.TSC_state, self.sizer_TSC_state = return_checkbox_labeled(self, "State")
+        #self.TSC_state, self.sizer_TSC_state = return_checkbox_labeled(self, "State")
 
         self.TSC_collecting_delay, dummy, dummy, self.sizer_TSC_collecting_delay, dummy, dummy = return_textbox_labeled(self, "Collecting time (m)")
         
@@ -1187,6 +1387,7 @@ class TabPanelTSC(InstrumentPanelClass):
         
         sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
         sizer.Add(self.instrument_test_sizer, 0, wx.ALL, 5)
+        sizer.Add(self.instrument_enable_status_sizer, 0, wx.ALL, 5)
         sizer.Add(self.sizer_TSC_state, 0, wx.ALL, 5)
         sizer.Add(self.sizer_TSC_collecting_delay, 0, wx.ALL, 5)
         sizer.Add(self.sizer_TSC_plot_adev, 0, wx.ALL, 5)
@@ -1216,7 +1417,7 @@ class TabPanelPowerMeter(InstrumentPanelClass):
 
         
         #power_meter_state = "ON"
-        self.power_meter_state, self.sizer_power_meter_state = return_checkbox_labeled(self, "State")
+        #self.power_meter_state, self.sizer_power_meter_state = return_checkbox_labeled(self, "State")
 
         #power_meter_misure_number = 1
         self.power_meter_misure_number, self.sizer_power_meter_misure_number = return_spinctrl(self, "Measures")
@@ -1228,7 +1429,7 @@ class TabPanelPowerMeter(InstrumentPanelClass):
 
         sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
         sizer.Add(self.instrument_test_sizer, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_power_meter_state, 0, wx.ALL, 5)
+        sizer.Add(self.instrument_enable_status_sizer, 0, wx.ALL, 5)
         sizer.Add(self.sizer_power_meter_misure_number, 0, wx.ALL, 5)
         sizer.Add(self.sizer_power_meter_misure_delay, 0, wx.ALL, 5)
         sizer.Add(self.sizer_power_meter_make_zero, 0, wx.ALL, 5)
