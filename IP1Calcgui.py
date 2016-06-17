@@ -5,13 +5,15 @@ Created on 09/may/2016
 '''
 
 #import images
+from taskframe import TaskFrame
 import wx
 import os
+import webbrowser
 
 from guitabs import TabPanelFSV, TabPanelPowerMeter, TabPanelSMB, TabPanelSpuriusSetup, TabPanelIP1CalcSetup, TabPanelSAB, TabPanelIP1PlotGraph
 from measure_scripts.IP1Cal import unit, SMB_RF, NRP2, SAB, measure_IP1
-from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument
-from utility import writelineonfilesettings, return_now_postfix,\
+from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument, check_steps
+from utility import return_now_postfix,\
     Generic_Range
 from measure_scripts.scriptutility import Frequency_Range
 
@@ -43,7 +45,7 @@ class NotebookDemo(wx.Notebook):
         self.AddPage(self.tabIP1CalcSetting, "Calculate IP1")
  
 ########################################################################
-class IP1CalcFrame(wx.Frame):
+class IP1CalcFrame(TaskFrame):
     """
     Frame that holds all other widgets
     """
@@ -51,111 +53,55 @@ class IP1CalcFrame(wx.Frame):
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
-        wx.Frame.__init__(self, None, wx.ID_ANY,
+        TaskFrame.__init__(self, NotebookDemo,
                           "Calculate IP1",
                           size=(800,650)
                           )
-        
-        menubar = wx.MenuBar()
-        fileMenu = wx.Menu()
-        
-        self.fitem = fileMenu.Append(wx.ID_OPEN, 'Load settings', 'Load settings')
-        self.fitem2 = fileMenu.Append(wx.ID_SAVEAS, 'Save settings', 'Save settings')
-        self.runmodeitem = fileMenu.AppendCheckItem(7890, "Testing Mode", "Enable testing mode")
-        menubar.Append(fileMenu, '&File')
-        self.SetMenuBar(menubar)
-        
-        self.Bind(wx.EVT_MENU, self.OnLoadSettings, self.fitem)
-        self.Bind(wx.EVT_MENU, self.OnSaveSettings, self.fitem2)
-        #self.Bind(wx.EVT_MENU, self.OnCheckRunMode, self.runmodeitem)
-        
-        self.panel = wx.Panel(self)
-        self.btn_execute = wx.Button(self.panel, 0, 'Start')
-        self.btn_execute.Bind(wx.EVT_BUTTON, self.OnStart)
-        
-        self.notebook = NotebookDemo(self.panel)
-        #notebook2 = NotebookDemo(panel)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.notebook, 1, wx.ALL|wx.EXPAND, 5)
-        #sizer.Add(notebook2, 0, wx.ALL|wx.EXPAND, 5)
-        sizer.Add(self.btn_execute, 0, wx.ALL|wx.EXPAND, 5)
-        self.panel.SetSizer(sizer)
-        self.Layout()
- 
-        self.Show()
-        
-    
-    def OnLoadSettings(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            #mypath = os.path.basename(path)
-            f = open(path, "r")
-            for line in f:
-                parameter = line.split("=")[0].strip()
-                value =  line.split("=")[1].strip()
-                exec("{param}.SetValue({value})".format(param = parameter, value = value))
-                        
-    def savesettings(self, filepointer):
 
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_state")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_IP")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_Port")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_Timeout")
-        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min")
-        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max")
-        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_min")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_max")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_step")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_fixed")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_IP")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_Port")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_Timeout")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_state")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_make_zero")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_misure_number")
-        self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_misure_delay")
-        self.writelinesettings(filepointer, "self.notebook.tabSAB.instrument_txt_IP")
-        self.writelinesettings(filepointer, "self.notebook.tabSAB.instrument_txt_Port")
-        self.writelinesettings(filepointer, "self.notebook.tabSAB.instrument_txt_Timeout")
-        self.writelinesettings(filepointer, "self.notebook.tabSAB.SAB_state")
-        self.writelinesettings(filepointer, "self.notebook.tabSAB.SAB_attenuation_min")
-        self.writelinesettings(filepointer, "self.notebook.tabSAB.SAB_attenuation_max")
-        self.writelinesettings(filepointer, "self.notebook.tabSAB.SAB_attenuation_step")
-        self.writelinesettings(filepointer, "self.notebook.tabSAB.SAB_attenuation_delay")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1CalcSetting.calibration_file_RF")
-        self.writelinesettings(filepointer, "self.notebook.tabSAB.SAB_switch01_delay")
-        self.writelinesettings(filepointer, "self.notebook.tabSAB.SAB_switch02_delay")
-        self.writelinesettings(filepointer, "self.notebook.tabSAB.SAB_switch03_delay")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1CalcSetting.result_file_name")         
-
-    
-    
-    
-    
-    def OnSaveSettings(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.SAVE)
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            f = open(path, "w")
-            self.savesettings(f)
-            f.close()
                         
-    def writelinesettings(self, f, parameter):
-        value = None
-        exec("value = {param}.GetValue()".format(param = parameter))
-        writelineonfilesettings(f, parameter, value)
+    def savesettings(self, filename):
+
+        params = ["tabRF.synthetizer_state", 
+                  "tabRF.instrument_txt_IP",
+                  "tabRF.instrument_txt_Port", 
+                  "tabRF.instrument_txt_Timeout",
+                  "tabRF.combobox_instrtype",
+                  "tabRF.synthetizer_frequency_min",
+                  "tabRF.synthetizer_frequency_max",
+                  "tabRF.synthetizer_frequency_step", 
+                  "tabRF.synthetizer_frequency_unit",
+                  "tabRF.synthetizer_level_min",
+                  "tabRF.synthetizer_level_max",
+                  "tabRF.synthetizer_level_step",
+                  "tabPowerMeter.instrument_txt_IP",
+                  "tabPowerMeter.instrument_txt_Port",
+                  "tabPowerMeter.instrument_txt_Timeout",
+                  "tabPowerMeter.combobox_instrtype",
+                  "tabPowerMeter.power_meter_state",
+                  "tabPowerMeter.power_meter_make_zero",
+                  "tabPowerMeter.power_meter_misure_number",
+                  "tabPowerMeter.power_meter_misure_delay",
+                  "tabSAB.instrument_txt_IP",
+                  "tabSAB.instrument_txt_Port",
+                  "tabSAB.instrument_txt_Timeout",
+                  "tabSAB.SAB_state",
+                  "tabSAB.SAB_attenuation_min",
+                  "tabSAB.SAB_attenuation_max",
+                  "tabSAB.SAB_attenuation_step",
+                  "tabSAB.SAB_attenuation_delay",
+                  "tabIP1CalcSetting.calibration_file_RF",
+                  "tabSAB.SAB_switch01_delay",
+                  "tabSAB.SAB_switch02_delay",
+                  "tabSAB.SAB_switch03_delay",
+                  "tabIP1CalcSetting.result_file_name"]
+        
+        
+        TaskFrame.framesavesettings(self, filename, params = params)
     
     def OnStart(self, event):
                 
-        if self.runmodeitem.IsChecked():
-            dlg = wx.MessageDialog(None, 'Test mode. Instruments comunication disabled', "Test mode",  wx.OK | wx.ICON_ERROR)
-            dlg.ShowModal()
+        TaskFrame.OnStart(self, event)
+        
         #Check all values
         synthetizer_IP = self.notebook.tabRF.instrument_txt_IP.GetValue()
         if check_value_is_IP(synthetizer_IP, "Synthetizer IP") == 0:
@@ -216,7 +162,7 @@ class IP1CalcFrame(wx.Frame):
         try:
             synthetizer_level_step = eval(self.notebook.tabRF.synthetizer_level_step.GetValue())
         except:
-            synthetizer_level_step = 0
+            synthetizer_level_step = 1
         
         
         
@@ -284,8 +230,10 @@ class IP1CalcFrame(wx.Frame):
             
         try:
             SAB_attenuation_step = eval(self.notebook.tabSAB.SAB_attenuation_step.GetValue())
+            if check_steps(SAB_attenuation_step, "SwitchAttBox attenuation step") == 0:
+                return None
         except:
-            SAB_attenuation_step = 0
+            SAB_attenuation_step = 1
         
         SAB_attenuation_delay = self.notebook.tabSAB.SAB_attenuation_delay.GetValue()
         if check_value_min_max(SAB_attenuation_delay, "Attenuation Delay", minimum = 0) == 0:
@@ -333,10 +281,13 @@ class IP1CalcFrame(wx.Frame):
         synthetizer_frequency.to_base()
         synthetizer_level = Generic_Range(synthetizer_level_min, synthetizer_level_max, synthetizer_level_step)
         SAB_attenuation = Generic_Range(SAB_attenuation_min, SAB_attenuation_max, SAB_attenuation_step)
+        
+        self.savesettings(result_file_name)
+        
         dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
                 style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME)
         
-        measure_IP1(SMB_RF, 
+        result_IP1_file_name = measure_IP1(SMB_RF, 
                     NRP2, 
                     SAB, 
                     synthetizer_state, 
@@ -357,10 +308,11 @@ class IP1CalcFrame(wx.Frame):
                     createprogressdialog = dialog)
         
         dialog.Destroy()
-        filesettingname = result_file_name + "_calcable_" + return_now_postfix() + ".cfg"
-        f = open(filesettingname, "w")
-        self.savesettings(f)
-        f.close()
+        
+        try:
+            webbrowser.open(os.path.dirname(result_IP1_file_name))
+        except:
+            pass
         
 #----------------------------------------------------------------------
 if __name__ == "__main__":
