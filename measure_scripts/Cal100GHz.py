@@ -28,13 +28,13 @@ from instrumentmeasures import readPM5
 #create dummy class and objects for debugging
 if "SMB_RF" not in globals():
 
-    print("SMB_LO or SMB_RF not defined")
+    #print("SMB_LO or SMB_RF not defined")
     SMB_RF = SMB_class()
     
 
 if "PM5" not in globals():
 
-    print("PM5 not defined")
+    #print("PM5 not defined")
     PM5 = PM5_class()  
     PM5_delay = 0
 else:
@@ -173,12 +173,12 @@ def measure_100GHz_cal(SMB = SMB_RF,
 #create dummy class and objects for debugging
 if "SMB_LO" not in globals():
 
-    print("SMB_LO not defined")
+    #print("SMB_LO not defined")
     SMB_LO = SMB_class()
     
 if "PM5" not in globals():
 
-    print("PM5 not defined")
+    #print("PM5 not defined")
     PM5 = PM5_class()  
     PM5_delay = 0
 else:
