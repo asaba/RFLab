@@ -20,14 +20,14 @@ class TaskFrame(wx.Frame):
                           size=size
                           )
         
-        menubar = wx.MenuBar()
-        fileMenu = wx.Menu()
+        self.menubar = wx.MenuBar()
+        self.fileMenu = wx.Menu()
         
-        self.fitem = fileMenu.Append(wx.ID_OPEN, 'Load settings', 'Load settings')
-        self.fitem2 = fileMenu.Append(wx.ID_SAVEAS, 'Save settings', 'Save settings')
-        self.runmodeitem = fileMenu.AppendCheckItem(7890, "Testing Mode", "Enable testing mode")
-        menubar.Append(fileMenu, '&File')
-        self.SetMenuBar(menubar)
+        self.fitem = self.fileMenu.Append(wx.ID_OPEN, 'Load settings', 'Load settings')
+        self.fitem2 = self.fileMenu.Append(wx.ID_SAVEAS, 'Save settings', 'Save settings')
+        self.runmodeitem = self.fileMenu.AppendCheckItem(7890, "Testing Mode", "Enable testing mode")
+        self.menubar.Append(self.fileMenu, '&File')
+        self.SetMenuBar(self.menubar)
         
         self.Bind(wx.EVT_MENU, self.OnLoadSettings, self.fitem)
         self.Bind(wx.EVT_MENU, self.OnSaveSettings, self.fitem2)
