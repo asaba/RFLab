@@ -21,8 +21,9 @@ from debug import FSV_class, SAB_class, NRP2_class, SMB_class
 from utility import save_data, save_settings, unit_class, save_spurius, return_now_postfix, save_harmonic,\
     Generic_Range, human_readable_frequency_unit
 from scriptutility import calibrate, readcalibrationfile, calibrationfilefunction, Frequency_Range
+from instrumentmeasures import readFSV_marker, FSV_reset_setup
 
-VERSION = 7.0
+VERSION = 8.0
 
 unit = unit_class()
         
@@ -84,10 +85,17 @@ def return_spurius_list(LO, RF, n_LO, m_RF, IF_low, IF_high):
     #by the equation
     #spurius = n*LO - m*RF
     #remove the spurius for n and m = 0 and > IF_high
+    
+    n_LO_range = n_LO.return_range()
+    if m_RF.min == 0 and m_RF.max == 0 and m_RF.step == 1:
+        m_RF_range = m_RF.return_range(step_correction = False)
+    else:
+        m_RF_range = m_RF.return_range()
+    
     result = []
-    for n in n_LO.return_range():
-        if m_RF.step>0: # RF enabled
-            for m in m_RF.return_range():
+    for n in n_LO_range:
+        if len(m_RF_range)>0: # RF enabled
+            for m in m_RF_range:
                 if n != 0 and m != 0:
                     current_spurius = n * LO + m * RF
                     if current_spurius > IF_low and current_spurius < IF_high:
@@ -96,7 +104,7 @@ def return_spurius_list(LO, RF, n_LO, m_RF, IF_low, IF_high):
             if n != 0:
                 current_spurius = n * LO
                 if current_spurius > IF_low and current_spurius < IF_high:
-                    result.append([current_spurius, unit.return_unit_str(unit.Hz), LO, LO, n, 0])
+                    result.append([current_spurius, unit.Hz, LO, 0, n, 0])
     return result
 
 
@@ -159,28 +167,24 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
     SMB_RF.write("*rst")
 
     #reset spectrum analyzer
-    FSV.write("*rst")
-
     #imposta la modalit� di funzionamento dei due SMB
     SMB_LO.write("FREQ:MODE FIX")
     SMB_LO.write("POW:MODE FIX")
     SMB_RF.write("FREQ:MODE FIX")
     SMB_RF.write("POW:MODE FIX")
     
-    #imposta la modalit� di funzionamento dello spectrum analyzer
-    FSV.write("SYST:DISP:UPD OFF") #diplay off
-    FSV.write("INIT:CONT ON") #contiuous sweep mode
-    FSV.write("DISP:WIND:TRAC:MODE WRIT") #lavora con Clr/Write mode
-    FSV.write("FREQ:MODE SWE") #Selects the frequency domain
-    FSV.write("SWE:POIN " + str(spectrum_analyzer_sweep_points)) #number of sweep points 101 to 32001 default 691
-    FSV.write("BAND " + str(spectrum_analyzer_resolution_bandwidth) + unit.return_unit_str(spectrum_analyzer_resolution_bandwidth_unit)) #set the resolution bandwidth
-    FSV.write("BAND:VID " + str(spectrum_analyzer_video_bandwidth) + unit.return_unit_str(spectrum_analyzer_video_bandwidth_unit)) #set video bandwidth
-    FSV.write("FREQ:SPAN " + str(spectrum_analyzer_frequency_span) + unit.return_unit_str(spectrum_analyzer_frequency_span_unit)) #
+    FSV_reset_setup(FSV, spectrum_analyzer_sweep_points, 
+                    spectrum_analyzer_resolution_bandwidth, 
+                    spectrum_analyzer_resolution_bandwidth_unit, 
+                    spectrum_analyzer_video_bandwidth, 
+                    spectrum_analyzer_video_bandwidth_unit, 
+                    spectrum_analyzer_frequency_span, 
+                    spectrum_analyzer_frequency_span_unit, 
+                    spectrum_analyzer_IF_atten_enable, 
+                    spectrum_analyzer_IF_atten, 
+                    spectrum_analyzer_IF_relative_level_enable, 
+                    spectrum_analyzer_IF_relative_level)
     
-    if spectrum_analyzer_IF_atten_enable == True:
-        FSV.write("INP:ATT " + str(spectrum_analyzer_IF_atten)) #set attenuation
-    if spectrum_analyzer_IF_relative_level_enable == True:
-        FSV.write("DISP:WIND:TRAC:Y:RLEV " + spectrum_analyzer_IF_relative_level + "dBm")
     FSV.write("CALC:MARKER ON") #enable marker mode
 
     #load data for cables from calibration files
@@ -238,7 +242,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
     
     maxcount = float(len(frequency_LO_range) * len(level_LO_range) * len(level_RF_range) * len(frequency_RF_range))
     count = 0
-    
+    continue_progress = (True, True)
 
     for f_LO in frequency_LO_range: #frequency loop
         #set SMB100A frequency for LO
@@ -276,7 +280,13 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
                     spurius_tmp = return_spurius_list(f_LO, f_RF, n_LO, m_RF, IF_low, IF_high)
                     #turn on RF
                     SMB_RF.write("OUTP ON")
-                    spurius_markers = readFSV_marker_spurius(FSV, FSV_delay, spurius_tmp, spectrum_analyzer_IF_atten, unit.Hz, calibration_IF, calibration_IF_function = calibration_function_IF, calibration_IF_function_unit = calibration_function_IF_unit)
+                    spurius_markers = readFSV_marker_spurius(FSV, 
+                                                             FSV_delay, 
+                                                             spurius_tmp, 
+                                                             unit.Hz, 
+                                                             calibration_IF, 
+                                                             calibration_IF_function = calibration_function_IF, 
+                                                             calibration_IF_function_unit = calibration_function_IF_unit)
                     count +=1
                     
                     
@@ -291,7 +301,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
                             #wx.MicroSleep(500)
                             dialog.Close()
                         else:
-                            dialog.Update(newvalue, message)
+                            continue_progress = dialog.Update(newvalue, message)
                     
                     
                     #load value for each spurius frequency
@@ -305,13 +315,22 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
                     if len(spurius_markers) >0:
                         spurius_filename =  os.path.join(partial_file_path, "_".join(["R"] + values[0][0:-2]))
                         save_spurius(spurius_filename, values)
+                        
+                    if not continue_progress[0]:
+                        dialog.Destroy()
+                        break
                     if f_LO == frequency_LO_range[-1] and l_LO == level_LO_range[-1] and l_RF == level_RF_range[-1] and f_RF == frequency_RF_range[-1]:
                         #safety turn Off
                         #dialog.Update(100, "Measure completed)
                         dialog.Destroy()
                         #SMB_LO.write("OUTP OFF")
                         #SMB_RF.write("OUTP OFF")
-                    
+                if not continue_progress[0]:
+                    break
+            if not continue_progress[0]:
+                break
+        if not continue_progress[0]:
+            break
                     
     #turn off LO and RF
     SMB_LO.write("OUTP OFF")
@@ -326,8 +345,9 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
         spurius_filename  =result_file_name + "_TOTAL_" + return_now_postfix()
         save_spurius(spurius_filename, totale_values)     
 
-    return spurius_filename
     print("Misure completed\n")
+    return spurius_filename
+    
 
 
 def readFSV_marker_harmonic(FSV, FSV_delay, central_frequency_value, central_frequency_unit, harmonic, attenuation_in, gainAmplifier):
@@ -347,42 +367,31 @@ def readFSV_marker_harmonic(FSV, FSV_delay, central_frequency_value, central_fre
 
     return result
 
-def readFSV_marker_spurius(FSV, FSV_delay, spurius_list, fsv_att_value, spurius_IF_unit, calibration_IF, calibration_IF_function, calibration_IF_function_unit):
+def readFSV_marker_spurius(FSV, 
+                           FSV_delay, 
+                           spurius_list, 
+                           spurius_IF_unit, 
+                           calibration_IF, 
+                           calibration_IF_function, 
+                           calibration_IF_function_unit):
     #measure all spurius level from FSV
     #return list [[Frequency, Unit, Level, n, m], [Frequency, Unit, Level, n, m], ..., [Frequency, Unit, Level, n, m]]
     result = []
     
     for s in spurius_list:
         freq = s[0]
-        result += [readFSV_marker(FSV, FSV_delay, str(freq) + s[1], fsv_att_value, spurius_IF_unit, calibration_IF, calibration_IF_function, calibration_IF_function_unit) + [str(s[4]) , str(s[5])]]
+        freq_unit = s[1]
+        result += [readFSV_marker(FSV, 
+                                  FSV_delay, 
+                                  freq, 
+                                  freq_unit, 
+                                  spurius_IF_unit, 
+                                  calibration_IF, 
+                                  calibration_IF_function, 
+                                  calibration_IF_function_unit) + [str(s[4]) , str(s[5])]]
     return result
 
-def readFSV_marker(FSV, FSV_delay, central_frequency, fsv_att_value, spurius_IF_unit, calibration_IF, calibration_IF_function, calibration_IF_function_unit):
-    #return the list [Frequency, Unit, Level]
-    
-    FSV.write("INP:ATT " + str(fsv_att_value)) #set attenuation
-    
-    #set central frequency
-    command = "FREQ:CENT " + central_frequency
-    FSV.write(command)
-    #wait for center frequency
-    time.sleep(FSV_delay)
-    FSV.write("CALC:MARK:MAX")
-    FSV.write("INIT:IMM; *WAI")
-    #FSV.write("*OPT")
-    #FSV.write("*WAI")
-    
-    #lettura = FSV.ask("CALC:MARK:X?")
-    #time.sleep(FSV_delay)
-    frequency = unit.unit_conversion(eval(FSV.ask("CALC:MARK:X?")), unit.Hz, spurius_IF_unit)
-    result = [str(frequency)]    
-    result += [unit.return_unit_str(spurius_IF_unit)]
-    #response = FSV.ask("CALC:MARK:Y?")
-    #time.sleep(FSV_delay)
-    FSV.write("INIT:IMM; *WAI")
-    tmp = eval(FSV.ask("CALC:MARK:Y?"))
-    result += [str(x) for x in calibrate(tmp, frequency, spurius_IF_unit, calibration_IF, round_freq = True, calibration_function = calibration_IF_function, calibration_function_unit = calibration_IF_function_unit)]
-    return result
+
 
 
 #===============================================================================
