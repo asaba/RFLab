@@ -12,25 +12,26 @@ from measure_scripts.USBInstruments import USB_PM5
 from measure_scripts.tscpy import instruments
 
 
-def browse_file(parent, text_control_file, dialog_text = "Choose a file", wildcard = "*.csv"):
+def browse_file(parent, text_control_file, dialog_text = "Choose a file", wildcard = "*.csv", mode = wx.OPEN):
     defaultFile = ""
     try:
         defaultFile = text_control_file.GetValue()
     except:
         defaultFile = ""
-    dlg = wx.FileDialog(parent, dialog_text, os.getcwd(), defaultFile = defaultFile, wildcard = wildcard, style = wx.OPEN)
+    dlg = wx.FileDialog(parent, dialog_text, os.getcwd(), defaultFile = defaultFile, wildcard = wildcard, style = mode)
     if dlg.ShowModal() == wx.ID_OK:
         path = dlg.GetPath()
         #mypath = os.path.basename(path)
         text_control_file.SetValue(path)
     else:
-        if os.path.exists(defaultFile):
+        if os.path.exists(defaultFile) or mode == wx.SAVE:
             text_control_file.SetValue(defaultFile)
         else:
             text_control_file.SetValue("")
 
-def create_instrument(ip, port, timeout, instr_type, TEST_MODE = False, instrument_class = "SMB"):
-    if TEST_MODE:
+def create_instrument(ip, port, timeout, instr_type, TEST_MODE = False, instrument_class = "SMB", enable_state = True):
+    #if in test mode or the instument is disable, create a dummy instrument object that responde of requenct for testing
+    if TEST_MODE or enable_state == False:
         if instrument_class == "SMB":   
             instrument = SMB_class()
         elif instrument_class == "FSV": 
@@ -41,6 +42,7 @@ def create_instrument(ip, port, timeout, instr_type, TEST_MODE = False, instrume
             instrument = TSC_class()
         elif instrument_class == "SAB": 
             instrument = SAB_class()
+        instrument.enable_state = enable_state
         return instrument
     rm = pyvisa.ResourceManager()
     if instr_type == "SOCKET":        
@@ -52,15 +54,19 @@ def create_instrument(ip, port, timeout, instr_type, TEST_MODE = False, instrume
     elif instr_type == "TELNET":
         instrument = instruments.TSC5120A(ip, port)
     instrument.timeout = timeout
+    instrument.enable_state = enable_state
     return instrument
 
 
-def create_USB_instrument(com_port, timeout, baudrate, TEST_MODE = False, instrument_class = "PM5"):
-    if TEST_MODE:
+def create_USB_instrument(com_port, timeout, baudrate, TEST_MODE = False, instrument_class = "PM5", enable_state = True):
+    #if in test mode or the instument is disable, create a dummy instrument object that responde of requenct for testing
+    if TEST_MODE or enable_state == False:
         if instrument_class == "PM5":   
             instrument = PM5_class()
+        instrument.enable_state = enable_state
         return instrument
     instrument = USB_PM5(com_port, eval(baudrate), timeout)
+    instrument.enable_state = enable_state
     return instrument
 
 def check_USB_instrument_comunication(instrument_COM, instrument_Timeout, instrument_Baud):
@@ -116,17 +122,34 @@ def check_value_min_max(value, value_text, minimum=None, maximum=None):
         return 0
     return 1
 
+def check_steps(steps, value_text):
+    value_invalid = False
+    if steps == 0:
+        value_invalid = True
+    if value_invalid:
+        error_message(value_text + " invalid", 'Error "' + value_text + '"')
+        return 0
+    return 1
+
+
 def check_steps_count(value_text, minimum, maximum, steps, counter):
-    
+    if check_steps(steps, value_text) == 0:
+        return 0
     value_invalid = False
     if abs(minimum - maximum)/steps >= counter:
         value_invalid = True
     if value_invalid:
         error_message(value_text + " invalid", 'Error "' + value_text + '"')
+        return 0
     return 1
 
 def error_message(body, header):
     dlg = wx.MessageDialog(None, body, header, wx.OK | wx.ICON_ERROR)
+    dlg.ShowModal()
+    return 0
+
+def info_message(body, header):
+    dlg = wx.MessageDialog(None, body, header, wx.OK | wx.ICON_INFORMATION)
     dlg.ShowModal()
     return 0
 
