@@ -5,6 +5,9 @@ Created on 26/dic/2015
 '''
 
 #import images
+
+from taskframe import TaskFrame
+
 import wx
 import os
 from guitabs import TabPanelFSV, TabPanelPowerMeter, TabPanelSMB, TabPanelSpuriusSetup, TabPanelSpuriusCPlotGraph, TabPanelGenericPlotGraph
@@ -52,7 +55,7 @@ class NotebookDemo(wx.Notebook):
  
  
 ########################################################################
-class SpuriusFrame(wx.Frame):
+class SpuriusFrame(TaskFrame):
     """
     Frame that holds all other widgets
     """
@@ -60,154 +63,78 @@ class SpuriusFrame(wx.Frame):
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
-        wx.Frame.__init__(self, None, wx.ID_ANY,
+        TaskFrame.__init__(self, NotebookDemo,
                           "Spurius Calculation",
                           size=(800,800)
                           )
-        
-        
-        menubar = wx.MenuBar()
-        fileMenu = wx.Menu()
-        self.fitem = fileMenu.Append(wx.ID_OPEN, 'Load settings', 'Load settings')
-        self.fitem2 = fileMenu.Append(wx.ID_SAVEAS, 'Save settings', 'Save settings')
-        self.runmodeitem = fileMenu.AppendCheckItem(7890, "Testing Mode", "Enable testing mode")
-        menubar.Append(fileMenu, '&File')
-        self.SetMenuBar(menubar)
-        
-        self.Bind(wx.EVT_MENU, self.OnLoadSettings, self.fitem)
-        self.Bind(wx.EVT_MENU, self.OnSaveSettings, self.fitem2)
-
-        self.panel = wx.Panel(self)
-        self.btn_execute = wx.Button(self.panel, 0, 'Start')
-        self.btn_execute.Bind(wx.EVT_BUTTON, self.OnStart)
-        
-        self.notebook = NotebookDemo(self.panel)
-        #notebook2 = NotebookDemo(panel)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.notebook, 1, wx.ALL|wx.EXPAND, 5)
-        #sizer.Add(notebook2, 0, wx.ALL|wx.EXPAND, 5)
-        sizer.Add(self.btn_execute, 0, wx.ALL|wx.EXPAND, 5)
-        self.panel.SetSizer(sizer)
-        self.Layout()
  
-        self.Show()
-    
-    
-    def OnLoadSettings(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            #mypath = os.path.basename(path)
-            f = open(path, "r")
-            for line in f:
-                parameter = line.split("=")[0].strip()
-                value =  line.split("=")[1].strip()
-                try:
-                    exec("{param}.SetValue({value})".format(param = parameter, value = value))
-                except:
-                    print("Error loading {param}".format(param = parameter))
-                        
     def savesettings(self, filepointer):
-        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_state")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.instrument_txt_IP")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.instrument_txt_Port")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.instrument_txt_Timeout")
-        #self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_min_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_min")
-        #self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_max_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_max")
-        #self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_step_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_step")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_frequency_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_level_min")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_level_max")
-        self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_level_step")
-        #self.writelinesettings(filepointer, "self.notebook.tabLO.synthetizer_level_fixed")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_state")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_IP")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_Port")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.instrument_txt_Timeout")
-        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_min")
-        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_max")
-        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_step")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_frequency_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_min")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_max")
-        self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_step")
-        #self.writelinesettings(filepointer, "self.notebook.tabRF.synthetizer_level_fixed")
-        #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_IP")
-        #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_Port")
-        #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.instrument_txt_Timeout")
-        #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_state")
-        #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_misure_number")
-        #self.writelinesettings(filepointer, "self.notebook.tabPowerMeter.power_meter_misure_delay")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.instrument_txt_IP")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.instrument_txt_Port")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.instrument_txt_Timeout")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_state")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_sweep_points")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_resolution_bandwidth")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_resolution_bandwidth_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_video_bandwidth")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_video_bandwidth_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_frequency_span")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_frequency_span_unit")
-        #self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_attenuation")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.gainAmplifier")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_IF_atten_enable")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_IF_atten")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_IF_relative_level_enable")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_IF_relative_level")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.threshold_power")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.spectrum_analyzer_frequency_marker_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabFSV.FSV_delay")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.m_min_RF")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.m_max_RF")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.m_step_RF")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.n_min_LO")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.n_max_LO")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.n_step_LO")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.IF_low")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.IF_low_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.IF_high")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.IF_high_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.spurius_IF_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.calibration_file_LO")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.calibration_file_RF")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.calibration_file_IF")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusSetting.result_file_name")
+        params = ["tabLO.instrument_enable_status",
+        "tabLO.instrument_txt_IP",
+        "tabLO.instrument_txt_Port",
+        "tabLO.instrument_txt_Timeout",
+        "tabLO.combobox_instrtype",
+        "tabLO.synthetizer_frequency_min",
+        "tabLO.synthetizer_frequency_max",
+        "tabLO.synthetizer_frequency_step",
+        "tabLO.synthetizer_frequency_unit",
+        "tabLO.synthetizer_level_min",
+        "tabLO.synthetizer_level_max",
+        "tabLO.synthetizer_level_step",
+        "tabRF.instrument_enable_status",
+        "tabRF.instrument_txt_IP",
+        "tabRF.instrument_txt_Port",
+        "tabRF.instrument_txt_Timeout",
+        "tabRF.combobox_instrtype",
+        "tabRF.synthetizer_frequency_min",
+        "tabRF.synthetizer_frequency_max",
+        "tabRF.synthetizer_frequency_step",
+        "tabRF.synthetizer_frequency_unit",
+        "tabRF.synthetizer_level_min",
+        "tabRF.synthetizer_level_max",
+        "tabRF.synthetizer_level_step",
+        "tabFSV.instrument_txt_IP",
+        "tabFSV.instrument_txt_Port",
+        "tabFSV.instrument_txt_Timeout",
+        "tabFSV.combobox_instrtype",
+        "tabFSV.instrument_enable_status",
+        "tabFSV.spectrum_analyzer_sweep_points",
+        "tabFSV.spectrum_analyzer_resolution_bandwidth",
+        "tabFSV.spectrum_analyzer_resolution_bandwidth_unit",
+        "tabFSV.spectrum_analyzer_video_bandwidth",
+        "tabFSV.spectrum_analyzer_video_bandwidth_unit",
+        "tabFSV.spectrum_analyzer_frequency_span",
+        "tabFSV.spectrum_analyzer_frequency_span_unit",
+        "tabFSV.gainAmplifier",
+        "tabFSV.spectrum_analyzer_IF_atten_enable",
+        "tabFSV.spectrum_analyzer_IF_atten",
+        "tabFSV.spectrum_analyzer_IF_relative_level_enable",
+        "tabFSV.spectrum_analyzer_IF_relative_level",
+        "tabFSV.threshold_power",
+        "tabFSV.spectrum_analyzer_frequency_marker_unit",
+        "tabFSV.FSV_delay",
+        "tabSpuriusSetting.m_min_RF",
+        "tabSpuriusSetting.m_max_RF",
+        "tabSpuriusSetting.m_step_RF",
+        "tabSpuriusSetting.n_min_LO",
+        "tabSpuriusSetting.n_max_LO",
+        "tabSpuriusSetting.n_step_LO",
+        "tabSpuriusSetting.IF_low",
+        "tabSpuriusSetting.IF_low_unit",
+        "tabSpuriusSetting.IF_high",
+        "tabSpuriusSetting.IF_high_unit",
+        "tabSpuriusSetting.spurius_IF_unit",
+        "tabSpuriusSetting.calibration_file_LO",
+        "tabSpuriusSetting.calibration_file_RF",
+        "tabSpuriusSetting.calibration_file_IF",
+        "tabSpuriusSetting.result_file_name"]
         
-        
+        TaskFrame.framesavesettings(self, filepointer, params = params)
         
 
-    def OnSaveSettings(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.SAVE)
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            #mypath = os.path.basename(path)
-            f = open(path, "w")
-            self.savesettings(f)
-
-            
-            f.close()
-                        
-    def writelinesettings(self, f, parameter):
-        value = None
-        exec("value = {param}.GetValue()".format(param = parameter))
-        writelineonfilesettings(f, parameter, value)
-    
     def OnStart(self, event):
         
-        
-        if self.runmodeitem.IsChecked():
-            dlg = wx.MessageDialog(None,'Test mode. Instruments comunication disabled', "Test mode",  wx.OK | wx.ICON_ERROR)
-            dlg.ShowModal()
-        #Check all values
-        
-        
+        TaskFrame.OnStart(self, event)
         #load values
          
         synthetizer_LO_IP = self.notebook.tabLO.instrument_txt_IP.GetValue()
@@ -224,60 +151,70 @@ class SpuriusFrame(wx.Frame):
         
         synthetizer_LO_instrType = self.notebook.tabLO.combobox_instrtype.GetValue()
         
-        synthetizer_LO_state = self.notebook.tabLO.synthetizer_state.GetValue()
+        synthetizer_LO_state = self.notebook.tabLO.instrument_enable_status.GetValue()
         
         #synthetizer_LO_frequency_min_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_min_unit.GetValue())
         #if check_value_not_none(synthetizer_LO_frequency_min_unit, "Minimum LO Frequency Unit") == 0:
         #    return None
         
-        synthetizer_LO_frequency_min = self.notebook.tabLO.synthetizer_frequency_min.GetValue()
-        if check_value_min_max(synthetizer_LO_frequency_min, "Minimum LO Frequency", minimum = 0) == 0:
-            return None
-        else:
-            synthetizer_LO_frequency_min = eval(self.notebook.tabLO.synthetizer_frequency_min.GetValue())
-        
-        
-        #synthetizer_LO_frequency_max_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_max_unit.GetValue())
-        #if check_value_not_none(synthetizer_LO_frequency_max_unit, "Maximum LO Frequency Unit") == 0:
-        #    return None
-        
-        synthetizer_LO_frequency_max = self.notebook.tabLO.synthetizer_frequency_max.GetValue()
-        if check_value_min_max(synthetizer_LO_frequency_max, "Maximum LO Frequency", minimum = 0) == 0:
-            return None
-        else:
-            synthetizer_LO_frequency_max = eval(self.notebook.tabLO.synthetizer_frequency_max.GetValue())
+        if synthetizer_LO_state:
             
-        #synthetizer_LO_frequency_step_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_step_unit.GetValue())
-        #if check_value_not_none(synthetizer_LO_frequency_step_unit, "LO Step Frequency Unit") == 0:
-        #    return None
-        
-        synthetizer_LO_frequency_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_unit.GetValue())
-        if check_value_not_none(synthetizer_LO_frequency_unit, "LO Frequency Unit") == 0:
-            return None
-        
-        synthetizer_LO_frequency_step = self.notebook.tabLO.synthetizer_frequency_step.GetValue()
-        if check_value_min_max(synthetizer_LO_frequency_step, "LO Step Frequency", minimum = 0) == 0:
-            return None
-        else:
-            synthetizer_LO_frequency_step = eval(self.notebook.tabLO.synthetizer_frequency_step.GetValue())
+            synthetizer_LO_frequency_min = self.notebook.tabLO.synthetizer_frequency_min.GetValue()
+            if check_value_min_max(synthetizer_LO_frequency_min, "Minimum LO Frequency", minimum = 0) == 0:
+                return None
+            else:
+                synthetizer_LO_frequency_min = eval(self.notebook.tabLO.synthetizer_frequency_min.GetValue())
             
             
-        try:
-            synthetizer_LO_level_min = eval(self.notebook.tabLO.synthetizer_level_min.GetValue())
-        except:
-            synthetizer_LO_level_min = 0
+            #synthetizer_LO_frequency_max_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_max_unit.GetValue())
+            #if check_value_not_none(synthetizer_LO_frequency_max_unit, "Maximum LO Frequency Unit") == 0:
+            #    return None
             
-        try:
-            synthetizer_LO_level_max = eval(self.notebook.tabLO.synthetizer_level_max.GetValue())
-        except:
-            synthetizer_LO_level_max = 0
-        
-        synthetizer_LO_level_step = self.notebook.tabLO.synthetizer_level_step.GetValue()
-        if check_value_min_max(synthetizer_LO_level_step, "LO Level Step", minimum = 0) == 0:
-            return None
+            synthetizer_LO_frequency_max = self.notebook.tabLO.synthetizer_frequency_max.GetValue()
+            if check_value_min_max(synthetizer_LO_frequency_max, "Maximum LO Frequency", minimum = 0) == 0:
+                return None
+            else:
+                synthetizer_LO_frequency_max = eval(self.notebook.tabLO.synthetizer_frequency_max.GetValue())
+                
+            #synthetizer_LO_frequency_step_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_step_unit.GetValue())
+            #if check_value_not_none(synthetizer_LO_frequency_step_unit, "LO Step Frequency Unit") == 0:
+            #    return None
+            
+            synthetizer_LO_frequency_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_unit.GetValue())
+            if check_value_not_none(synthetizer_LO_frequency_unit, "LO Frequency Unit") == 0:
+                return None
+            
+            synthetizer_LO_frequency_step = self.notebook.tabLO.synthetizer_frequency_step.GetValue()
+            if check_value_min_max(synthetizer_LO_frequency_step, "LO Step Frequency", minimum = 0) == 0:
+                return None
+            else:
+                synthetizer_LO_frequency_step = eval(self.notebook.tabLO.synthetizer_frequency_step.GetValue())
+                
+                
+            try:
+                synthetizer_LO_level_min = eval(self.notebook.tabLO.synthetizer_level_min.GetValue())
+            except:
+                synthetizer_LO_level_min = 0
+                
+            try:
+                synthetizer_LO_level_max = eval(self.notebook.tabLO.synthetizer_level_max.GetValue())
+            except:
+                synthetizer_LO_level_max = 0
+            
+            synthetizer_LO_level_step = self.notebook.tabLO.synthetizer_level_step.GetValue()
+            if check_value_min_max(synthetizer_LO_level_step, "LO Level Step", minimum = 0) == 0:
+                return None
+            else:
+                synthetizer_LO_level_step = eval(self.notebook.tabLO.synthetizer_level_step.GetValue())
+                
+            synthetizer_LO_frequency = Frequency_Range(synthetizer_LO_frequency_min, synthetizer_LO_frequency_max, synthetizer_LO_frequency_step, synthetizer_LO_frequency_unit)
+            synthetizer_LO_frequency.to_base()
+            synthetizer_LO_level = Generic_Range(synthetizer_LO_level_min, synthetizer_LO_level_max, synthetizer_LO_level_step)
         else:
-            synthetizer_LO_level_step = eval(self.notebook.tabLO.synthetizer_level_step.GetValue())
-        
+            synthetizer_LO_frequency = Frequency_Range(0, 0, 1, unit.Hz)
+            synthetizer_LO_frequency.to_base()
+            synthetizer_LO_level = Generic_Range(0, 0, 1)
+            
         synthetizer_RF_IP = self.notebook.tabRF.instrument_txt_IP.GetValue()
         if check_value_is_IP(synthetizer_RF_IP, "RF Synthetizer IP") == 0:
             return None
@@ -292,58 +229,66 @@ class SpuriusFrame(wx.Frame):
         
         synthetizer_RF_instrType = self.notebook.tabRF.combobox_instrtype.GetValue()
         
-        synthetizer_RF_state = self.notebook.tabRF.synthetizer_state.GetValue()
+        synthetizer_RF_state = self.notebook.tabRF.instrument_enable_status.GetValue()
         #synthetizer_RF_frequency_min_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_min_unit.GetValue())
         #if check_value_not_none(synthetizer_RF_frequency_min_unit, "Minimum RF Frequency Unit") == 0:
         #    return None
-        
-        synthetizer_RF_frequency_min = self.notebook.tabRF.synthetizer_frequency_min.GetValue()
-        if check_value_min_max(synthetizer_RF_frequency_min, "Minimum RF Frequency", minimum = 0) == 0:
-            return None
+        if synthetizer_RF_state:
+            synthetizer_RF_frequency_min = self.notebook.tabRF.synthetizer_frequency_min.GetValue()
+            if check_value_min_max(synthetizer_RF_frequency_min, "Minimum RF Frequency", minimum = 0) == 0:
+                return None
+            else:
+                synthetizer_RF_frequency_min = eval(self.notebook.tabRF.synthetizer_frequency_min.GetValue())
+            
+            
+            #synthetizer_RF_frequency_max_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_max_unit.GetValue())
+            #if check_value_not_none(synthetizer_RF_frequency_max_unit, "Maximum RF Frequency Unit") == 0:
+            #    return None
+            
+            synthetizer_RF_frequency_max = self.notebook.tabRF.synthetizer_frequency_max.GetValue()
+            if check_value_min_max(synthetizer_RF_frequency_max, "Maximum RF Frequency", minimum = 0) == 0:
+                return None
+            else:
+                synthetizer_RF_frequency_max = eval(self.notebook.tabRF.synthetizer_frequency_max.GetValue())
+                
+            #synthetizer_RF_frequency_step_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_step_unit.GetValue())
+            #if check_value_not_none(synthetizer_RF_frequency_step_unit, "RF Step Frequency Unit") == 0:
+            #    return None
+            
+            synthetizer_RF_frequency_step = self.notebook.tabRF.synthetizer_frequency_step.GetValue()
+            if check_value_min_max(synthetizer_RF_frequency_step, "RF Step Frequency", minimum = 0) == 0:
+                return None
+            else:
+                synthetizer_RF_frequency_step = eval(self.notebook.tabRF.synthetizer_frequency_step.GetValue())
+                
+            synthetizer_RF_frequency_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_unit.GetValue())
+            if check_value_not_none(synthetizer_RF_frequency_unit, "RF Frequency Unit") == 0:
+                return None
+                
+            try:
+                synthetizer_RF_level_min = eval(self.notebook.tabRF.synthetizer_level_min.GetValue())
+            except:
+                synthetizer_RF_level_min = 0
+                
+            try:
+                synthetizer_RF_level_max = eval(self.notebook.tabRF.synthetizer_level_max.GetValue())
+            except:
+                synthetizer_RF_level_max = 0
+            
+            synthetizer_RF_level_step = self.notebook.tabRF.synthetizer_level_step.GetValue()
+            if check_value_min_max(synthetizer_RF_level_step, "RF Level Step", minimum = 0) == 0:
+                return None
+            else:
+                synthetizer_RF_level_step = eval(self.notebook.tabRF.synthetizer_level_step.GetValue())
+                
+            synthetizer_RF_frequency = Frequency_Range(synthetizer_RF_frequency_min, synthetizer_RF_frequency_max, synthetizer_RF_frequency_step, synthetizer_RF_frequency_unit)
+            synthetizer_RF_frequency.to_base()
+            synthetizer_RF_level = Generic_Range(synthetizer_RF_level_min, synthetizer_RF_level_max, synthetizer_RF_level_step)
         else:
-            synthetizer_RF_frequency_min = eval(self.notebook.tabRF.synthetizer_frequency_min.GetValue())
-        
-        
-        #synthetizer_RF_frequency_max_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_max_unit.GetValue())
-        #if check_value_not_none(synthetizer_RF_frequency_max_unit, "Maximum RF Frequency Unit") == 0:
-        #    return None
-        
-        synthetizer_RF_frequency_max = self.notebook.tabRF.synthetizer_frequency_max.GetValue()
-        if check_value_min_max(synthetizer_RF_frequency_max, "Maximum RF Frequency", minimum = 0) == 0:
-            return None
-        else:
-            synthetizer_RF_frequency_max = eval(self.notebook.tabRF.synthetizer_frequency_max.GetValue())
-            
-        #synthetizer_RF_frequency_step_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_step_unit.GetValue())
-        #if check_value_not_none(synthetizer_RF_frequency_step_unit, "RF Step Frequency Unit") == 0:
-        #    return None
-        
-        synthetizer_RF_frequency_step = self.notebook.tabRF.synthetizer_frequency_step.GetValue()
-        if check_value_min_max(synthetizer_RF_frequency_step, "RF Step Frequency", minimum = 0) == 0:
-            return None
-        else:
-            synthetizer_RF_frequency_step = eval(self.notebook.tabRF.synthetizer_frequency_step.GetValue())
-            
-        synthetizer_RF_frequency_unit = unit.return_unit(self.notebook.tabRF.synthetizer_frequency_unit.GetValue())
-        if check_value_not_none(synthetizer_RF_frequency_unit, "RF Frequency Unit") == 0:
-            return None
-            
-        try:
-            synthetizer_RF_level_min = eval(self.notebook.tabRF.synthetizer_level_min.GetValue())
-        except:
-            synthetizer_RF_level_min = 0
-            
-        try:
-            synthetizer_RF_level_max = eval(self.notebook.tabRF.synthetizer_level_max.GetValue())
-        except:
-            synthetizer_RF_level_max = 0
-        
-        synthetizer_RF_level_step = self.notebook.tabRF.synthetizer_level_step.GetValue()
-        if check_value_min_max(synthetizer_RF_level_step, "RF Level Step", minimum = 0) == 0:
-            return None
-        else:
-            synthetizer_RF_level_step = eval(self.notebook.tabRF.synthetizer_level_step.GetValue())
-            
+            synthetizer_RF_frequency = Frequency_Range(0, 0, 1, unit.Hz)
+            synthetizer_RF_frequency.to_base()
+            synthetizer_RF_level = Generic_Range(0, 0, 1)
+                
         spectrum_analyzer_IP = self.notebook.tabFSV.instrument_txt_IP.GetValue()
         if check_value_is_IP(spectrum_analyzer_IP, "LO Synthetizer IP") == 0:
             return None
@@ -358,80 +303,81 @@ class SpuriusFrame(wx.Frame):
         
         spectrum_analyzer_instrType = self.notebook.tabFSV.combobox_instrtype.GetValue()
         
-        spectrum_analyzer_state = self.notebook.tabFSV.spectrum_analyzer_state.GetValue()
+        spectrum_analyzer_state = self.notebook.tabFSV.instrument_enable_status.GetValue()
         
-        spectrum_analyzer_sweep_points = self.notebook.tabFSV.spectrum_analyzer_sweep_points.GetValue()
-        if check_value_min_max(spectrum_analyzer_sweep_points, "Sweep points", minimum = 0) == 0:
-            return None
-        else:
-            spectrum_analyzer_sweep_points = eval(self.notebook.tabFSV.spectrum_analyzer_sweep_points.GetValue())
-        
-        
-        spectrum_analyzer_resolution_bandwidth = self.notebook.tabFSV.spectrum_analyzer_resolution_bandwidth.GetValue()
-        if check_value_min_max(spectrum_analyzer_resolution_bandwidth, "Resolution Bandwidth", minimum = 0) == 0:
-            return None
-        else:
-            spectrum_analyzer_resolution_bandwidth = eval(self.notebook.tabFSV.spectrum_analyzer_resolution_bandwidth.GetValue())
-        
-        spectrum_analyzer_resolution_bandwidth_unit = unit.return_unit(self.notebook.tabFSV.spectrum_analyzer_resolution_bandwidth_unit.GetValue())
-        if check_value_not_none(spectrum_analyzer_resolution_bandwidth_unit, "Resolution Bandwidth Unit") == 0:
-            return None
-        
-        spectrum_analyzer_video_bandwidth = self.notebook.tabFSV.spectrum_analyzer_video_bandwidth.GetValue()
-        if check_value_min_max(spectrum_analyzer_video_bandwidth, "Video Bandwidth", minimum = 0) == 0:
-            return None
-        else:
-            spectrum_analyzer_video_bandwidth = eval(self.notebook.tabFSV.spectrum_analyzer_video_bandwidth.GetValue())
-        
-        spectrum_analyzer_video_bandwidth_unit = unit.return_unit(self.notebook.tabFSV.spectrum_analyzer_video_bandwidth_unit.GetValue())
-        if check_value_not_none(spectrum_analyzer_video_bandwidth_unit, "Video Bandwidth Unit") == 0:
-            return None
-        
-        spectrum_analyzer_frequency_span = self.notebook.tabFSV.spectrum_analyzer_frequency_span.GetValue()
-        if check_value_min_max(spectrum_analyzer_frequency_span, "Frequency Span", minimum = 0) == 0:
-            return None
-        else:
-            spectrum_analyzer_frequency_span = eval(self.notebook.tabFSV.spectrum_analyzer_frequency_span.GetValue())
-        
-        spectrum_analyzer_frequency_span_unit = unit.return_unit(self.notebook.tabFSV.spectrum_analyzer_frequency_span_unit.GetValue())
-        if check_value_not_none(spectrum_analyzer_frequency_span_unit, "Frequency Span Unit") == 0:
-            return None
-        
-        ##spectrum_analyzer_harmonic_number = spectrum_analyzer_harmonic_number
-        #spectrum_analyzer_attenuation = self.notebook.tabFSV.spectrum_analyzer_attenuation.GetValue()
-        #if check_value_not_none(spectrum_analyzer_attenuation, "Attenuation") == 0:
-        #    return None
-        
-        gainAmplifier = self.notebook.tabFSV.gainAmplifier.GetValue() #dB
-        if check_value_not_none(gainAmplifier, "Gain Amplifier") == 0:
-            return None
-        
-        spectrum_analyzer_IF_atten_enable = self.notebook.tabFSV.spectrum_analyzer_IF_atten_enable.GetValue()
-        spectrum_analyzer_IF_atten = self.notebook.tabFSV.spectrum_analyzer_IF_atten.GetValue()
-        if check_value_not_none(spectrum_analyzer_IF_atten, "Attenuation") == 0:
-            return None
-        
-        spectrum_analyzer_IF_relative_level = self.notebook.tabFSV.spectrum_analyzer_IF_relative_level.GetValue()
-        if check_value_not_none(spectrum_analyzer_IF_relative_level, "Relative Power Level") == 0:
-            return None
-        
-        spectrum_analyzer_IF_relative_level_enable = self.notebook.tabFSV.spectrum_analyzer_IF_relative_level_enable.GetValue()
-        
-        
-        threshold_power = self.notebook.tabFSV.threshold_power.GetValue() #dB 
-        if check_value_not_none(threshold_power, "Threshold Power Level") == 0:
-            return None
-        
-        spectrum_analyzer_frequency_marker_unit = unit.return_unit(self.notebook.tabFSV.spectrum_analyzer_frequency_marker_unit.GetValue())
-        #to check
-        if check_value_not_none(synthetizer_RF_frequency_unit, "Marker Frequency Unit") == 0:
-            return None
-        
-        FSV_delay = self.notebook.tabFSV.FSV_delay.GetValue()
-        if check_value_min_max(FSV_delay, "FSV measure delay", minimum = 0) == 0:
-            return None
-        else:
-            FSV_delay = eval(self.notebook.tabFSV.FSV_delay.GetValue())
+        if spectrum_analyzer_state:
+            spectrum_analyzer_sweep_points = self.notebook.tabFSV.spectrum_analyzer_sweep_points.GetValue()
+            if check_value_min_max(spectrum_analyzer_sweep_points, "Sweep points", minimum = 0) == 0:
+                return None
+            else:
+                spectrum_analyzer_sweep_points = eval(self.notebook.tabFSV.spectrum_analyzer_sweep_points.GetValue())
+            
+            
+            spectrum_analyzer_resolution_bandwidth = self.notebook.tabFSV.spectrum_analyzer_resolution_bandwidth.GetValue()
+            if check_value_min_max(spectrum_analyzer_resolution_bandwidth, "Resolution Bandwidth", minimum = 0) == 0:
+                return None
+            else:
+                spectrum_analyzer_resolution_bandwidth = eval(self.notebook.tabFSV.spectrum_analyzer_resolution_bandwidth.GetValue())
+            
+            spectrum_analyzer_resolution_bandwidth_unit = unit.return_unit(self.notebook.tabFSV.spectrum_analyzer_resolution_bandwidth_unit.GetValue())
+            if check_value_not_none(spectrum_analyzer_resolution_bandwidth_unit, "Resolution Bandwidth Unit") == 0:
+                return None
+            
+            spectrum_analyzer_video_bandwidth = self.notebook.tabFSV.spectrum_analyzer_video_bandwidth.GetValue()
+            if check_value_min_max(spectrum_analyzer_video_bandwidth, "Video Bandwidth", minimum = 0) == 0:
+                return None
+            else:
+                spectrum_analyzer_video_bandwidth = eval(self.notebook.tabFSV.spectrum_analyzer_video_bandwidth.GetValue())
+            
+            spectrum_analyzer_video_bandwidth_unit = unit.return_unit(self.notebook.tabFSV.spectrum_analyzer_video_bandwidth_unit.GetValue())
+            if check_value_not_none(spectrum_analyzer_video_bandwidth_unit, "Video Bandwidth Unit") == 0:
+                return None
+            
+            spectrum_analyzer_frequency_span = self.notebook.tabFSV.spectrum_analyzer_frequency_span.GetValue()
+            if check_value_min_max(spectrum_analyzer_frequency_span, "Frequency Span", minimum = 0) == 0:
+                return None
+            else:
+                spectrum_analyzer_frequency_span = eval(self.notebook.tabFSV.spectrum_analyzer_frequency_span.GetValue())
+            
+            spectrum_analyzer_frequency_span_unit = unit.return_unit(self.notebook.tabFSV.spectrum_analyzer_frequency_span_unit.GetValue())
+            if check_value_not_none(spectrum_analyzer_frequency_span_unit, "Frequency Span Unit") == 0:
+                return None
+            
+            ##spectrum_analyzer_harmonic_number = spectrum_analyzer_harmonic_number
+            #spectrum_analyzer_attenuation = self.notebook.tabFSV.spectrum_analyzer_attenuation.GetValue()
+            #if check_value_not_none(spectrum_analyzer_attenuation, "Attenuation") == 0:
+            #    return None
+            
+            gainAmplifier = self.notebook.tabFSV.gainAmplifier.GetValue() #dB
+            if check_value_not_none(gainAmplifier, "Gain Amplifier") == 0:
+                return None
+            
+            spectrum_analyzer_IF_atten_enable = self.notebook.tabFSV.spectrum_analyzer_IF_atten_enable.GetValue()
+            spectrum_analyzer_IF_atten = self.notebook.tabFSV.spectrum_analyzer_IF_atten.GetValue()
+            if check_value_not_none(spectrum_analyzer_IF_atten, "Attenuation") == 0:
+                return None
+            
+            spectrum_analyzer_IF_relative_level = self.notebook.tabFSV.spectrum_analyzer_IF_relative_level.GetValue()
+            if check_value_not_none(spectrum_analyzer_IF_relative_level, "Relative Power Level") == 0:
+                return None
+            
+            spectrum_analyzer_IF_relative_level_enable = self.notebook.tabFSV.spectrum_analyzer_IF_relative_level_enable.GetValue()
+            
+            
+            threshold_power = self.notebook.tabFSV.threshold_power.GetValue() #dB 
+            if check_value_not_none(threshold_power, "Threshold Power Level") == 0:
+                return None
+            
+            spectrum_analyzer_frequency_marker_unit = unit.return_unit(self.notebook.tabFSV.spectrum_analyzer_frequency_marker_unit.GetValue())
+            #to check
+            if check_value_not_none(spectrum_analyzer_frequency_marker_unit, "Marker Frequency Unit") == 0:
+                return None
+            
+            FSV_delay = self.notebook.tabFSV.FSV_delay.GetValue()
+            if check_value_min_max(FSV_delay, "FSV measure delay", minimum = 0) == 0:
+                return None
+            else:
+                FSV_delay = eval(self.notebook.tabFSV.FSV_delay.GetValue()) 
             
         m_min_RF = self.notebook.tabSpuriusSetting.m_min_RF.GetValue()
         m_max_RF = self.notebook.tabSpuriusSetting.m_max_RF.GetValue()
@@ -486,58 +432,41 @@ class SpuriusFrame(wx.Frame):
         result_file_name = self.notebook.tabSpuriusSetting.result_file_name.GetValue()
 
         try:
-            if synthetizer_LO_state:
-                SMB_LO = create_instrument(synthetizer_LO_IP, synthetizer_LO_Port, eval(synthetizer_LO_Timeout), synthetizer_LO_instrType, TEST_MODE = self.runmodeitem.IsChecked())
-            else:
-                SMB_LO = create_instrument(synthetizer_LO_IP, synthetizer_LO_Port, eval(synthetizer_LO_Timeout), synthetizer_LO_instrType, TEST_MODE = True)
+            SMB_LO = create_instrument(synthetizer_LO_IP, synthetizer_LO_Port, eval(synthetizer_LO_Timeout), synthetizer_LO_instrType, TEST_MODE = self.runmodeitem.IsChecked(), enable_state = synthetizer_LO_state)
         except:
             dlg = wx.MessageDialog(None, "LO synthetizer comunication error", 'Error LO synthetizer', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
         
         try:
-            if synthetizer_RF_state:
-                SMB_RF = create_instrument(synthetizer_RF_IP, synthetizer_RF_Port, eval(synthetizer_RF_Timeout), synthetizer_RF_instrType, TEST_MODE = self.runmodeitem.IsChecked())
-            else:
-                SMB_RF = create_instrument(synthetizer_RF_IP, synthetizer_RF_Port, eval(synthetizer_RF_Timeout), synthetizer_RF_instrType, TEST_MODE = True)
+            SMB_RF = create_instrument(synthetizer_RF_IP, synthetizer_RF_Port, eval(synthetizer_RF_Timeout), synthetizer_RF_instrType, TEST_MODE = self.runmodeitem.IsChecked(), enable_state = synthetizer_RF_state)
         except:
             dlg = wx.MessageDialog(None, "RF synthetizer comunication error", 'Error RF synthetizer', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
-
-        #try:
-        #    if power_meter_state:
-        #        NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "NRP2")
-        #    else:
-        #        NRP2 = create_instrument(power_meter_IP, power_meter_Port, eval(power_meter_Timeout), power_meter_instrType, TEST_MODE = True, instrument_class = "NRP2")
-        #except:
-        #    dlg = wx.MessageDialog(None, "Power meter comunication error", 'Error Power meter', wx.OK | wx.ICON_ERROR)
-        #    dlg.ShowModal()
-        #    return 0
         
         try:
-            if spectrum_analyzer_state:
-                FSV = create_instrument(spectrum_analyzer_IP, spectrum_analyzer_Port, eval(spectrum_analyzer_Timeout), spectrum_analyzer_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "FSV")
-            else:
-                FSV = create_instrument(spectrum_analyzer_IP, spectrum_analyzer_Port, eval(spectrum_analyzer_Timeout), spectrum_analyzer_instrType, TEST_MODE = True, instrument_class = "FSV")
+            FSV = create_instrument(spectrum_analyzer_IP, spectrum_analyzer_Port, eval(spectrum_analyzer_Timeout), spectrum_analyzer_instrType, TEST_MODE = self.runmodeitem.IsChecked(), instrument_class = "FSV", enable_state = spectrum_analyzer_state)
         except:
             dlg = wx.MessageDialog(None, "Spectrum analiser comunication error", 'Error Spectrum analiser', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             return 0
-
-        synthetizer_LO_frequency = Frequency_Range(synthetizer_LO_frequency_min, synthetizer_LO_frequency_max, synthetizer_LO_frequency_step, synthetizer_LO_frequency_unit)
-        synthetizer_LO_frequency.to_base()
-        synthetizer_LO_level = Generic_Range(synthetizer_LO_level_min, synthetizer_LO_level_max, synthetizer_LO_level_step)
-        synthetizer_RF_frequency = Frequency_Range(synthetizer_RF_frequency_min, synthetizer_RF_frequency_max, synthetizer_RF_frequency_step, synthetizer_RF_frequency_unit)
-        synthetizer_RF_frequency.to_base()
-        synthetizer_RF_level = Generic_Range(synthetizer_RF_level_min, synthetizer_RF_level_max, synthetizer_RF_level_step)
-        m_RF = Generic_Range(m_min_RF, m_max_RF, m_step_RF)
-        n_LO = Generic_Range(n_min_LO, n_max_LO, n_step_LO)
+        
+        if synthetizer_LO_state:
+            n_LO = Generic_Range(n_min_LO, n_max_LO, n_step_LO)
+        else:
+            n_LO = Generic_Range(0, 0, 1)
+        if synthetizer_RF_state:
+            m_RF = Generic_Range(m_min_RF, m_max_RF, m_step_RF)
+        else:
+            m_RF = Generic_Range(0, 0, 1)
         
 
         dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
                 style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME)
-
+        
+        self.savesettings(result_file_name)
+        
         spurius_filename = measure_LNA_spurius(SMB_LO, 
                             SMB_RF, 
                             FSV, 
@@ -582,18 +511,6 @@ class SpuriusFrame(wx.Frame):
  
         dialog.Destroy()
         
-        setting_file_path = os.path.join(result_file_name, "_".join(["Config", return_now_postfix()]))
-        if not os.path.exists(setting_file_path):
-            try:
-                os.makedirs(setting_file_path)
-            except:
-                print("Error creating " + setting_file_path)
-                return 0
-        
-        filesettingname = os.path.join(setting_file_path, "config.cfg")
-        f = open(filesettingname, "w")
-        self.savesettings(f)
-        f.close()
         try:
             webbrowser.open(os.path.dirname(spurius_filename))
         except:
