@@ -5,6 +5,7 @@ Created on 26/dic/2015
 '''
 
 #import images
+from taskframe import TaskFrame
 import wx
 import os
 
@@ -43,7 +44,7 @@ class NotebookDemo(wx.Notebook):
         self.AddPage(self.tabIP1PlotGraph, "Graph IP1 plot")
  
 ########################################################################
-class PlotsFrame(wx.Frame):
+class PlotsFrame(TaskFrame):
     """
     Frame that holds all other widgets
     """
@@ -51,106 +52,39 @@ class PlotsFrame(wx.Frame):
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
-        wx.Frame.__init__(self, None, wx.ID_ANY,
+        TaskFrame.__init__(self, NotebookDemo,
                           "Plots",
-                          size=(800,650)
+                          size=(800,650),
+                          start_button = False
                           )
-        
-        menubar = wx.MenuBar()
-        fileMenu = wx.Menu()
-        self.fitem = fileMenu.Append(wx.ID_OPEN, 'Load settings', 'Load settings')
-        self.fitem2 = fileMenu.Append(wx.ID_SAVEAS, 'Save settings', 'Save settings')
-        menubar.Append(fileMenu, '&File')
-        self.SetMenuBar(menubar)
-        
-        self.Bind(wx.EVT_MENU, self.OnLoadSettings, self.fitem)
-        self.Bind(wx.EVT_MENU, self.OnSaveSettings, self.fitem2)
-        #self.Bind(wx.EVT_MENU, self.OnCheckRunMode, self.runmodeitem)
-        
-        self.panel = wx.Panel(self)
-        
-        self.notebook = NotebookDemo(self.panel)
-        #notebook2 = NotebookDemo(panel)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.notebook, 1, wx.ALL|wx.EXPAND, 5)
-        self.panel.SetSizer(sizer)
-        self.Layout()
- 
-        self.Show()
-    
-    
-    #def OnCheckRunMode(self, event):
-    #    if self.runmodeitem.IsChecked():
-    #        TEST_MODE = True
-    #        #self.runmodeitem.Check()
-    #    else:
-    #        TEST_MODE = False
-    
-    def OnLoadSettings(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            #mypath = os.path.basename(path)
-            f = open(path, "r")
-            for line in f:
-                parameter = line.split("=")[0].strip()
-                value =  line.split("=")[1].strip()
-                exec("{param}.SetValue({value})".format(param = parameter, value = value))
                         
-    def savesettings(self, filepointer):
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_title")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_label")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_min")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_max")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_step")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_label")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_min")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_max")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_step")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_label_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_min_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_max_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_x_step_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_label_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_min_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_max_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_y_step_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.graph_animated")
-        self.writelinesettings(filepointer, "self.notebook.tabIP1PlotGraph.data_file_name") 
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_label")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_min")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_max")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_step")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_label")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_min")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_max")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_step")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_unit")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_label_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_min_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_max_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_x_step_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_label_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_min_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_max_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_y_step_auto")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.data_file_name")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_title")
-        self.writelinesettings(filepointer, "self.notebook.tabSpuriusPlotGraph.graph_type")      
-    
-    def OnSaveSettings(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.SAVE)
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            f = open(path, "w")
-            self.savesettings(f)
-            f.close()
-                        
-    def writelinesettings(self, f, parameter):
-        value = None
-        exec("value = {param}.GetValue()".format(param = parameter))
-        writelineonfilesettings(f, parameter, value)
+    def savesettings(self, filename):
+        params = ["tabIP1PlotGraph.graph_title",
+        "tabIP1PlotGraph.graph_x_label",
+        "tabIP1PlotGraph.graph_x_min",
+        "tabIP1PlotGraph.graph_x_max",
+        "tabIP1PlotGraph.graph_x_step",
+        "tabIP1PlotGraph.graph_y_label",
+        "tabIP1PlotGraph.graph_y_min",
+        "tabIP1PlotGraph.graph_y_max",
+        "tabIP1PlotGraph.graph_y_step",
+        "tabIP1PlotGraph.graph_animated",
+        "tabIP1PlotGraph.data_file_name", 
+        "tabSpuriusPlotGraph.graph_x_label",
+        "tabSpuriusPlotGraph.graph_x_min",
+        "tabSpuriusPlotGraph.graph_x_max",
+        "tabSpuriusPlotGraph.graph_x_step",
+        "tabSpuriusPlotGraph.graph_x_unit",
+        "tabSpuriusPlotGraph.graph_y_label",
+        "tabSpuriusPlotGraph.graph_y_min",
+        "tabSpuriusPlotGraph.graph_y_max",
+        "tabSpuriusPlotGraph.graph_y_step",
+        "tabSpuriusPlotGraph.graph_y_unit",
+        "tabSpuriusPlotGraph.data_file_name",
+        "tabSpuriusPlotGraph.graph_title",
+        "tabSpuriusPlotGraph.graph_type"]
+        
+        TaskFrame.framesavesettings(self, filename, params = params)      
     
         
 #----------------------------------------------------------------------
