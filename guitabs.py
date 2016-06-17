@@ -44,6 +44,8 @@ class InstrumentUSBPanelClass(wx.Panel):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
         self.instrument_combobox_com_port, self.instrument_txt_timeout, self.instrument_combobox_baud, self.instrument_search_button, self.instrument_sizer = return_usb_instrument(self)
         self.instrument_test_button, self.instrument_label, self.instrument_test_sizer  = return_test_instrument(self)
+        self.instrument_enable_status, self.instrument_enable_status_sizer = return_checkbox_labeled(self, "Instrument Status")
+        
         self.instrument_test_button.Bind(wx.EVT_BUTTON, self.OnTestInstrument)
         self.instrument_search_button.Bind(wx.EVT_BUTTON, self.OnSearchCom)
     
