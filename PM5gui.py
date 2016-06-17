@@ -61,7 +61,7 @@ class CalPM5Frame(TaskFrame):
 
                         
     def savesettings(self, filename):
-        params = ["tabRF.synthetizer_state",
+        params = ["tabRF.instrument_enable_status",
         "tabRF.instrument_txt_IP",
         "tabRF.instrument_txt_Port",
         "tabRF.instrument_txt_Timeout",
@@ -73,15 +73,14 @@ class CalPM5Frame(TaskFrame):
         "tabRF.synthetizer_level_min",
         "tabRF.synthetizer_level_max",
         "tabRF.synthetizer_level_step",
-        "tabRF.synthetizer_level_fixed",
         "tabPM5.instrument_combobox_com_port",
         "tabPM5.instrument_txt_timeout",
-        "tabPM5.combobox_instrtype",
         "tabPM5.instrument_combobox_baud",
         "tabPM5.pm5_misure_number",
         "tabPM5.pm5_misure_delay",
-        "tabPM5.pm5_state",
+        "tabPM5.instrument_enable_status",
         "tabPM5Setting.calibration_file_LO",
+        "tabPM5Setting.calibration_file_LO_enable",
         "tabPM5Setting.result_file_name"]
         
         TaskFrame.framesavesettings(self, filename, params = params)      

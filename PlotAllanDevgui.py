@@ -45,14 +45,14 @@ class PlotAllanDevFrame(TaskFrame):
     def __init__(self):
         """Constructor"""
         TaskFrame.__init__(self, NotebookDemo,
-                          "Calibrate Cable",
+                          "Calculate Allan Deviation",
                           size=(800,650)
                           )
         
                         
     def savesettings(self, filename):
         
-        params = ["tabTSC.TSC_state",
+        params = ["tabTSC.instrument_enable_status",
         "tabTSC.instrument_txt_IP",
         "tabTSC.instrument_txt_Port",
         "tabTSC.instrument_txt_Timeout",
