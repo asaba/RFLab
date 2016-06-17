@@ -103,18 +103,12 @@ def measure_calibration_cable(SMB = SMB_RF,
                     SAB_switch_01_delay = SAB_switch_01_delay,
                     SAB_switch_02_delay = SAB_switch_02_delay,
                     result_file_name = result_file_name,
+                    dummy_cable_power_level = 0,
+                    create_dummy_cable = False,
                     createprogressdialog = None
                     ):
 
     dialog = createprogressdialog
-
-    #if createprogressdialog:
-    #    import wx
-    #    
-    #    app = wx.App()
-    #    dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
-    #            style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME | wx.PD_AUTO_HIDE)
-
     values = [] #variable for results
 
     #reset the synthetizer SMB100A
@@ -125,28 +119,27 @@ def measure_calibration_cable(SMB = SMB_RF,
     SMB.write("POW:MODE FIX")
     command = "POW " + str(synthetizer_fix_power)
     SMB.write(command)
-    
-    #synthetizer_frequency_min = unit.convertion_to_base(synthetizer_frequency_min, synthetizer_frequency_unit)
-    #synthetizer_frequency_max = unit.convertion_to_base(synthetizer_frequency_max, synthetizer_frequency_unit)
-    #synthetizer_frequency_step = unit.convertion_to_base(synthetizer_frequency_step, synthetizer_frequency_unit)
-    
+
     frequency_range = synthetizer_frequency.return_range()
 
     maxcount = len(frequency_range)
     count = 0
     
-    
+    continue_progress = (True, True)
     for f in frequency_range: #frequency loop
         #set SMB100A frequency
         f_value = str(f)
         current_frequency = f_value + unit.return_unit_str(unit.Hz) 
-        current_frequency_human_readable = unit.return_unit_str(f)  
+        current_frequency_human_readable = unit.return_human_readable_str(f)
         command = "FREQ " + current_frequency #Ex. FREQ 500kHz
         SMB.write(command)
         SMB.write("OUTP ON")
         time.sleep(2) 
-        data_now = str(datetime.datetime.now())       
-        values.append([f_value, unit.return_unit_str(unit.Hz)] + readNRP2(SAB, NRP2, power_meter_misure_number, power_meter_misure_delay, f, unit.Hz, SAB_switch_01_delay, make_zero = True) + [data_now])
+        data_now = str(datetime.datetime.now()) 
+        if create_dummy_cable:
+            values.append([f_value, unit.return_unit_str(unit.Hz)] + [str(dummy_cable_power_level) for x in range(power_meter_misure_number)] + [data_now])
+        else:      
+            values.append([f_value, unit.return_unit_str(unit.Hz)] + readNRP2(SAB, NRP2, power_meter_misure_number, power_meter_misure_delay, f, unit.Hz, SAB_switch_01_delay, make_zero = True) + [data_now])
         #turn off RF
         SMB.write("OUTP OFF")
         
@@ -163,8 +156,10 @@ def measure_calibration_cable(SMB = SMB_RF,
                 #wx.MicroSleep(500)
                 dialog.Close()
             else:
-                dialog.Update(newvalue, message)
-        
+                continue_progress = dialog.Update(newvalue, message)
+        if not continue_progress[0]:
+            dialog.Destroy()
+            break
         if f == frequency_range[-1]:
             #safety turn Off
             #dialog.Update(100, "Measure completed)
@@ -184,13 +179,16 @@ def measure_calibration_cable(SMB = SMB_RF,
         values_headers.append("Loss value(dB)")
     values_headers.append("Time")
     #save data on file
+    savefile_path = result_file_name + "_" + return_now_postfix() + ".csv"
     try:
-        f_csv = open(result_file_name + "_" + return_now_postfix() + ".csv", "wb")
+        f_csv = open(savefile_path, "wb")
         create_csv(f_csv, header, values_headers, values)
         f_csv.close()
     except:
         #on error print data on standard output
         print(values)
+        
+    return savefile_path
 
 
 
