@@ -1388,7 +1388,6 @@ class TabPanelTSC(InstrumentPanelClass):
         sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
         sizer.Add(self.instrument_test_sizer, 0, wx.ALL, 5)
         sizer.Add(self.instrument_enable_status_sizer, 0, wx.ALL, 5)
-        sizer.Add(self.sizer_TSC_state, 0, wx.ALL, 5)
         sizer.Add(self.sizer_TSC_collecting_delay, 0, wx.ALL, 5)
         sizer.Add(self.sizer_TSC_plot_adev, 0, wx.ALL, 5)
         sizer.Add(self.sizer_result_file_name, 0, wx.ALL, 5)
