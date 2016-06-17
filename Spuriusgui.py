@@ -113,6 +113,8 @@ class SpuriusFrame(TaskFrame):
         "tabFSV.threshold_power",
         "tabFSV.spectrum_analyzer_frequency_marker_unit",
         "tabFSV.FSV_delay",
+        "tabFSV.spectrum_analyzer_central_frequency",
+        "tabFSV.spectrum_analyzer_central_frequency_unit",
         "tabSpuriusSetting.m_min_RF",
         "tabSpuriusSetting.m_max_RF",
         "tabSpuriusSetting.m_step_RF",
@@ -125,8 +127,11 @@ class SpuriusFrame(TaskFrame):
         "tabSpuriusSetting.IF_high_unit",
         "tabSpuriusSetting.spurius_IF_unit",
         "tabSpuriusSetting.calibration_file_LO",
+        "tabSpuriusSetting.calibration_file_LO_enable",
         "tabSpuriusSetting.calibration_file_RF",
+        "tabSpuriusSetting.calibration_file_RF_enable",
         "tabSpuriusSetting.calibration_file_IF",
+        "tabSpuriusSetting.calibration_file_IF_enable",
         "tabSpuriusSetting.result_file_name"]
         
         TaskFrame.framesavesettings(self, filepointer, params = params)
