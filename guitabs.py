@@ -767,18 +767,21 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
                                                  "index" : "self.y_index", 
                                                  "textbox_min" : "self.graph_y_min", 
                                                  "textbox_max" : "self.graph_y_max", 
+                                                 "textbox_step" : "self.graph_y_step", 
                                                  "filter" : "self.row_data_filter", 
                                                  "unit_index" : "self.y_unit_index"}
         self.grap_x_calc_button.param_to_calc = {"combobox": "self.graph_x_unit", 
                                                  "index" : "self.x_index", 
                                                  "textbox_min" : "self.graph_x_min", 
                                                  "textbox_max" : "self.graph_x_max", 
+                                                 "textbox_step" : "self.graph_x_step", 
                                                  "filter" : "self.row_data_filter", 
                                                  "unit_index" : "self.x_unit_index"}
         self.grap_z_calc_button.param_to_calc = {"combobox": "self.graph_z_unit", 
                                                  "index" : "self.z_index", 
                                                  "textbox_min" : "self.graph_z_min", 
                                                  "textbox_max" : "self.graph_z_max", 
+                                                 "textbox_step" : "self.graph_z_step", 
                                                  "filter" : "self.row_data_filter", 
                                                  "unit_index" : "self.z_unit_index"}
         #self.grap_x_max_calc_button.param_to_calc = {"combobox": "self.graph_x_unit", "type": "max", "index" : "self.x_index", "textbox" : "self.graph_x_max", "filter" : "self.row_data_filter", "unit_index" : "self.x_unit_index"}
@@ -793,13 +796,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         
 
         self.graph_x_label.ChangeValue("IF Frequency ({unit})")
-        self.graph_x_min.ChangeValue("100")
-        self.graph_x_max.ChangeValue("3000")
-        self.graph_x_step.ChangeValue("100")
         self.graph_y_label.ChangeValue("IF Power Loss ({unit})")
-        self.graph_y_min.ChangeValue("-20")
-        self.graph_y_max.ChangeValue("0")
-        self.graph_y_step.ChangeValue("2")
 
         sizer.Add(self.sizer_data_file_name, 0, wx.ALL, 5)
         sizer.Add(self.sizer_graph_type, 0, wx.ALL, 5)
@@ -845,8 +842,12 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
                     if eval(param_to_calc["unit_index"]) is not None:
                         tmp_unit = unit.return_unit_str(d[eval(param_to_calc["unit_index"])])
         if len(m) > 0:
+            mx = max(m)
+            mn = min(m)
+            step = abs(mx-mn)/10
             eval(param_to_calc["textbox_max"]).ChangeValue(str(max(m)))
             eval(param_to_calc["textbox_min"]).ChangeValue(str(min(m)))
+            eval(param_to_calc["textbox_step"]).ChangeValue(str(step))
             eval(param_to_calc["combobox"]).SetSelection(unit.return_unit_index(tmp_unit))
     
     def check_filter(self, row, row_filter):
