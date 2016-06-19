@@ -15,9 +15,7 @@ import sys
 from csvutility import frequency_LO_index, unit_LO_index, power_LO_index, is_LO_calibrated_index, frequency_RF_index, unit_RF_index, power_RF_index, is_RF_calibrated_index, frequency_IF_index, unit_IF_index, power_IF_index, is_IF_calibrated_index, n_LO_index, m_RF_index, conversion_loss, csv_file_header
 
 
-from graphutility import csfont_title, csfont_axislegend, csfont_axisticks, csfont_legendlines,\
-                         csfont_legendtitle, csfont_suptitle, csfont_annotation,\
-                         openSpuriusfile, splitSpuriusCfiletablevalueDict, order_and_group_data
+from graphutility import openSpuriusfile, splitSpuriusCfiletablevalueDict, order_and_group_data
 
 from utility import save_data, save_settings, create_csv, unit_class, return_now_postfix
 import os.path
@@ -74,7 +72,13 @@ def splitIP1filetablevalue(table_value):
 
         
 
-def calculate_all_IP1(data_file_name, graph_title, graph_x, graph_y, IF_Frequency_selected, animated):
+def calculate_all_IP1(data_file_name, 
+                      graph_title, 
+                      graph_x, 
+                      graph_y, 
+                      IF_Frequency_selected, 
+                      animated, 
+                      font_style = None):
     """
     data = dict{frequency: [power_level_input, power_level_output, calibration_info]}
     """
@@ -98,7 +102,14 @@ def calculate_all_IP1(data_file_name, graph_title, graph_x, graph_y, IF_Frequenc
                 ip1_data = dt[:]
             elif dt[0][n_LO_index] == 3 and dt[0][frequency_LO_index] == frequency:
                 ip3_data = dt[:]
-        calculateIP1(ip1_data, ip3_data, graph_title, graph_x, graph_y, data_file_directory = data_file_directory, animated = animated) #return list of value sorted by power_level_input field. Used to manage different measure for different attenuations
+        calculateIP1(ip1_data, 
+                     ip3_data, 
+                     graph_title, 
+                     graph_x, 
+                     graph_y, 
+                     data_file_directory = data_file_directory, 
+                     animated = animated,
+                     font_style = font_style) #return list of value sorted by power_level_input field. Used to manage different measure for different attenuations
     #####TODO
     #for k, v in splitSpuriusCfiletablevalueDict(file_table_result).iteritems():
     #    calculateIP1(k, unit_value, sorted(v, key=lambda x: x[0]), graph_title, graph_x_label, graph_x_min, graph_x_max, graph_x_step, graph_y_label, graph_y_min, graph_y_max, graph_y_step, data_file_directory = data_file_directory, animated = animated) #return list of value sorted by power_level_input field. Used to manage different measure for different attenuations
@@ -117,7 +128,15 @@ def return_ip1_ip3(p_linear_ip1, spl_ip1, t_ip3, graph_x, p_linear_ip3):
                 IP3_x = x
         return IP1_x, spl_ip1(IP1_x), IP3_x, p_linear_ip3(IP3_x)
 
-def calculateIP1(table_value_ip1, table_value_ip3, graph_title, graph_x, graph_y, return_IP1 = True, data_file_directory = "", animated = False):
+def calculateIP1(table_value_ip1, 
+                 table_value_ip3, 
+                 graph_title, 
+                 graph_x, 
+                 graph_y, 
+                 return_IP1 = True, 
+                 data_file_directory = "", 
+                 animated = False,
+                 font_style = None):
     
     power_input_curve_ip1 = []
     power_linear_last_index_ip1 = 0
@@ -196,61 +215,24 @@ def calculateIP1(table_value_ip1, table_value_ip3, graph_title, graph_x, graph_y
     
     
     a = gca()
-    a.set_xticklabels(a.get_xticks(), **csfont_axisticks)
-    a.set_yticklabels(a.get_yticks(), **csfont_axisticks)
+    a.set_xticklabels(a.get_xticks(), **font_style["axisticks"])
+    a.set_yticklabels(a.get_yticks(), **font_style["csfont_axisticks"])
     
     if not graph_x.label:
         graph_x.label = 'Input Power(dBm)'
-    plt.xlabel(graph_x.label, **csfont_axislegend)
+    plt.xlabel(graph_x.label, **font_style["csfont_axislegend"])
     if not graph_y.label:
         graph_y.label = "Output Power (dBm)"
-    plt.ylabel(graph_y.label, **csfont_axislegend)
+    plt.ylabel(graph_y.label, **font_style["csfont_axislegend"])
     if not graph_title:
         graph_title = unit.return_human_readable_str(table_value_ip1[0][frequency_LO_index]) + " Cable Cal." + str(calibrated_ip1)
-    plt.title(graph_title, **csfont_title)
+    plt.title(graph_title, **font_style["csfont_title"])
     plt.grid(True)
     lower = 0
     upper = len(t_ip1)
     middle = 0
     if return_IP1:
-        ##for i in range(0, int(np.log2(len(t_ip1)))-1):
-        ##    middle = lower + int((upper-lower) /2)
-        ##    if abs(p_linear_ip1(t_ip1[middle]) - spl_ip1(t_ip1[middle]))<0.8:
-        ##        lower = middle
-        ##    else:
-        ##        upper = middle
-        #for x in np.arange(t_ip1[0], t_ip1[-1], 0.0001):
-        ##for x in np.arange(t_ip1[middle], t_ip1[-1], 0.0001):
-        #    if abs(p_linear_ip1(x) - spl_ip1(x))>=1:
-        #        #IP1 found
-        #        IP1_x = x
-        #        #plt.plot(x, spl(x), "ro")
-        #        #plt.text(x+0.2, spl(x)+0.2, "{}".format(x))
-        #        break
-        #t_ip3_tmp = t_ip3 + [graph_x.max]
-        ##lower = 0
-        ##upper = len(t_ip3_tmp)
-        ##middle = 0
-        ##
-        ##for i in range(0, int(np.log2(len(t_ip3_tmp)))-1):
-        ##    middle = lower + int((upper-lower) /2)
-        ##    if abs(p_linear_ip1(t_ip3_tmp[middle]) - p_linear_ip3(t_ip3_tmp[middle]))<0.5:
-        ##        lower = middle
-        ##    else:
-        ##        upper = middle
-        ###for x in np.arange(t[0], t[-1], 0.0001):
-        ##for x in np.arange(t_ip3_tmp[middle], t_ip3_tmp[-1], 0.0001):
-        ##    if abs(p_linear_ip1(x) - p_linear_ip3(x))>=0.00001:
-        ##        #IP1 found
-        ##        IP3_x = x
-        ##        #plt.plot(x, spl(x), "ro")
-        ##        #plt.text(x+0.2, spl(x)+0.2, "{}".format(x))
-        ##        break
-        #    
-        #for x in np.arange(t_ip3_tmp[0], t_ip3_tmp[-1], 0.001):
-        #    if abs(p_linear_ip1(x) - p_linear_ip3(x))<0.01:
-        #        IP3_x = x
-        #        break
+    
         ip1_x, ip1_y, ip3_x, ip3_y = return_ip1_ip3(p_linear_ip1, spl_ip1, t_ip3, graph_x, p_linear_ip3)
     
     
@@ -259,11 +241,11 @@ def calculateIP1(table_value_ip1, table_value_ip3, graph_title, graph_x, graph_y
     curve_data_ip3 = np.array([t_ip3, [spl_ip3(x) for x in t_ip3]])
     line_data_ip3 = np.array([t_ip3 + [graph_x.max], s_linear_ip3])
     ip1, = ax.plot([ip1_x], [ip1_y], "ro")
-    plt.text(ip1_x+0.2, ip1_y-2, "{:.3f} dBm".format(ip1_x), **csfont_annotation)
+    plt.text(ip1_x+0.2, ip1_y-2, "{:.3f} dBm".format(ip1_x), **font_style["annotation"])
     retta_ip1, = ax.plot(line_data_ip1[0], line_data_ip1[1], "g--")
     curve_ip1, = ax.plot(curve_data_ip1[0], curve_data_ip1[1], "r-")
     ip3, = ax.plot([ip3_x],[ip3_y], "bo")
-    plt.text(ip3_x+0.2, ip3_y-2, "{:.3f} dBm".format(ip3_x), **csfont_annotation)
+    plt.text(ip3_x+0.2, ip3_y-2, "{:.3f} dBm".format(ip3_x), **font_style["annotation"])
     retta_ip3, = ax.plot(line_data_ip3[0], line_data_ip3[1], "c--")
     curve_ip3, = ax.plot(curve_data_ip3[0], curve_data_ip3[1], "b-")
     
@@ -273,44 +255,44 @@ def calculateIP1(table_value_ip1, table_value_ip3, graph_title, graph_x, graph_y
     fig.savefig(os.path.join(data_file_directory, unit.return_human_readable_str(table_value_ip1[0][frequency_LO_index]) + "_Cable_Cal" + str(calibrated_ip1) + "_" + return_now_postfix() + ".png"))
     return IP1_x
  
-def update_line(num, line_data_ip1, line_ip1, line_generator_ip1, curve_data_ip1, curve_ip1, curve_generator_ip1, ip1, line_data_ip3, line_ip3, line_generator_ip3, curve_data_ip3, curve_ip3, curve_generator_ip3, ip3):
-    #line.set_data(data[0, :num], data[1,:num])
-    if len(line_ip1.get_xdata()) == len(line_data_ip1[0]):
-        return line_ip1, curve_ip1, line_ip3, curve_ip3
-    line_ip1.set_xdata(np.append(line_ip1.get_xdata(), line_data_ip1[0][num]))
-    line_ip1.set_ydata(np.append(line_ip1.get_ydata(), line_data_ip1[1][num]))
-    line_ip3.set_xdata(np.append(line_ip3.get_xdata(), line_data_ip3[0][num]))
-    line_ip3.set_ydata(np.append(line_ip3.get_ydata(), line_data_ip3[1][num]))
-    #line2.set_data(data2[0, :num], data2[1, :num])
-    #if num < len(curve_data_ip1[0]):
-    curve_ip1.set_xdata(np.append(curve_ip1.get_xdata(), curve_data_ip1[0][num]))
-    curve_ip1.set_ydata(np.append(curve_ip1.get_ydata(), curve_data_ip1[1][num]))
-    curve_ip3.set_xdata(np.append(curve_ip3.get_xdata(), curve_data_ip3[0][num]))
-    curve_ip3.set_ydata(np.append(curve_ip3.get_ydata(), curve_data_ip3[1][num]))
-    if len(ip1.get_xdata())==0:
-        if abs(line_data_ip1[1][num] - curve_data_ip1[1][num]) > 1.0:
-            for x in np.arange(curve_data_ip1[0][num-1], curve_data_ip1[0][num+1], 0.0001):
-                if abs(line_generator_ip1(x) - curve_generator_ip1(x))>=1:
-                    #IP1 found
-                    ip1.set_xdata(np.append(ip1.get_xdata(), curve_data_ip1[0][num]))
-                    ip1.set_ydata(np.append(ip1.get_ydata(), curve_data_ip1[1][num]))
-                    plt.text(x+0.2, curve_generator_ip1(x)-2, "{:.3f} dBm".format(x), **csfont_annotation)
-                    break
-    if len(ip3.get_xdata())==0:
-        if line_data_ip1[1][num] > line_data_ip3[1][num]:
-            diff = line_data_ip1[1][num] - line_data_ip3[1][num]
-        else:
-            diff = line_data_ip3[1][num] - line_data_ip1[1][num]
-        
-        if diff < 0.0:
-            for x in np.arange(line_data_ip3[0][num-1], line_data_ip3[0][num+1], 0.0001):
-                if abs(line_generator_ip1(x) - line_generator_ip1(x))<0.0001:
-                    #IP3 found
-                    ip3.set_xdata(np.append(ip3.get_xdata(), line_data_ip3[0][num]))
-                    ip3.set_ydata(np.append(ip3.get_ydata(), line_data_ip3[1][num]))
-                    plt.text(x+0.2, line_generator_ip1(x)-2, "{:.3f} dBm".format(x), **csfont_annotation)
-                    break
-    return line_ip1, curve_ip1, line_ip3, curve_ip3
+#def update_line(num, line_data_ip1, line_ip1, line_generator_ip1, curve_data_ip1, curve_ip1, curve_generator_ip1, ip1, line_data_ip3, line_ip3, line_generator_ip3, curve_data_ip3, curve_ip3, curve_generator_ip3, ip3):
+#    #line.set_data(data[0, :num], data[1,:num])
+#    if len(line_ip1.get_xdata()) == len(line_data_ip1[0]):
+#        return line_ip1, curve_ip1, line_ip3, curve_ip3
+#    line_ip1.set_xdata(np.append(line_ip1.get_xdata(), line_data_ip1[0][num]))
+#    line_ip1.set_ydata(np.append(line_ip1.get_ydata(), line_data_ip1[1][num]))
+#    line_ip3.set_xdata(np.append(line_ip3.get_xdata(), line_data_ip3[0][num]))
+#    line_ip3.set_ydata(np.append(line_ip3.get_ydata(), line_data_ip3[1][num]))
+#    #line2.set_data(data2[0, :num], data2[1, :num])
+#    #if num < len(curve_data_ip1[0]):
+#    curve_ip1.set_xdata(np.append(curve_ip1.get_xdata(), curve_data_ip1[0][num]))
+#    curve_ip1.set_ydata(np.append(curve_ip1.get_ydata(), curve_data_ip1[1][num]))
+#    curve_ip3.set_xdata(np.append(curve_ip3.get_xdata(), curve_data_ip3[0][num]))
+#    curve_ip3.set_ydata(np.append(curve_ip3.get_ydata(), curve_data_ip3[1][num]))
+#    if len(ip1.get_xdata())==0:
+#        if abs(line_data_ip1[1][num] - curve_data_ip1[1][num]) > 1.0:
+#            for x in np.arange(curve_data_ip1[0][num-1], curve_data_ip1[0][num+1], 0.0001):
+#                if abs(line_generator_ip1(x) - curve_generator_ip1(x))>=1:
+#                    #IP1 found
+#                    ip1.set_xdata(np.append(ip1.get_xdata(), curve_data_ip1[0][num]))
+#                    ip1.set_ydata(np.append(ip1.get_ydata(), curve_data_ip1[1][num]))
+#                    plt.text(x+0.2, curve_generator_ip1(x)-2, "{:.3f} dBm".format(x), **font_style["annotation"])
+#                    break
+#    if len(ip3.get_xdata())==0:
+#        if line_data_ip1[1][num] > line_data_ip3[1][num]:
+#            diff = line_data_ip1[1][num] - line_data_ip3[1][num]
+#        else:
+#            diff = line_data_ip3[1][num] - line_data_ip1[1][num]
+#        
+#        if diff < 0.0:
+#            for x in np.arange(line_data_ip3[0][num-1], line_data_ip3[0][num+1], 0.0001):
+#                if abs(line_generator_ip1(x) - line_generator_ip1(x))<0.0001:
+#                    #IP3 found
+#                    ip3.set_xdata(np.append(ip3.get_xdata(), line_data_ip3[0][num]))
+#                    ip3.set_ydata(np.append(ip3.get_ydata(), line_data_ip3[1][num]))
+#                    plt.text(x+0.2, line_generator_ip1(x)-2, "{:.3f} dBm".format(x), **font_style["annotation"])
+#                    break
+#    return line_ip1, curve_ip1, line_ip3, curve_ip3
 
 fig = None
 

@@ -31,9 +31,7 @@ from utility import create_csv, create_csv, unit_class, return_now_postfix
 import os.path
 from csvutility import frequency_LO_index, unit_LO_index, power_LO_index, is_LO_calibrated_index, frequency_RF_index, unit_RF_index, power_RF_index, is_RF_calibrated_index, frequency_IF_index, unit_IF_index, power_IF_index, is_IF_calibrated_index, n_LO_index, m_RF_index, conversion_loss, csv_file_header
 
-from graphutility import styles, linecolors, markerstyles, csfont_axislegend,\
- csfont_axisticks, csfont_legendlines, csfont_legendtitle, csfont_suptitle,\
-  csfont_title, styles_generic_XY, openGenericTxtfile, openSpuriusfile,\
+from graphutility import styles, linecolors, markerstyles, styles_generic_XY, openGenericTxtfile, openSpuriusfile,\
    splitSpuriusCfiletablevalueDict, order_and_group_data
 from measure_scripts.graphutility import graph_types, generic_graph_types
 from plotXYgraph import plot_XY_Single
@@ -125,7 +123,8 @@ def plot_spurius_graph(data_file_name,
                        SD_LO_Frequency,
                        SD_LO_Level,
                        SD_RF_Level,
-                       IF_Frequency_selected = 1000):
+                       IF_Frequency_selected = 1000, 
+                       font_style = None):
     """
     data = dict{(n, m, Freq_LO, Level_LO, Level_RF): [Freq_unit_LO, Calib_LO, Freq_RF, Freq_unit_RF, Calib_RF, Freq_IF, Freq_unit_IF, Level_IF, Calib_IF, -(Level_RF - Level_IF)]}
     """
@@ -181,7 +180,8 @@ def plot_spurius_graph(data_file_name,
                            graph_x = graph_x,
                            graph_y = graph_y, 
                            graph_z = graph_z,
-                           data_file_directory = data_file_directory)
+                           data_file_directory = data_file_directory,
+                           font_style = font_style)
     if len(group_for_SD)>0:
         plot_spurius_C(table_value = group_for_SD,
                            graph_group_index = graph_group_index,
@@ -194,7 +194,8 @@ def plot_spurius_graph(data_file_name,
                            graph_x = graph_x,
                            graph_y = graph_y,
                            graph_z = graph_z,
-                           data_file_directory = data_file_directory)
+                           data_file_directory = data_file_directory,
+                           font_style = font_style)
     if len(group_for_GG)>0:
         plot_XY_Single(fig, table_value = group_for_GG,
                            graph_group_index = graph_group_index,
@@ -208,7 +209,8 @@ def plot_spurius_graph(data_file_name,
                            graph_x = graph_x,
                            graph_y = graph_y,
                            graph_z = graph_z,
-                           data_file_directory = data_file_directory)
+                           data_file_directory = data_file_directory,
+                           font_style = font_style)
     return data_file_directory
 
 def plot_spurius_C(table_value, 
@@ -222,7 +224,8 @@ def plot_spurius_C(table_value,
                    graph_x,
                    graph_y,
                    graph_z,
-                   data_file_directory = ""):
+                   data_file_directory = "",
+                   font_style = None):
     
     fig = plt.figure()
     #for i in range (1, 13):
@@ -238,7 +241,8 @@ def plot_spurius_C(table_value,
                    graph_x = graph_x,
                    graph_y = graph_y, 
                    graph_z = graph_z,
-                   data_file_directory = data_file_directory)
+                   data_file_directory = data_file_directory,
+                   font_style = None)
     
     
     
@@ -269,7 +273,8 @@ def plot_3d_distribution(fig, data_table,
                                graph_x,
                                graph_y,
                                graph_z,
-                               data_file_directory):
+                               data_file_directory,
+                               font_style):
 
     
     bar_with = 5e+7 #Hz
@@ -281,7 +286,7 @@ def plot_3d_distribution(fig, data_table,
     color = ['r', 'g', 'b', 'y']
     yticklabels = [str(r[0][n_LO_index])+ ", " + str(r[0][m_RF_index]) for r in data_table]
     ax.set_yticks(front_back_position)
-    ax.set_yticklabels(yticklabels, **csfont_axislegend)
+    ax.set_yticklabels(yticklabels, **font_style["axislegend"])
     color_index = 0
     fb_index = 0
     sort_data = [frequency_IF_index]
@@ -294,24 +299,6 @@ def plot_3d_distribution(fig, data_table,
         level_result = []
         for f_index in range(len(freq)):
             if freq[f_index] >= graph_x.min and freq[f_index] <= graph_x.max:
-                #exclude the spurius with the same frequency of intermodulation of LO and RF
-                #freq_LO = lo[f_index]
-                #freq_RF = rf[f_index] 
-                #freq_IF = freq[f_index]
-                #harmonic = [round(freq_LO - freq_RF), round(-freq_LO + freq_RF)]
-                #n = n_list[f_index]
-                #m = m_list[f_index]
-                #spurius_freq = n * freq_LO + m * freq_RF
-                #print("LO: {lo}".format(lo=freq_LO))
-                #print("RF: {rf}".format(rf=freq_RF))
-                #print(n)
-                #print(m)
-                #print(harmonic)
-                #print(spurius_freq)
-                #if not (spurius_freq in harmonic):
-                #    
-                #    freq_result.append(unit.unit_conversion(freq[f_index], unit.Hz, graph_x.unit))
-                #    level_result.append(level[f_index])
                 freq_result.append(freq[f_index])
                 level_result.append(level[f_index])
         color_index += 1
@@ -320,11 +307,11 @@ def plot_3d_distribution(fig, data_table,
         ax.bar(freq_result, level_result, zs=front_back_position[fb_index], color = color[color_index], width  = unit.unit_conversion(bar_with, bar_with_unit, graph_x.unit), zdir='y', alpha=0.8)
         fb_index += 1
     
-    plt.suptitle("Spuriuos Distribution", **csfont_suptitle)
-    plt.title(graph_title, **csfont_title)
-    ax.set_xlabel(graph_x.label, **csfont_axislegend)
-    ax.set_ylabel(graph_y.label, **csfont_axislegend)
-    ax.set_zlabel(graph_z.label, **csfont_axislegend)
+    plt.suptitle("Spuriuos Distribution", **font_style["suptitle"])
+    plt.title(graph_title, **font_style["title"])
+    ax.set_xlabel(graph_x.label, **font_style["axislegend"])
+    ax.set_ylabel(graph_y.label, **font_style["axislegend"])
+    ax.set_zlabel(graph_z.label, **font_style["axislegend"])
     
     ax.set_xlim3d(graph_x.from_base().min, graph_x.from_base().max)
     ax.set_xticks(graph_x.from_base().return_arange())
@@ -336,7 +323,7 @@ def plot_3d_distribution(fig, data_table,
     fig.canvas.draw()
     zticklabels = ax.get_zticklabels()
     new_zticklabels = [str(eval(zt.get_text()) + graph_z.from_base().min) for zt in zticklabels]
-    ax.set_zticklabels(new_zticklabels, **csfont_axisticks)
+    ax.set_zticklabels(new_zticklabels, **font_style["axisticks"])
     #plt.gca().invert_zaxis()
     plt.show()
 
@@ -352,7 +339,8 @@ def plot_spurius_Single(fig, table_value,
                    graph_x,
                    graph_y,
                    graph_z,
-                   data_file_directory = ""):
+                   data_file_directory = "",
+                   font_style = None):
     """
 
     """
@@ -449,15 +437,15 @@ def plot_spurius_Single(fig, table_value,
         plt.yticks(graph_y.return_ticks_range(2))
         
         a = gca()
-        a.set_xticklabels(a.get_xticks(), **csfont_axisticks)
-        a.set_yticklabels(a.get_yticks(), **csfont_axisticks)
+        a.set_xticklabels(a.get_xticks(), **font_style["axisticks"])
+        a.set_yticklabels(a.get_yticks(), **font_style["axisticks"])
         
         
         
-        plt.xlabel(graph_x.label, **csfont_axislegend)
-        plt.ylabel(graph_y.label, **csfont_axislegend)
-        plt.title(graph_title, **csfont_title)
-        plt.suptitle(graph_sup_title, linespacing = 2, **csfont_suptitle)
+        plt.xlabel(graph_x.label, **font_style["axislegend"])
+        plt.ylabel(graph_y.label, **font_style["axislegend"])
+        plt.title(graph_title, **font_style["title"])
+        plt.suptitle(graph_sup_title, linespacing = 2, **font_style["suptitle"])
         plt.grid(True)
     
     # Put a legend to the right of the current axis
@@ -486,8 +474,8 @@ def plot_spurius_Single(fig, table_value,
             ax.set_ylim([mn-x_y_offset, mx+x_y_offset])
             plt.xticks(graph_x.return_ticks_range(2))
             plt.yticks(graph_y.return_ticks_range(2))
-            a.set_xticklabels(a.get_xticks(), **csfont_axisticks)
-            a.set_yticklabels(a.get_yticks(), **csfont_axisticks)
+            a.set_xticklabels(a.get_xticks(), **font_style["axisticks"])
+            a.set_yticklabels(a.get_yticks(), **font_style["axisticks"])
             markercolor = tuple(list(colorConverter.to_rgb(styles[s][1])) + [0.4])
             ax.plot(np.array(x), np.array(y), label=label, linestyle='-', marker=styles[s][0], color=styles[s][1], markerfacecolor=markercolor)
             s += 1
@@ -498,8 +486,8 @@ def plot_spurius_Single(fig, table_value,
         #legend_object.set_title(title = legend_title, prop = csfont_title)
         #legend_object.get_title().set_fontsize(csfont_title["fontsize"]) #legend 'Title' fontsize
         #legend_object.get_title().set_fontname(csfont_title["fontname"])
-        plt.setp(plt.gca().get_legend().get_title(), **csfont_legendtitle)
-        plt.setp(plt.gca().get_legend().get_texts(), **csfont_legendlines) #legend 'list' fontsize
+        plt.setp(plt.gca().get_legend().get_title(), **font_style["legendtitle"])
+        plt.setp(plt.gca().get_legend().get_texts(), **font_style["legendlines"]) #legend 'list' fontsize
             
             
             #curves_data.append(np.array([t, [spl[-1](x) for x in t]]))

@@ -727,7 +727,7 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
         IF_Frequency_selected = eval("[" + result + "]")
         IF_Frequency_selected = [unit.convertion_to_base(x, unit.MHz) for x in IF_Frequency_selected]
         
-        
+        current_font_style = self.Parent.GrandParent.get_selected_settings()
         
         graph_x = Graph_Axis_Range(graph_x_min, graph_x_max, graph_x_step, graph_x_unit, graph_x_label)
         graph_x.to_base()
@@ -740,7 +740,8 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
                           graph_x,
                           graph_y, 
                           IF_Frequency_selected,
-                          graph_animated)
+                          graph_animated,
+                          font_style = current_font_style)
         #self.instrument_label.SetLabel(response)
 
 
@@ -1065,6 +1066,8 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
             SD_LO_Level = eval(SD_LO_Level)
             SD_RF_Level = eval(SD_RF_Level)
         
+        current_font_style = self.Parent.GrandParent.get_selected_settings()
+        
         
         for frequency_IF_filter  in IF_Frequency_selected:
             result_folder = plot_spurius_graph(self.data_file_name_value, 
@@ -1076,7 +1079,8 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
                            SD_LO_Frequency = SD_LO_Frequency,
                            SD_LO_Level = SD_LO_Level,
                            SD_RF_Level = SD_RF_Level,
-                           IF_Frequency_selected = frequency_IF_filter)
+                           IF_Frequency_selected = frequency_IF_filter,
+                           font_style = current_font_style)
             
         try:
             last_svg = ""
@@ -1298,6 +1302,8 @@ class TabPanelGenericPlotGraph(XYPlotGraphPanelClass):
         SD_LO_Level = 0
         SD_RF_Level = 0
 
+        current_font_style = self.Parent.GrandParent.get_selected_settings()
+
         result_folder = plot_spurius_graph(self.data_file_name_value, 
                        self.graph_type_value, 
                        graph_title, 
@@ -1307,7 +1313,8 @@ class TabPanelGenericPlotGraph(XYPlotGraphPanelClass):
                        SD_LO_Frequency = SD_LO_Frequency,
                        SD_LO_Level = SD_LO_Level,
                        SD_RF_Level = SD_RF_Level,
-                       IF_Frequency_selected = 0)
+                       IF_Frequency_selected = 0,
+                       font_style = current_font_style)
             
         try:
             last_svg = ""

@@ -149,7 +149,7 @@ class PlotsFrame(TaskFrame):
         
     def _select_setting(self, param_name, menu_item_list):
         
-        for fontsizestyle in self.menu_item_list:
+        for fontsizestyle in menu_item_list:
             if fontsizestyle.IsChecked():
                 font_styles[param_name]["fontsize"] = fontsizestyle.Text
                 break
