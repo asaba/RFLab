@@ -12,7 +12,7 @@ from matplotlib.colors import colorConverter
 
 from utility import create_csv, create_csv, unit_class, return_now_postfix
 import os.path
-from graphutility import styles, linecolors, markerstyles, csfont_axislegend, csfont_axisticks, csfont_legendlines, csfont_legendtitle, csfont_suptitle, csfont_title, styles_generic_XY
+from graphutility import styles, linecolors, markerstyles, styles_generic_XY
 
 unit = unit_class()
 
@@ -50,7 +50,8 @@ def plot_XY_Single(fig1, table_value,
                    graph_z,
                    data_file_directory = "",
                    line_style = styles_generic_XY,
-                   save = True):
+                   save = True, 
+                   font_style = None):
     """
 
     """
@@ -58,16 +59,7 @@ def plot_XY_Single(fig1, table_value,
 
     graph_sup_title = graph_title
     
-    #last_group_index = tuple([table_value[0][index] for index in graph_group_index])
-    #result = [table_value[0][:]]
-    #for row in table_value[1:]:
-    #    current_group_index = tuple([row[index] for index in graph_group_index])
-    #    if current_group_index == last_group_index:
-    #        result[-1].append(row[:])
-    #    else:
-    #        last_group_index = current_group_index
-    #        result.append([row[:]])
-            
+           
             
     last_group_index = tuple([table_value[0][index] for index in graph_group_index])
     result = [[table_value[0][:]]]
@@ -81,20 +73,13 @@ def plot_XY_Single(fig1, table_value,
     
 
     ax = plt.axes(xlim=(graph_x.min, graph_x.max), ylim=(graph_y.min, graph_y.max))
-    #plt.xticks(graph_x.return_ticks_range(not_round=True))
-    #plt.yticks(graph_y.return_ticks_range(2))
-    
-    #a = gca()
-    #a.set_xticklabels(["{0:.2f}".format(eval(s.get_text())) for s in  a.get_xticklabels()], **csfont_axisticks)
-    #a.set_xticklabels(a.get_xticks(), **csfont_axisticks)
-    #a.set_yticklabels(a.get_yticks(), **csfont_axisticks)
     
     
     
-    plt.xlabel(graph_x.label.format(unit = unit.return_unit_str(graph_x.unit)), **csfont_axislegend)
-    plt.ylabel(graph_y.label, **csfont_axislegend)
+    plt.xlabel(graph_x.label.format(unit = unit.return_unit_str(graph_x.unit)), **font_style["axislegend"])
+    plt.ylabel(graph_y.label, **font_style["axislegend"])
     #plt.title(graph_title, **csfont_title)
-    plt.suptitle(graph_sup_title, linespacing = 2, **csfont_suptitle)
+    plt.suptitle(graph_sup_title, linespacing = 2, **font_style["suptitle"])
     plt.grid(True)
 
     mn = 1000
@@ -126,8 +111,8 @@ def plot_XY_Single(fig1, table_value,
         plt.xticks(graph_x.return_ticks_range(not_round = True))
         plt.yticks(graph_y.return_ticks_range(2))
         a = gca()
-        a.set_xticklabels(["{0:.2f}".format(tk) for tk in  a.get_xticks()], **csfont_axisticks)
-        a.set_yticklabels(a.get_yticks(), **csfont_axisticks)
+        a.set_xticklabels(["{0:.2f}".format(tk) for tk in  a.get_xticks()], **font_style["axisticks"])
+        a.set_yticklabels(a.get_yticks(), **font_style["axisticks"])
         markercolor = tuple(list(colorConverter.to_rgb(line_style[s][1])) + [0.4])
         ax.plot(np.array(x), np.array(y), label=label, linestyle='-', marker=line_style[s][0], color=line_style[s][1], markerfacecolor=markercolor)
         s += 1
@@ -136,8 +121,8 @@ def plot_XY_Single(fig1, table_value,
         box = ax.get_position()
         ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
         legend_object =  ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), title = legend_title)
-        plt.setp(plt.gca().get_legend().get_title(), **csfont_legendtitle)
-        plt.setp(plt.gca().get_legend().get_texts(), **csfont_legendlines) #legend 'list' fontsize
+        plt.setp(plt.gca().get_legend().get_title(), **font_style["legendtitle"])
+        plt.setp(plt.gca().get_legend().get_texts(), **font_style["legendlines"]) #legend 'list' fontsize
             
     if save:
         save_file_name = os.path.join(data_file_directory, "Graph_" + graph_title)
