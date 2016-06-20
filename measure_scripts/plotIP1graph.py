@@ -126,7 +126,15 @@ def return_ip1_ip3(p_linear_ip1, spl_ip1, t_ip3, graph_x, p_linear_ip3):
                 IP1_x = x
             if abs(ip_line_point - p_linear_ip3(x)) <= 0.001:
                 IP3_x = x
-        return IP1_x, spl_ip1(IP1_x), IP3_x, p_linear_ip3(IP3_x)
+        if IP1_x is None:
+            spl_ip1_point = None
+        else:
+            spl_ip1_point = spl_ip1(IP1_x)
+        if IP3_x is None:
+            spl_ip3_point = None
+        else:
+            spl_ip3_point = p_linear_ip3(IP3_x)
+        return IP1_x, spl_ip1_point, IP3_x, spl_ip3_point
 
 def calculateIP1(table_value_ip1, 
                  table_value_ip3, 
@@ -216,17 +224,17 @@ def calculateIP1(table_value_ip1,
     
     a = gca()
     a.set_xticklabels(a.get_xticks(), **font_style["axisticks"])
-    a.set_yticklabels(a.get_yticks(), **font_style["csfont_axisticks"])
+    a.set_yticklabels(a.get_yticks(), **font_style["axisticks"])
     
     if not graph_x.label:
         graph_x.label = 'Input Power(dBm)'
-    plt.xlabel(graph_x.label, **font_style["csfont_axislegend"])
+    plt.xlabel(graph_x.label, **font_style["axislegend"])
     if not graph_y.label:
         graph_y.label = "Output Power (dBm)"
-    plt.ylabel(graph_y.label, **font_style["csfont_axislegend"])
+    plt.ylabel(graph_y.label, **font_style["axislegend"])
     if not graph_title:
         graph_title = unit.return_human_readable_str(table_value_ip1[0][frequency_LO_index]) + " Cable Cal." + str(calibrated_ip1)
-    plt.title(graph_title, **font_style["csfont_title"])
+    plt.title(graph_title, **font_style["title"])
     plt.grid(True)
     lower = 0
     upper = len(t_ip1)
@@ -244,8 +252,9 @@ def calculateIP1(table_value_ip1,
     plt.text(ip1_x+0.2, ip1_y-2, "{:.3f} dBm".format(ip1_x), **font_style["annotation"])
     retta_ip1, = ax.plot(line_data_ip1[0], line_data_ip1[1], "g--")
     curve_ip1, = ax.plot(curve_data_ip1[0], curve_data_ip1[1], "r-")
-    ip3, = ax.plot([ip3_x],[ip3_y], "bo")
-    plt.text(ip3_x+0.2, ip3_y-2, "{:.3f} dBm".format(ip3_x), **font_style["annotation"])
+    if ip3_x is not None:
+        ip3, = ax.plot([ip3_x],[ip3_y], "bo")
+        plt.text(ip3_x+0.2, ip3_y-2, "{:.3f} dBm".format(ip3_x), **font_style["annotation"])
     retta_ip3, = ax.plot(line_data_ip3[0], line_data_ip3[1], "c--")
     curve_ip3, = ax.plot(curve_data_ip3[0], curve_data_ip3[1], "b-")
     

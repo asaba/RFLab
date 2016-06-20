@@ -49,9 +49,7 @@ generic_graph_types = {"Generic Graph" : "GG"}
 graph_types = {"Conversion Loss" : "LO", 
                "Compression point" : "RF", 
                "Harmonic Intermodulation Products" : "SP", 
-               "Spurious Distribution" : "SD",
-               "IP1" : "IP1",
-               "IP3" : "IP3"}
+               "Spurious Distribution" : "SD"}
 
 
 def openGenericTxtfile(filename, skip_first_row = 0):
@@ -131,7 +129,7 @@ def splitSpuriusCfiletablevalueDict(data_file_name, graph_type, table_value, sor
     
     #add columnd -(power_RF - power_IF)
     table_result = []
-    if graph_type in graph_types.values():
+    if graph_type in graph_types.values() + ["IP1"]:
         for row in table_value:
             table_result.append(row + [-(row[power_RF_index] - row[power_IF_index])])
     elif graph_type in generic_graph_types.values():
@@ -145,7 +143,7 @@ def splitSpuriusCfiletablevalueDict(data_file_name, graph_type, table_value, sor
     group_result = [[table_result[0][:]]]
     last_tupla = tuple([table_result[0][index] for index in group_level_01])
     #last_tupla = (table_result[0][n_LO_index], table_result[0][m_RF_index], table_result[0][frequency_LO_index], table_result[0][power_LO_index])
-    for row in table_result[1:]:
+    for row in table_result[1:]: #first row in group_result yet
         if graph_type == "SD" and row[power_LO_index] == SD_LO_Level and row[power_RF_index] == SD_RF_Level and row[power_IF_index]>SD_IF_Min_Level:
             if row[frequency_LO_index] == SD_LO_Frequency:
 
@@ -184,7 +182,7 @@ def order_and_group_data(data_file_name,
     """
     data = dict{(n, m, Freq_LO, Level_LO, Level_RF): [Freq_unit_LO, Calib_LO, Freq_RF, Freq_unit_RF, Calib_RF, Freq_IF, Freq_unit_IF, Level_IF, Calib_IF, -(Level_RF - Level_IF)]}
     """
-    if graph_type in graph_types.values():
+    if graph_type in graph_types.values() + ["IP1"]:
         file_table_result, unit_value, data_file_directory = openSpuriusfile(data_file_name)
     elif graph_type in generic_graph_types.values():
         file_table_result, unit_value, data_file_directory = openGenericTxtfile(data_file_name, skip_first_row = 1)
