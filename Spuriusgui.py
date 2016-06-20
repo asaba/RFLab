@@ -10,7 +10,8 @@ from taskframe import TaskFrame
 
 import wx
 import os
-from guitabs import TabPanelFSV, TabPanelPowerMeter, TabPanelSMB, TabPanelSpuriusSetup, TabPanelSpuriusCPlotGraph, TabPanelGenericPlotGraph
+from guitabs_instruments import TabPanelFSV, TabPanelSMB
+from guitabs_setup import TabPanelSpuriusSetup
 from measure_scripts.Spurius import unit, measure_LNA_spurius, SMB_LO, SMB_RF, NRP2, FSV
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument
 from utility import writelineonfilesettings, return_now_postfix,\

@@ -9,11 +9,11 @@ from taskframe import TaskFrame
 import wx
 import os
 
-from guitabs import TabPanelFSV, TabPanelPowerMeter, TabPanelSMB, TabPanelSpuriusSetup, TabPanelCalCableSetup, TabPanelSAB
+from guitabs_instruments import TabPanelPowerMeter, TabPanelSMB, TabPanelSAB
+from guitabs_setup import TabPanelCalCableSetup
 from measure_scripts.CalibrazioneCavo import unit, measure_calibration_cable, SMB_RF, NRP2, SAB
 from measure_scripts.scriptutility import Frequency_Range
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument, info_message
-from utility import writelineonfilesettings, return_now_postfix
 import webbrowser
 
 

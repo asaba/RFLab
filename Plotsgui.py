@@ -9,7 +9,7 @@ from taskframe import TaskFrame
 import wx
 import os
 
-from guitabs import TabPanelGenericPlotGraph, TabPanelIP1PlotGraph, TabPanelSpuriusCPlotGraph
+from guitabs_plot import TabPanelGenericPlotGraph, TabPanelIP1PlotGraph, TabPanelSpuriusCPlotGraph
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK
 from utility import writelineonfilesettings, return_now_postfix,\
     Generic_Range
@@ -55,7 +55,7 @@ class PlotsFrame(TaskFrame):
         """Constructor"""
         TaskFrame.__init__(self, NotebookDemo,
                           "Plots",
-                          size=(800,650),
+                          size=(800,680),
                           start_button = False
                           )
         

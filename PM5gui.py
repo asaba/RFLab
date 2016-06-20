@@ -9,7 +9,8 @@ from taskframe import TaskFrame
 import wx
 import os
 
-from guitabs import TabPanelSMB, TabPanelPM5Setup, TabPanelPM5
+from guitabs_instruments import TabPanelSMB, TabPanelPM5
+from guitabs_setup import TabPanelPM5Setup
 from measure_scripts.Cal100GHz import unit, measure_100GHz_cal, SMB_RF, PM5
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, check_value_is_IP, create_instrument,\
     create_USB_instrument

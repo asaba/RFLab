@@ -9,11 +9,10 @@ from taskframe import TaskFrame
 import wx
 import os
 
-from guitabs import TabPanelContinousVoltageSetup, TabPanelSourceMeter
+from guitabs_instruments import TabPanelSourceMeter
+from guitabs_setup import TabPanelContinousVoltageSetup
 from measure_scripts.CalibrazioneDummyCable import unit, create_calibration_cable
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK
-from utility import writelineonfilesettings, return_now_postfix
-
 
 class NotebookDemo(wx.Notebook):
     """

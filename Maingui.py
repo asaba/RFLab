@@ -15,9 +15,7 @@ else:
 
 from Spuriusgui import SpuriusFrame
 from CalCablegui import CalCableFrame
-from CalDummyCablegui import CalDummyCableFrame
 from ContinousMeasuregui import CalContinousMeasureFrame
-from IP1Calcgui import IP1CalcFrame
 from PlotAllanDevgui import PlotAllanDevFrame
 from PM5gui import CalPM5Frame
 from Plotsgui import PlotsFrame 
@@ -94,21 +92,12 @@ class MainFrame(wx.Frame):
         calcableapp.MainLoop()
         #Check all values
 
-    #def OnCalDummyCable(self, event):
-    #    caldummycableapp = wx.App()
-    #    frame = CalDummyCableFrame()
-    #    caldummycableapp.MainLoop()
-    #    #Check all values
     
     def OnCalcSpurius(self, event):
         calcspuriusapp = wx.App()
         frame = SpuriusFrame()
         calcspuriusapp.MainLoop()
         
-    def OnCalcIP1(self, event):
-        calcIP1app = wx.App()
-        frame = IP1CalcFrame()
-        calcIP1app.MainLoop()
         
     def OnCalcAdev(self, event):
         calcAdevapp = wx.App()

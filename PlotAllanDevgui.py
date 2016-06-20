@@ -10,7 +10,7 @@ from taskframe import TaskFrame
 import wx
 import os
 
-from guitabs import TabPanelTSC
+from guitabs_instruments import TabPanelTSC
 from measure_scripts.CalculateAllanDeviation import unit, TSC_measure
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, check_value_is_IP, create_instrument
 from utility import writelineonfilesettings, return_now_postfix
