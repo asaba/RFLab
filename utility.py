@@ -10,8 +10,6 @@ Created on 10/ott/2015
 
 '''
 
-
-
 import csv
 import os
 import datetime
@@ -21,10 +19,12 @@ VERSION = "5.5"
 
 inkscape_exec = "C:\\Program Files\\Inkscape\\inkscape.com"
 
-human_readable_frequency_unit = int(1e+9) #GHz
+human_readable_frequency_unit = int(1e+9)  # GHz
+
 
 def return_now_postfix():
     return datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
 
 def buildfitsfileslist(rootpath):
     result = []
@@ -43,15 +43,15 @@ class unit_class(object):
         self.KHz = 1000
         self.MHz = int(1e+6)
         self.GHz = int(1e+9)
-        
+
     def return_unit_list(self):
         return [self.return_unit_str(self.dBm),
                 self.return_unit_str(self.dB),
-                self.return_unit_str(self.Hz), 
-                self.return_unit_str(self.KHz), 
-                self.return_unit_str(self.MHz), 
+                self.return_unit_str(self.Hz),
+                self.return_unit_str(self.KHz),
+                self.return_unit_str(self.MHz),
                 self.return_unit_str(self.GHz)]
-    
+
     def return_unit_index_str(self, unit_str):
         if unit_str.upper() == "dBm".upper():
             return -2
@@ -65,7 +65,7 @@ class unit_class(object):
             return 2
         elif unit_str.upper() == "GHz".upper():
             return 3
-    
+
     def return_unit_index_value(self, unit_value):
         if unit_value == self.dBm:
             return 0
@@ -79,11 +79,13 @@ class unit_class(object):
             return 4
         elif unit_value == self.GHz:
             return 5
+
     def return_unit_index(self, unit_x):
         if type(unit_x) is str:
             return self.return_unit_index_str(unit_x)
         else:
             return self.return_unit_index_value(unit_x)
+
     def return_unit(self, unit_str):
         if unit_str.upper() == "dBm".upper():
             return self.dBm
@@ -97,7 +99,7 @@ class unit_class(object):
             return self.MHz
         elif unit_str.upper() == "GHz".upper():
             return self.GHz
-        
+
     def return_unit_str(self, unit_v):
         if unit_v == self.dBm:
             return "dBm"
@@ -111,38 +113,39 @@ class unit_class(object):
             return "MHz"
         elif unit_v == self.GHz:
             return "GHz"
-        
+
     def unit_conversion(self, value, initial_unit, destination_unit):
-        if initial_unit < 0 or destination_unit <0:
+        if initial_unit < 0 or destination_unit < 0:
             return value
-        return value / (destination_unit/float(initial_unit))
-    
+        return value / (destination_unit / float(initial_unit))
+
     def convertion_to_base(self, value, initial_unit):
         if initial_unit < 0:
             return value
         return int(round(self.unit_conversion(value, initial_unit, self.Hz)))
-    
+
     def convertion_from_base(self, value, destination_unit):
         if destination_unit < 0:
             return value
         return self.unit_conversion(value, self.Hz, destination_unit)
-    
-    def return_human_readable_str(self, value, initial_unit = 1):
+
+    def return_human_readable_str(self, value, initial_unit=1):
         if initial_unit < 0:
             return str(value) + self.return_unit_str(initial_unit)
         else:
-            return str(self.unit_conversion(value, initial_unit, human_readable_frequency_unit)) + " " + self.return_unit_str(human_readable_frequency_unit)
-        
-    
+            return str(
+                self.unit_conversion(value, initial_unit, human_readable_frequency_unit)) + " " + self.return_unit_str(
+                human_readable_frequency_unit)
+
+
 def writelineonfilesettings(f, parameter, value):
-    
     if type(value) is str or type(value) is unicode:
         value = '"{}"'.format(value)
         value = value.replace("\\", "\\\\")
     f.write("{} = {}\n".format(parameter, value))
-    
-def buildcsvrow(tuplevalue):
 
+
+def buildcsvrow(tuplevalue):
     rowresult = []
 
     for v in tuplevalue:
@@ -159,34 +162,33 @@ def buildcsvrow(tuplevalue):
 
     return rowresult
 
+
 def save_harmonic(filename, values):
-    
     writemode = "wb"
 
     f = open(filename + ".csv", writemode)
-    #Freq LO(unit), Level LO(DBm), Fundamental, 2 harmonic, 3 harmonic, ..., AMP_marker (dBm) = Spurius Level (1)]
+    # Freq LO(unit), Level LO(DBm), Fundamental, 2 harmonic, 3 harmonic, ..., AMP_marker (dBm) = Spurius Level (1)]
     s_unit = values[0][1]
     harmonic_number = max([eval(row[12]) for row in values])
-    harmonic_list = [str(x) + " Harmonic" for x in range(2, harmonic_number+1)]
-    
+    harmonic_list = [str(x) + " Harmonic" for x in range(2, harmonic_number + 1)]
+
     header = ["Freq(" + s_unit + ")", "Level (dBm)", "Fundamental"] + harmonic_list + ["AMP_marker (dBm)"]
 
     harmonic = {}
     for row in values:
         freq = eval(row[0])
         level = eval(row[2])
-        if freq in harmonic: #freq
-            if level in harmonic[freq]: #level
-                if len(harmonic[freq][level]) == eval(row[12])-1:
+        if freq in harmonic:  # freq
+            if level in harmonic[freq]:  # level
+                if len(harmonic[freq][level]) == eval(row[12]) - 1:
                     harmonic[freq][level].append(row[10])
                 else:
                     print("Error in row")
             else:
                 harmonic[freq][level] = [row[10]]
         else:
-            harmonic[freq] = {level : [row[10]]}
-        
-        
+            harmonic[freq] = {level: [row[10]]}
+
     values_harmonic = []
     e = harmonic.keys()
     e.sort()
@@ -195,27 +197,28 @@ def save_harmonic(filename, values):
         fh.sort()
         for j in fh:
             values_harmonic.append([str(k), str(j)] + harmonic[k][j])
-            
-    #header = ["Freq LO", "unit", "Level LO", "LO Calibration", "Freq RF", "unit", "Level RF", "RF Calibration", "Spurius Freq", "unit", "Spurius Level"]
+
+    # header = ["Freq LO", "unit", "Level LO", "LO Calibration", "Freq RF", "unit", "Level RF", "RF Calibration", "Spurius Freq", "unit", "Spurius Level"]
 
     create_csv(f, header, [], values_harmonic)
 
     f.close()
-    
+
+
 def save_spurius(filename, values):
-    
     writemode = "wb"
 
     f = open(filename + ".csv", writemode)
-    header = ["Freq LO", "unit", "Level LO", "LO Calibration", "Freq RF", "unit", "Level RF", "RF Calibration", "Spurius Freq", "unit", "Spurius Level"]
+    header = ["Freq LO", "unit", "Level LO", "LO Calibration", "Freq RF", "unit", "Level RF", "RF Calibration",
+              "Spurius Freq", "unit", "Spurius Level"]
 
     create_csv(f, header, [], values)
 
     f.close()
 
-def save_data(file_format, filename, values, misure_number, frequency_unit, fsv_att = False):
 
-        #data on file
+def save_data(file_format, filename, values, misure_number, frequency_unit, fsv_att=False):
+    # data on file
 
     if file_format == "csv":
 
@@ -228,13 +231,12 @@ def save_data(file_format, filename, values, misure_number, frequency_unit, fsv_
     f = open(filename + "." + file_format, writemode)
 
     header = ["Freq(" + frequency_unit + ")", "Level(dBm)", "Attenuation(dB)"]
-    
+
     if fsv_att:
         header.append("FSV Attenuation(dB)")
     values_headers = []
 
     for v in range(0, misure_number):
-
         values_headers.append("Power Level(dB)")
 
     header_string = "   ".join(header) + "   ".join(values_headers) + "\n"
@@ -242,51 +244,51 @@ def save_data(file_format, filename, values, misure_number, frequency_unit, fsv_
     if file_format == "csv":
 
         create_csv(f, header, values_headers, values)
-        
+
 
     elif file_format == "txt":
 
         f.write(header_string)
 
         for line in values:
-
-            row= "   ".join(line) + "\n"
+            row = "   ".join(line) + "\n"
 
             f.write(row)
 
-    
-
     f.close()
 
-    
-def save_settings(result_file_name, arguments_values):
 
+def save_settings(result_file_name, arguments_values):
     result = []
     result.append("measure_date : " + datetime.datetime.now().strftime("%Y%m%d%H%M%S %d/%m/%Y %H:%M:%S") + "\n")
     for key, value in arguments_values.iteritems():
         result.append(key + " : " + str(value) + "\n")
     now_postfix = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     f = open(result_file_name + "_setting_" + now_postfix + ".txt", "w")
-    
+
     for line in result:
         f.write(line)
-        
+
     f.close()
-    
+
+
 def create_csv(filepointer, header, values_headers, values):
     csvwriter = open_csv_file(filepointer, header, values_headers)
     for line in values:
         add_csv_row(csvwriter, line)  # 'Testo', 
 
+
 def open_csv_file(filepointer, header, values_headers):
     csvwriter = csv.writer(filepointer, dialect=csv.excel, quoting=csv.QUOTE_ALL)
     csvwriter.writerow(['sep=,'])
-    csvwriter.writerow(header+values_headers)
+    csvwriter.writerow(header + values_headers)
     return csvwriter
+
 
 def add_csv_row(csvwriter, row):
     csvwriter.writerow(buildcsvrow(row))
-    
+
+
 def convert_txt_to_csv(filename_txt, filename_csv, txt_separator=None):
     f = open(filename_txt, "r")
     first_row = f.readline()
@@ -296,7 +298,7 @@ def convert_txt_to_csv(filename_txt, filename_csv, txt_separator=None):
     else:
         row_split = first_row.split()
     values_number = len(row_split[2:])
-    header = ["date", "time"] + ["val"+ str(i) for i in range(0, values_number) ]
+    header = ["date", "time"] + ["val" + str(i) for i in range(0, values_number)]
     f = open(filename_txt, "r")
     f_csv = open(filename_csv, "wb")
     writer_csv = open_csv_file(f_csv, header, [])
@@ -304,46 +306,48 @@ def convert_txt_to_csv(filename_txt, filename_csv, txt_separator=None):
         add_csv_row(writer_csv, row.split())
     f_csv.close()
     f.close()
-    
-    
+
+
 class Generic_Range(object):
     def __init__(self, a_min, a_max, a_step):
         self.max = a_max
         self.min = a_min
-        self.step = a_step  
-    
+        self.step = a_step
+
     def return_arange(self, step_correction=True):
         if step_correction:
             return arange(self.min, self.max + self.step, self.step)
         else:
             return arange(self.min, self.max, self.step)
-    
+
     def return_range(self, step_correction=True):
         if step_correction:
             return range(self.min, self.max + self.step, self.step)
         else:
             return range(self.min, self.max, self.step)
 
-def return_max_min_from_data_table_row(data_table_row, x_index, y_index = None, z_index = None):
+
+def return_max_min_from_data_table_row(data_table_row, x_index, y_index=None, z_index=None):
     x_list = []
     y_list = []
     z_list = []
-    
+
     for row in data_table_row:
         x_list.append(row[x_index])
         if y_index is not None:
             y_list.append(row[y_index])
         if z_index is not None:
             z_list.append(row[z_index])
-            
+
     if len(y_list) == 0:
         y_list = [None]
     if len(z_list) == 0:
         z_list = [None]
-            
+
     return max(x_list), min(x_list), max(y_list), min(y_list), max(z_list), min(z_list)
 
-def return_max_min_from_data_table(data_table, x_index, y_index = None, z_index = None):
+
+def return_max_min_from_data_table(data_table, x_index, y_index=None, z_index=None):
     x_u_list = []
     x_d_list = []
     y_u_list = [None]
@@ -359,4 +363,3 @@ def return_max_min_from_data_table(data_table, x_index, y_index = None, z_index 
         z_u_list.append(z_u)
         z_d_list.append(z_d)
     return max(x_u_list), min(x_d_list), max(y_u_list), min(y_d_list), max(z_u_list), min(z_d_list)
-
