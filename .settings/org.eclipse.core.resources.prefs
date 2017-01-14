@@ -4,4 +4,7 @@ encoding//measure_scripts/CalibrazioneCavo.py=utf-8
 encoding//measure_scripts/CalibrazioneDummyCable.py=utf-8
 encoding//measure_scripts/IP1Cal.py=utf-8
 encoding//measure_scripts/Spurius.py=utf-8
+encoding//measure_scripts/copy_CalibrazioneCavo.py=utf-8
+encoding//measure_scripts/tscpy/instruments/_tsc5120a.py=utf-8
+encoding//measure_scripts/tscpy/plotter/_plot.py=utf-8
 encoding/utility.py=utf-8

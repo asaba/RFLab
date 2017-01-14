@@ -3,8 +3,8 @@ Created on 26/dic/2015
 
 @author: sabah
 
-Version 2.0
-Update: 25/05/2016
+Version 3.0
+Update: 12/12/2016
 '''
 
 # import images
