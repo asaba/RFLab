@@ -211,6 +211,7 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
             self.z_unit_index = None
             graph_z_min = self.graph_z_min.GetValue()
             if check_value_min_max(graph_z_min, "Graph Z min", minimum=None) == 0:
+                error_message("Insert lower value of Z axis", 'Error on Z min')
                 return []
             else:
                 graph_z_min = eval(self.graph_z_min.GetValue())

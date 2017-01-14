@@ -246,7 +246,7 @@ def plot_spurius_C(table_value,
                         graph_y=graph_y,
                         graph_z=graph_z,
                         data_file_directory=data_file_directory,
-                        font_style=None)
+                        font_style=font_style)
 
 
 def filter_spurius_on_harmonic(data_rows):
@@ -269,7 +269,8 @@ def filter_spurius_on_harmonic(data_rows):
     return result
 
 
-def plot_3d_distribution(fig, data_table,
+def plot_3d_distribution(fig,
+                         data_table,
                          x_index,
                          y_index,
                          z_index,
@@ -444,7 +445,8 @@ def plot_spurius_Single(fig, table_value,
                              graph_x,
                              graph_y,
                              graph_z,
-                             data_file_directory)
+                             data_file_directory,
+                             font_style=font_style)
     else:
 
         ax = plt.axes(xlim=(graph_x.from_base().min, graph_x.from_base().max),
