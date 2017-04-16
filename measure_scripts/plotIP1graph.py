@@ -96,9 +96,9 @@ def calculate_all_IP1(data_file_name,
         ip1_data = [[]]
         ip3_data = [[]]
         for dt in data_table:
-            if dt[0][n_LO_index] == 1 and dt[0][frequency_LO_index] == frequency:
+            if dt[0][m_RF_index] == 1 and dt[0][frequency_RF_index] == frequency:
                 ip1_data = dt[:]
-            elif dt[0][n_LO_index] == 3 and dt[0][frequency_LO_index] == frequency:
+            elif dt[0][m_RF_index] == 3 and dt[0][frequency_RF_index] == frequency:
                 ip3_data = dt[:]
         calculateIP1(ip1_data,
                      ip3_data,
@@ -114,16 +114,30 @@ def calculate_all_IP1(data_file_name,
 
 
 def return_ip1_ip3(p_linear_ip1, spl_ip1, t_ip3, graph_x, p_linear_ip3):
+    # return the x, y position of IP1 and IP3 point
+    # p_linear_ip1 - linear function for IP1
+    # p_linear_ip3 - linear function for IP1
+    # spl_ip1 - spline function for IP1
+    # graph_x - X axis range for graph
+    # t_ip3 - X points
+
     IP1_x = None
     IP3_x = None
-    IP3_x_diff = abs(p_linear_ip1(t_ip3[0]) - p_linear_ip3(t_ip3[0]))
-    for x in np.arange(t_ip3[0], graph_x.max, 0.0001):
+    if t_ip3:
+        min_x_line_value = t_ip3[0]
+    else:
+        # check TODO
+        min_x_line_value = graph_x.min
+    if p_linear_ip3:
+        IP3_x_diff = abs(p_linear_ip1(min_x_line_value) - p_linear_ip3(min_x_line_value))
+    for x in np.arange(min_x_line_value, graph_x.max, 0.0001):
         ip_line_point = p_linear_ip1(x)
         if IP1_x is None and abs(ip_line_point - spl_ip1(x)) >= 1:
             # IP1 found
             IP1_x = x
-        if abs(ip_line_point - p_linear_ip3(x)) <= 0.001:
-            IP3_x = x
+        if p_linear_ip3:
+            if abs(ip_line_point - p_linear_ip3(x)) <= 0.001:
+                IP3_x = x
     if IP1_x is None:
         spl_ip1_point = None
     else:
@@ -155,30 +169,14 @@ def calculateIP1(table_value_ip1,
     calibrated_ip3 = True
     IP3_x = None
 
-    start_power = table_value_ip1[0][power_LO_index]
+    start_power = table_value_ip1[0][power_RF_index]
     for i in table_value_ip1:
-        if i[is_LO_calibrated_index] != "CAL":
+        if i[is_RF_calibrated_index] != "CAL":
             calibrated_ip1 = False
-        power_input_curve_ip1.append(i[power_LO_index])
+        power_input_curve_ip1.append(i[power_RF_index])
         power_output_curve_ip1.append(i[power_IF_index])
         if abs(power_input_curve_ip1[-1] - start_power) <= 5:
             power_linear_last_index_ip1 += 1
-
-    start_power = table_value_ip3[0][power_LO_index]
-    start_power_index = 0
-    for i in range(len(table_value_ip3)):
-        if table_value_ip3[i][is_LO_calibrated_index] != "CAL":
-            calibrated_ip3 = False
-        if table_value_ip3[i][power_IF_index] > -90:
-            start_power = table_value_ip3[i][power_LO_index]
-            start_power_index = i
-            break
-    for i in range(len(table_value_ip3)):
-        power_input_curve_ip3.append(table_value_ip3[i][power_LO_index])
-        power_output_curve_ip3.append(table_value_ip3[i][power_IF_index])
-        if table_value_ip3[i][power_IF_index] > -90:
-            if abs(table_value_ip3[i][power_LO_index] - start_power) <= 15:
-                power_linear_last_index_ip3 = i
 
     x_curve_ip1 = np.array(power_input_curve_ip1)
     y_curve_ip1 = np.array(power_output_curve_ip1)
@@ -188,16 +186,37 @@ def calculateIP1(table_value_ip1,
     spl_ip1 = UnivariateSpline(x_curve_ip1, y_curve_ip1, s=0)
     t_ip1 = x_curve_ip1
     s_linear_ip1 = [p_linear_ip1(x) for x in
-                    t_ip1 + [graph_x.max]]  # aggiungo un punto alla retta per disegnarla oltre la fine della curva
+                    np.append(t_ip1,[graph_x.max])]  # aggiungo un punto alla retta per disegnarla oltre la fine della curva
 
-    x_curve_ip3 = np.array(power_input_curve_ip3)
-    y_curve_ip3 = np.array(power_output_curve_ip3)
-    coefficient_linear_ip3 = np.polyfit(x_curve_ip3[start_power_index:power_linear_last_index_ip3],
-                                        y_curve_ip3[start_power_index:power_linear_last_index_ip3], 1)
-    p_linear_ip3 = np.poly1d(coefficient_linear_ip3)
-    spl_ip3 = UnivariateSpline(x_curve_ip3, y_curve_ip3, s=0)
-    t_ip3 = x_curve_ip3
-    s_linear_ip3 = [p_linear_ip3(x) for x in t_ip3 + [graph_x.max]]
+    t_ip3 = None
+    p_linear_ip3 = None
+
+    if len(table_value_ip3[0]) > 0:
+        start_power = table_value_ip3[0][power_RF_index]
+        start_power_index = 0
+        for i in range(len(table_value_ip3)):
+            if table_value_ip3[i][is_LO_calibrated_index] != "CAL":
+                calibrated_ip3 = False
+            if table_value_ip3[i][power_IF_index] > -90:
+                start_power = table_value_ip3[i][power_RF_index]
+                start_power_index = i
+                break
+        for i in range(len(table_value_ip3)):
+            power_input_curve_ip3.append(table_value_ip3[i][power_RF_index])
+            power_output_curve_ip3.append(table_value_ip3[i][power_IF_index])
+            if table_value_ip3[i][power_IF_index] > -90:
+                if abs(table_value_ip3[i][power_RF_index] - start_power) <= 15:
+                    power_linear_last_index_ip3 = i
+
+
+        x_curve_ip3 = np.array(power_input_curve_ip3)
+        y_curve_ip3 = np.array(power_output_curve_ip3)
+        coefficient_linear_ip3 = np.polyfit(x_curve_ip3[start_power_index:power_linear_last_index_ip3],
+                                            y_curve_ip3[start_power_index:power_linear_last_index_ip3], 1)
+        p_linear_ip3 = np.poly1d(coefficient_linear_ip3)
+        spl_ip3 = UnivariateSpline(x_curve_ip3, y_curve_ip3, s=0)
+        t_ip3 = x_curve_ip3
+        s_linear_ip3 = [p_linear_ip3(x) for x in np.append(t_ip3,[graph_x.max])]
 
     line_ani = None
 
@@ -230,7 +249,7 @@ def calculateIP1(table_value_ip1,
         graph_y.label = "Output Power (dBm)"
     plt.ylabel(graph_y.label, **font_style["axislegend"])
     if not graph_title:
-        graph_title = unit.return_human_readable_str(table_value_ip1[0][frequency_LO_index]) + " Cable Cal." + str(
+        graph_title = unit.return_human_readable_str(table_value_ip1[0][frequency_RF_index]) + " Cable Cal." + str(
             calibrated_ip1)
     plt.title(graph_title, **font_style["title"])
     plt.grid(True)
@@ -241,23 +260,34 @@ def calculateIP1(table_value_ip1,
         ip1_x, ip1_y, ip3_x, ip3_y = return_ip1_ip3(p_linear_ip1, spl_ip1, t_ip3, graph_x, p_linear_ip3)
 
     curve_data_ip1 = np.array([t_ip1, [spl_ip1(x) for x in t_ip1]])
-    line_data_ip1 = np.array([t_ip1 + [graph_x.max], s_linear_ip1])
-    curve_data_ip3 = np.array([t_ip3, [spl_ip3(x) for x in t_ip3]])
-    line_data_ip3 = np.array([t_ip3 + [graph_x.max], s_linear_ip3])
-    ip1, = ax.plot([ip1_x], [ip1_y], "ro")
-    plt.text(ip1_x + 0.2, ip1_y - 2, "{:.3f} dBm".format(ip1_x), **font_style["annotation"])
+    line_data_ip1 = np.array([np.append(t_ip1, [graph_x.max]), s_linear_ip1])
+    if len(table_value_ip3[0]) > 0:
+        curve_data_ip3 = np.array([t_ip3, [spl_ip3(x) for x in t_ip3]])
+        line_data_ip3 = np.array(np.append(t_ip3, [graph_x.max]), s_linear_ip3)
+    if ip1_x is None:
+        #TODO
+        #Message IP1 not found
+        pass
+    else:
+        #plot IP1 point
+        ip1, = ax.plot([ip1_x], [ip1_y], "ro")
+        plt.text(ip1_x + 0.2, ip1_y - 2, "{:.3f} dBm".format(ip1_x), **font_style["annotation"])
     retta_ip1, = ax.plot(line_data_ip1[0], line_data_ip1[1], "g--")
     curve_ip1, = ax.plot(curve_data_ip1[0], curve_data_ip1[1], "r-")
-    if ip3_x is not None:
+    if ip3_x is None:
+        # TODO
+        # Message IP3 not found
+        pass
+    else:
         ip3, = ax.plot([ip3_x], [ip3_y], "bo")
         plt.text(ip3_x + 0.2, ip3_y - 2, "{:.3f} dBm".format(ip3_x), **font_style["annotation"])
-    retta_ip3, = ax.plot(line_data_ip3[0], line_data_ip3[1], "c--")
-    curve_ip3, = ax.plot(curve_data_ip3[0], curve_data_ip3[1], "b-")
+        retta_ip3, = ax.plot(line_data_ip3[0], line_data_ip3[1], "c--")
+        curve_ip3, = ax.plot(curve_data_ip3[0], curve_data_ip3[1], "b-")
 
     # line_ani = animation.FuncAnimation(fig, update_line, len(line_data_ip1[0]),  fargs=(line_data_ip1, retta_ip1, p_linear_ip1, curve_data_ip1, curve_ip1, spl_ip1, ip1, line_data_ip3, retta_ip3, p_linear_ip3, curve_data_ip3, curve_ip3, spl_ip3, ip3), interval=interval, blit=False, repeat=False)
     plt.show()
     fig.savefig(os.path.join(data_file_directory, unit.return_human_readable_str(
-        table_value_ip1[0][frequency_LO_index]) + "_Cable_Cal" + str(
+        table_value_ip1[0][frequency_RF_index]) + "_Cable_Cal" + str(
         calibrated_ip1) + "_" + return_now_postfix() + ".png"))
     return IP1_x
 

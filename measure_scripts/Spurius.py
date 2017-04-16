@@ -94,7 +94,9 @@ def return_spurius_list(LO, RF, n_LO, m_RF, IF_low, IF_high):
     for n in n_LO_range:
         if len(m_RF_range) > 0:  # RF enabled
             for m in m_RF_range:
-                if n != 0 and m != 0:
+                if n == 0 and m == 0:
+                    pass
+                else:
                     current_spurius = n * LO + m * RF
                     if current_spurius > IF_low and current_spurius < IF_high:
                         result.append([current_spurius, unit.return_unit_str(unit.Hz), LO, RF, n, m])
@@ -380,7 +382,7 @@ def readFSV_marker_spurius(FSV,
 
     for s in spurius_list:
         freq = s[0]
-        freq_unit = s[1]
+        freq_unit = unit.return_unit(s[1])
         result += [readFSV_marker(FSV,
                                   FSV_delay,
                                   freq,

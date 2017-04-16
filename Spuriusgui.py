@@ -429,13 +429,13 @@ class SpuriusFrame(TaskFrame):
         calibration_file_RF = self.notebook.tabSpuriusSetting.calibration_file_RF.GetValue()
         calibration_file_RF_enable = self.notebook.tabSpuriusSetting.calibration_file_RF_enable.GetValue()
         if calibration_file_RF_enable:
-            if check_value_is_valid_file(calibration_file_LO, "LO Calibration file") == 0:
+            if check_value_is_valid_file(calibration_file_RF, "RF Calibration file") == 0:
                 return None
 
         calibration_file_IF = self.notebook.tabSpuriusSetting.calibration_file_IF.GetValue()
         calibration_file_IF_enable = self.notebook.tabSpuriusSetting.calibration_file_IF_enable.GetValue()
         if calibration_file_IF_enable:
-            if check_value_is_valid_file(calibration_file_LO, "LO Calibration file") == 0:
+            if check_value_is_valid_file(calibration_file_IF, "IF Calibration file") == 0:
                 return None
 
         result_file_name = self.notebook.tabSpuriusSetting.result_file_name.GetValue()

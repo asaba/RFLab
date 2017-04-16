@@ -181,13 +181,13 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
             self.z_unit_index = None
             self.row_data_filter = [(n_LO_index, "in", [1, -1]), (m_RF_index, "in", [1, -1])]
         elif self.graph_type_value == "IP1":
-            self.x_index = power_LO_index
+            self.x_index = power_RF_index
             self.x_unit_index = None
             self.y_index = power_IF_index
             self.y_unit_index = None
             self.z_index = power_IF_index
             self.z_unit_index = None
-            self.row_data_filter = [(n_LO_index, "not in", [0])]
+            self.row_data_filter = [(m_RF_index, "not in", [0])]
         elif self.graph_type_value == "SP":
             self.x_index = power_RF_index
             self.x_unit_index = None
