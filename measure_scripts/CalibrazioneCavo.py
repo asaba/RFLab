@@ -154,11 +154,10 @@ def measure_calibration_cable(SMB=SMB_RF,
         if create_dummy_cable:
             values.append([f_value, unit.return_unit_str(unit.Hz)] + [str(dummy_cable_power_level)] + [data_now])
         else:
-            values.append([f_value, unit.return_unit_str(unit.Hz)] +
-                          readFSV_marker(FSV,
+            values.append(readFSV_marker(FSV,
                                          FSV_delay,
                                          f,
-                                         unit.return_unit_str(unit.Hz),
+                                         unit.Hz,
                                          unit.Hz,
                                          calibration_IF=[],
                                          calibration_IF_function=None,
