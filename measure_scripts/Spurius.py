@@ -254,10 +254,11 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
             current_LO_level, calibration_LO_result = calibrate(l_LO, f_LO, unit.Hz, calibration_LO,
                                                                 calibration_function=calibration_function_LO,
                                                                 calibration_function_unit=calibration_function_LO_unit)
-            if current_LO_level > threshold_power:
-                # Power over the limit
-                count += 1
-                continue
+            if threshold_power is not None:
+                if current_LO_level > threshold_power:
+                    # Power over the limit
+                    count += 1
+                    continue
             command = "POW " + str(current_LO_level)
             SMB_LO.write(command)
             # turn on LO
@@ -271,10 +272,11 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
                     current_RF_level, calibration_RF_result = calibrate(l_RF, f_RF, unit.Hz, calibration_RF,
                                                                         calibration_function=calibration_function_RF,
                                                                         calibration_function_unit=calibration_function_RF_unit)
-                    if current_RF_level > threshold_power:
-                        # Power over the limit
-                        count += 1
-                        continue
+                    if threshold_power is not None:
+                        if current_RF_level > threshold_power:
+                            # Power over the limit
+                            count += 1
+                            continue
                     command = "POW " + str(current_RF_level)
                     SMB_RF.write(command)  # set level for RF
                     # set SMB100A frequency for RF
