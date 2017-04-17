@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.pyplot import gca
 import sys
+from utility import eval_if, SplineError, PointNotFound
 
 from csvutility import frequency_LO_index, unit_LO_index, power_LO_index, is_LO_calibrated_index, frequency_RF_index, \
     unit_RF_index, power_RF_index, is_RF_calibrated_index, frequency_IF_index, unit_IF_index, power_IF_index, \
@@ -56,15 +57,15 @@ def splitIP1filetablevalue(table_value):
     power_output_curve = []
 
     for i in table_value:
-        current_frequency = eval(i[0].replace(",", "."))
+        current_frequency = eval_if(i[0])
         if current_frequency in file_measures:
-            file_measures[current_frequency].append([eval(i[1].replace(",", ".")),
-                                                     eval(i[5].replace(",", ".")),
+            file_measures[current_frequency].append([eval_if(i[1]),
+                                                     eval_if(i[5]),
                                                      i[3]])
         else:
             file_measures[current_frequency] = {}
-            file_measures[current_frequency] = [[eval(i[1].replace(",", ".")),
-                                                 eval(i[5].replace(",", ".")),
+            file_measures[current_frequency] = [[eval_if(i[1]),
+                                                 eval_if(i[5]),
                                                  i[3]]]
 
     return file_measures
@@ -171,7 +172,7 @@ def calculateIP1(table_value_ip1,
 
     start_power = table_value_ip1[0][power_RF_index]
     for i in table_value_ip1:
-        if i[is_RF_calibrated_index] != "CAL":
+        if str(i[is_RF_calibrated_index]) != "CAL":
             calibrated_ip1 = False
         power_input_curve_ip1.append(i[power_RF_index])
         power_output_curve_ip1.append(i[power_IF_index])
@@ -183,7 +184,10 @@ def calculateIP1(table_value_ip1,
     coefficient_linear_ip1 = np.polyfit(x_curve_ip1[:power_linear_last_index_ip1],
                                         y_curve_ip1[:power_linear_last_index_ip1], 1)
     p_linear_ip1 = np.poly1d(coefficient_linear_ip1)
-    spl_ip1 = UnivariateSpline(x_curve_ip1, y_curve_ip1, s=0)
+    try:
+        spl_ip1 = UnivariateSpline(x_curve_ip1, y_curve_ip1, s=0)
+    except:
+        raise SplineError("Spline Error")
     t_ip1 = x_curve_ip1
     s_linear_ip1 = [p_linear_ip1(x) for x in
                     np.append(t_ip1,[graph_x.max])]  # aggiungo un punto alla retta per disegnarla oltre la fine della curva
@@ -195,7 +199,7 @@ def calculateIP1(table_value_ip1,
         start_power = table_value_ip3[0][power_RF_index]
         start_power_index = 0
         for i in range(len(table_value_ip3)):
-            if table_value_ip3[i][is_LO_calibrated_index] != "CAL":
+            if str(table_value_ip3[i][is_LO_calibrated_index]) != "CAL":
                 calibrated_ip3 = False
             if table_value_ip3[i][power_IF_index] > -90:
                 start_power = table_value_ip3[i][power_RF_index]
@@ -265,9 +269,7 @@ def calculateIP1(table_value_ip1,
         curve_data_ip3 = np.array([t_ip3, [spl_ip3(x) for x in t_ip3]])
         line_data_ip3 = np.array(np.append(t_ip3, [graph_x.max]), s_linear_ip3)
     if ip1_x is None:
-        #TODO
-        #Message IP1 not found
-        pass
+        raise PointNotFound("IP1 not not found")
     else:
         #plot IP1 point
         ip1, = ax.plot([ip1_x], [ip1_y], "ro")

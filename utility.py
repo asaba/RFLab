@@ -11,6 +11,7 @@ Created on 10/ott/2015
 '''
 
 import csv
+import openpyxl
 import os
 import datetime
 from numpy import arange
@@ -30,7 +31,7 @@ def buildfitsfileslist(rootpath):
     result = []
     for root, dirs, files in os.walk(rootpath):
         for name in files:
-            if name[-4:] == ".svg":
+            if str(name[-4:]) == ".svg":
                 result.append(os.path.join(root, name))
     return result
 
@@ -53,6 +54,7 @@ class unit_class(object):
                 self.return_unit_str(self.GHz)]
 
     def return_unit_index_str(self, unit_str):
+        unit_str = str(unit_str)
         if unit_str.upper() == "dBm".upper():
             return -2
         elif unit_str.upper() == "dB".upper():
@@ -87,6 +89,7 @@ class unit_class(object):
             return self.return_unit_index_value(unit_x)
 
     def return_unit(self, unit_str):
+        unit_str = str(unit_str)
         if unit_str.upper() == "dBm".upper():
             return self.dBm
         elif unit_str.upper() == "dB".upper():
@@ -120,6 +123,9 @@ class unit_class(object):
         return value / (destination_unit / float(initial_unit))
 
     def convertion_to_base(self, value, initial_unit):
+        # if value is a text convert to number
+        if type(value) is str or type(value) is unicode:
+            value = eval_if(value)
         if initial_unit < 0:
             return value
         return int(round(self.unit_conversion(value, initial_unit, self.Hz)))
@@ -150,7 +156,7 @@ def buildcsvrow(tuplevalue):
 
     for v in tuplevalue:
 
-        if v == "OFF":
+        if str(v) == "OFF":
 
             rowresult.append(v)
 
@@ -163,7 +169,7 @@ def buildcsvrow(tuplevalue):
     return rowresult
 
 
-def save_harmonic(filename, values):
+def save_harmonic(filename, values, save_xlsx=True):
     writemode = "wb"
 
     f = open(filename + ".csv", writemode)
@@ -204,8 +210,12 @@ def save_harmonic(filename, values):
 
     f.close()
 
+    if save_xlsx:
+        f = filename + ".xlsx"
+        create_xlsx(f, header, [], values)
 
-def save_spurius(filename, values):
+
+def save_spurius(filename, values, save_xlsx=True):
     writemode = "wb"
 
     f = open(filename + ".csv", writemode)
@@ -216,19 +226,13 @@ def save_spurius(filename, values):
 
     f.close()
 
+    if save_xlsx:
+        f = filename + ".xlsx"
+        create_xlsx(f, header, [], values)
+
 
 def save_data(file_format, filename, values, misure_number, frequency_unit, fsv_att=False):
     # data on file
-
-    if file_format == "csv":
-
-        writemode = "wb"
-
-    else:
-
-        writemode = "w"
-
-    f = open(filename + "." + file_format, writemode)
 
     header = ["Freq(" + frequency_unit + ")", "Level(dBm)", "Attenuation(dB)"]
 
@@ -241,21 +245,24 @@ def save_data(file_format, filename, values, misure_number, frequency_unit, fsv_
 
     header_string = "   ".join(header) + "   ".join(values_headers) + "\n"
 
-    if file_format == "csv":
-
+    if str(file_format) == "csv":
+        writemode = "wb"
+        f = open(filename + "." + file_format, writemode)
         create_csv(f, header, values_headers, values)
+        f.close()
 
-
-    elif file_format == "txt":
-
+    elif str(file_format) == "txt":
+        writemode = "w"
+        f = open(filename + "." + file_format, writemode)
         f.write(header_string)
-
         for line in values:
             row = "   ".join(line) + "\n"
-
             f.write(row)
+        f.close()
 
-    f.close()
+    elif str(file_format) == "xlsx":
+        f = filename + "." + file_format
+        create_xlsx(f, header, values_headers, values)
 
 
 def save_settings(result_file_name, arguments_values):
@@ -277,6 +284,15 @@ def create_csv(filepointer, header, values_headers, values):
     for line in values:
         add_csv_row(csvwriter, line)  # 'Testo', 
 
+
+def create_xlsx(filename, header, values_headers, values):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.append(header + values_headers)
+    for line in values:
+        ws.append(line)  # 'Testo',
+
+    wb.save(filename)
 
 def open_csv_file(filepointer, header, values_headers):
     csvwriter = csv.writer(filepointer, dialect=csv.excel, quoting=csv.QUOTE_ALL)
@@ -363,3 +379,15 @@ def return_max_min_from_data_table(data_table, x_index, y_index=None, z_index=No
         z_u_list.append(z_u)
         z_d_list.append(z_d)
     return max(x_u_list), min(x_d_list), max(y_u_list), min(y_d_list), max(z_u_list), min(z_d_list)
+
+def eval_if(variable):
+    if type(variable) is str or type(variable) is unicode:
+        return eval(variable.replace(",", "."))
+    else:
+        return variable
+
+class SplineError(Exception):
+    pass
+
+class PointNotFound(Exception):
+    pass

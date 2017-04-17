@@ -123,7 +123,7 @@ def measure_IP1(SMB_RF=SMB_RF,
     SMB_RF.write("FREQ:MODE FIX")
     SMB_RF.write("POW:MODE FIX")
 
-    if SAB_state == "OFF":
+    if str(SAB_state) == "OFF":
         SAB_attenuation_level_min = 0
         SAB_attenuation_level_max = 0
         SAB_attenuation_level_step = 1

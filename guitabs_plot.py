@@ -22,7 +22,7 @@ import webbrowser
 import subprocess
 # from Imagegui import ImageFrame
 from utility import inkscape_exec, buildfitsfileslist, return_max_min_from_data_table_row, \
-    human_readable_frequency_unit
+    human_readable_frequency_unit, SplineError, PointNotFound
 
 fig1 = None
 
@@ -31,7 +31,7 @@ class PlotGraphPanelClass(wx.Panel):
     # input Data File
     # Graph Title
 
-    def __init__(self, parent, input_file_wildcard="*.csv"):
+    def __init__(self, parent, input_file_wildcard="CSV files (*.csv)|*.csv|Excel file (*.xlsx)|*.xlsx"):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
         self.data_file_name, self.data_file_name_button, dummy, self.sizer_data_file_name = return_file_browse(self,
                                                                                                                "Data File")
@@ -51,7 +51,7 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
     Tab for Plot XY Graph ex. IP1, Spurius, ...
     """
 
-    def __init__(self, parent, animated=False, z_axes=False, input_file_wildcard="*.csv"):
+    def __init__(self, parent, animated=False, z_axes=False, input_file_wildcard="CSV files (*.csv)|*.csv|Excel file (*.xlsx)|*.xlsx"):
 
         self.x_index = 0
         self.y_index = 0
@@ -142,12 +142,12 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
             index = f[0]
             filter_type = f[1]
             filter_value = f[2]
-            if filter_type == "in":
+            if str(filter_type) == "in":
                 if row[index] in filter_value:
                     pass
                 else:
                     return False
-            elif filter_type == "not in":
+            elif str(filter_type) == "not in":
                 if row[index] not in filter_value:
                     pass
                 else:
@@ -164,7 +164,7 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
         SD_RF_Level = 0
         graph_z_min = 0
 
-        if self.graph_type_value == "LO":
+        if str(self.graph_type_value) == "LO":
             self.x_index = frequency_IF_index
             self.x_unit_index = unit_IF_index
             self.y_index = conversion_loss
@@ -172,7 +172,7 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
             self.z_index = power_IF_index
             self.z_unit_index = None
             self.row_data_filter = [(n_LO_index, "in", [1, -1]), (m_RF_index, "in", [1, -1])]
-        elif self.graph_type_value == "RF":
+        elif str(self.graph_type_value) == "RF":
             self.x_index = power_RF_index
             self.x_unit_index = None
             self.y_index = power_IF_index
@@ -180,7 +180,7 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
             self.z_index = power_IF_index
             self.z_unit_index = None
             self.row_data_filter = [(n_LO_index, "in", [1, -1]), (m_RF_index, "in", [1, -1])]
-        elif self.graph_type_value == "IP1":
+        elif str(self.graph_type_value) == "IP1":
             self.x_index = power_RF_index
             self.x_unit_index = None
             self.y_index = power_IF_index
@@ -188,7 +188,7 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
             self.z_index = power_IF_index
             self.z_unit_index = None
             self.row_data_filter = [(m_RF_index, "not in", [0])]
-        elif self.graph_type_value == "SP":
+        elif str(self.graph_type_value) == "SP":
             self.x_index = power_RF_index
             self.x_unit_index = None
             self.y_index = power_IF_index
@@ -202,7 +202,7 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
             IF_Frequency_selected = eval("[" + result + "]")
             IF_Frequency_selected = [unit.convertion_to_base(x, unit.MHz) for x in IF_Frequency_selected]
             self.row_data_filter = [(n_LO_index, "not in", [1, -1]), (m_RF_index, "not in", [1, -1])]
-        elif self.graph_type_value == "SD":
+        elif str(self.graph_type_value) == "SD":
             self.x_index = frequency_IF_index
             self.x_unit_index = unit_IF_index
             self.y_index = power_IF_index
@@ -219,7 +219,7 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
             dlg.ShowModal()
             SD_LO_Frequency = dlg.GetValue()
             dlg.Destroy()
-            SD_LO_Frequency = unit.convertion_to_base(eval(SD_LO_Frequency), unit.MHz)
+            SD_LO_Frequency = unit.convertion_to_base(SD_LO_Frequency, unit.MHz)
             dlg = wx.TextEntryDialog(self, "Insert LO Level (dBm)")
             dlg.ShowModal()
             SD_LO_Level = dlg.GetValue()
@@ -232,7 +232,7 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
             SD_RF_Level = eval(SD_RF_Level)
             self.row_data_filter = [(n_LO_index, "not in", [1, -1]), (m_RF_index, "not in", [1, -1])]
 
-        elif self.graph_type_value == "GG":
+        elif str(self.graph_type_value) == "GG":
             # sort_data = [0, 1]
             # group_level_01 = []
             self.x_index = 1
@@ -240,7 +240,7 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
             self.y_index = 2
             self.y_unit_index = None
             self.row_data_filter = [(0, "not in", [0])]
-        elif self.graph_type_value == "NN":
+        elif str(self.graph_type_value) == "NN":
             # sort_data = [0, 1]
             # group_level_01 = []
             self.x_index = 1
@@ -451,7 +451,7 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
         # dlg.Destroy()
         # IF_Frequency_selected = eval("[" + result + "]")
         # IF_Frequency_selected = [unit.convertion_to_base(x, unit.MHz) for x in IF_Frequency_selected]
-        IF_Frequency_selected = [unit.convertion_to_base(eval(x), human_readable_frequency_unit) for x in
+        IF_Frequency_selected = [unit.convertion_to_base(x, human_readable_frequency_unit) for x in
                                  self.return_checked_ports()]
         # IF_Frequency_selected = self.return_checked_ports()
 
@@ -459,14 +459,20 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
 
         current_font_style = self.Parent.GrandParent.get_selected_settings()
 
-        calculate_all_IP1(data_file_name,
-                          graph_title,
-                          graph_x,
-                          graph_y,
-                          IF_Frequency_selected,
-                          graph_animated,
-                          font_style=current_font_style)
-        # self.instrument_label.SetLabel(response)
+        try:
+            calculate_all_IP1(data_file_name,
+                              graph_title,
+                              graph_x,
+                              graph_y,
+                              IF_Frequency_selected,
+                              graph_animated,
+                              font_style=current_font_style)
+            # self.instrument_label.SetLabel(response)
+        except SplineError:
+            error_message("Impossible to build spline", "Spline Error")
+        except PointNotFound:
+            error_message("IP1 point not found", "IP1 error")
+
 
 
 class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
@@ -529,7 +535,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         if graph_x is None or graph_y is None:
             return None
 
-        if self.graph_type_value == "SD":
+        if str(self.graph_type_value) == "SD":
             if graph_z is None:
                 return None
         else:
@@ -539,14 +545,14 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         SD_LO_Frequency = 0
         SD_LO_Level = 0
         SD_RF_Level = 0
-        if self.graph_type_value == "SP":
+        if str(self.graph_type_value) == "SP":
             dlg = wx.TextEntryDialog(self, "Insert Spurius Frequencies (MHz) - comma separated")
             dlg.ShowModal()
             result = dlg.GetValue()
             dlg.Destroy()
             IF_Frequency_selected = eval("[" + result + "]")
             IF_Frequency_selected = [unit.convertion_to_base(x, unit.MHz) for x in IF_Frequency_selected]
-        elif self.graph_type_value == "SD":
+        elif str(self.graph_type_value) == "SD":
             dlg = wx.TextEntryDialog(self, "Insert LO Frequency (MHz)")
             dlg.ShowModal()
             SD_LO_Frequency = dlg.GetValue()
@@ -559,7 +565,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
             dlg.ShowModal()
             SD_RF_Level = dlg.GetValue()
             dlg.Destroy()
-            SD_LO_Frequency = unit.convertion_to_base(eval(SD_LO_Frequency), unit.MHz)
+            SD_LO_Frequency = unit.convertion_to_base(SD_LO_Frequency, unit.MHz)
             SD_LO_Level = eval(SD_LO_Level)
             SD_RF_Level = eval(SD_RF_Level)
 
@@ -588,7 +594,7 @@ class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
         except:
             print("Error saving " + last_svg)
         try:
-            if self.graph_type_value != "SD":
+            if str(self.graph_type_value) != "SD":
                 webbrowser.open(result_folder)
         except:
             pass
@@ -680,7 +686,7 @@ class TabPanelGenericPlotGraph(XYPlotGraphPanelClass):
             error_message("Graph type not selected", "Graph type error")
             return 0
 
-        if self.graph_type_value != "NN":
+        if str(self.graph_type_value) != "NN":
             error_message("Graph type invalid", "Graph type error")
             return 0
 
@@ -724,7 +730,7 @@ class TabPanelGenericPlotGraph(XYPlotGraphPanelClass):
         SD_LO_Level = 0
         SD_RF_Level = 0
 
-        if self.graph_type_value == "NN":
+        if str(self.graph_type_value) == "NN":
             # file_table_result, list_of_s_param = opentouchstonefile(self.data_file_name_value, filter_label=None)
             # dlg = wx.TextEntryDialog(self, "Insert s params - comma separated (ex. S12DB, S11A)", defaultValue=str(list_of_s_param)[1:-1].replace("'", ""))
             # dlg.ShowModal()
@@ -733,7 +739,7 @@ class TabPanelGenericPlotGraph(XYPlotGraphPanelClass):
             # result = self.return_checked_ports()
             # IF_Frequency_selected = [r.strip() for r in result.split(",")]
             IF_Frequency_selected = self.return_checked_ports()
-        elif self.graph_type_value == "GG":
+        elif str(self.graph_type_value) == "GG":
             IF_Frequency_selected = [0]
 
         current_font_style = self.Parent.GrandParent.get_selected_settings()
@@ -760,7 +766,7 @@ class TabPanelGenericPlotGraph(XYPlotGraphPanelClass):
         except:
             print("Error saving " + last_svg)
         try:
-            if self.graph_type_value != "SD":
+            if str(self.graph_type_value) != "SD":
                 webbrowser.open(result_folder)
         except:
             pass

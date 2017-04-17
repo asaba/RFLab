@@ -148,6 +148,7 @@ def plot_spurius_graph(data_file_name,
     group_for_GG = []
     for row_grouped in data_table:
         plot_this = False
+        graph_type = str(graph_type)
         if (graph_type == "RF" or graph_type == "LO") and (
                 row_grouped[0][n_LO_index] == 1 or row_grouped[0][n_LO_index] == -1) and (
                 row_grouped[0][m_RF_index] == 1 or row_grouped[0][m_RF_index] == -1):
@@ -355,7 +356,7 @@ def plot_spurius_Single(fig, table_value,
     filter_1 = False
 
     x_y_offset = 0
-
+    graph_type = str(graph_type)
     if graph_type == "LO":
         if not graph_x.label:
             graph_x.label = 'IF Freq (' + unit.return_unit_str(graph_x.unit) + ')'
@@ -424,7 +425,7 @@ def plot_spurius_Single(fig, table_value,
         legend_title = "Power LO"
 
     # split by RF_level or LO_level
-    if graph_type != "SD":
+    if str(graph_type) != "SD":
         last_group_index = tuple([table_value[0][index] for index in graph_group_index])
         result = [[table_value[0][:]]]
         for row in table_value[1:]:

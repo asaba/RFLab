@@ -4,7 +4,7 @@ Created on 07/mag/2016
 @author: sabah
 '''
 
-from utility import unit_class, csv, Generic_Range
+from utility import unit_class, csv, Generic_Range, eval_if
 from scipy.interpolate import UnivariateSpline
 from numpy import array, arange
 
@@ -32,8 +32,8 @@ def calibrate(input_power, input_frequency, input_frequency_unit, calibration_ta
             power_dict = {}
             for t in calibration_table[1:]:
                 # power dictionary {Cable Frequency (input_frequency_unit): calibrated power}
-                power_dict[unit.unit_conversion(eval(t[0].replace(",", ".")), unit.return_unit(t[1]),
-                                                input_frequency_unit)] = eval(t[2].replace(",", "."))
+                power_dict[unit.unit_conversion(eval_if(t[0]), unit.return_unit(t[1]),
+                                                input_frequency_unit)] = eval_if(t[2])
 
             # search the narrow value in power_dict keys
             # notes: lambda is equal to def func(x): return abs(x-input_frequency)
@@ -48,9 +48,9 @@ def calibrate(input_power, input_frequency, input_frequency_unit, calibration_ta
         # check if input frequency is present in calibration_table
         for t in calibration_table:
             t_unit = unit.return_unit(t[1].strip())
-            t_frequency = unit.unit_conversion(eval(t[0].replace(",", ".")), t_unit, input_frequency_unit)
+            t_frequency = unit.unit_conversion(eval_if(t[0]), t_unit, input_frequency_unit)
             if input_frequency == t_frequency:
-                calibration_value = eval(t[2].replace(",", "."))
+                calibration_value = eval_if(t[2])
                 # result power lever = input power level - calibrated power level
                 calibrated_power = input_power - calibration_value
                 calibration_result = "CAL"
@@ -83,8 +83,8 @@ def calibrationfilefunction(calibrationresult):
     # if len()
     calibration_unit = unit.return_unit(calibrationresult[0][1])
     for row in calibrationresult:
-        x_curve.append(unit.convertion_to_base(eval(row[0].replace(",", ".")), calibration_unit))
-        y_curve.append(eval(row[2].replace(",", ".")))
+        x_curve.append(unit.convertion_to_base(row[0], calibration_unit))
+        y_curve.append(eval_if(row[2]))
 
     return UnivariateSpline(array(x_curve), array(y_curve), s=0), unit.Hz
 

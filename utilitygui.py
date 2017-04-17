@@ -12,7 +12,7 @@ from measure_scripts.USBInstruments import USB_PM5
 from measure_scripts.tscpy import instruments
 
 
-def browse_file(parent, text_control_file, dialog_text="Choose a file", wildcard="*.csv", mode=wx.OPEN):
+def browse_file(parent, text_control_file, dialog_text="Choose a file", wildcard="CSV files (*.csv)|*.csv|Excel file (*.xlsx)|*.xlsx", mode=wx.OPEN):
     defaultFile = ""
     try:
         defaultFile = text_control_file.GetValue()
@@ -32,6 +32,8 @@ def browse_file(parent, text_control_file, dialog_text="Choose a file", wildcard
 
 def create_instrument(ip, port, timeout, instr_type, TEST_MODE=False, instrument_class="SMB", enable_state=True):
     # if in test mode or the instument is disable, create a dummy instrument object that responde of requenct for testing
+    instrument_class = str(instrument_class)
+    instr_type = str(instr_type)
     if TEST_MODE or enable_state == False:
         if instrument_class == "SMB":
             instrument = SMB_class()
@@ -111,7 +113,7 @@ def check_value_min_max(value, value_text, minimum=None, maximum=None):
     value_invalid = False
     if value is None:
         value_invalid = True
-    elif value == "":
+    elif value == "" or value == u"":
         value_invalid = True
     if not value_invalid and not (minimum is None):
         if eval(value) <= maximum:

@@ -3,9 +3,10 @@ Created on 28/mag/2016
 
 @author: sabah
 '''
-from utility import unit_class, return_now_postfix, create_csv
+from utility import unit_class, return_now_postfix, create_csv, create_xlsx, eval_if
 import numpy as np
 import csv
+import openpyxl
 import operator
 import os
 from scriptutility import Frequency_Range
@@ -91,11 +92,11 @@ def openGenericTxtfile(filename, skip_first_row=0):
         for row in result[skip_first_row:]:
             # uniform unit and convert string to value
             if len(row) == row_skiped_len:
-                if row[0] == "freq":
+                if str(row[0]) == "freq":
                     # new series
                     first_column = row[1]
                 else:
-                    result_eval.append([first_column] + [eval(token.replace(",", ".")) for token in row])
+                    result_eval.append([first_column] + [eval_if(token) for token in row])
 
         return result_eval, unit.Hz, os.path.dirname(filename)
     except:
@@ -109,32 +110,47 @@ def openSpuriusfile(filename):
     # return empty table if error
     result = []
     try:
-        with open(filename, 'rb') as csvfile:
-            reader = csv.reader(csvfile)
-            for row in reader:
-                result.append(row)
+        file_extention = filename.split(".")[-1]
+        file_extention = str(file_extention)
+        if file_extention == "csv":
+            header_lines = 2
+            with open(filename, 'rb') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    result.append(row)
+        elif file_extention == "xlsx":
+            header_lines = 1
+            wb = openpyxl.load_workbook(filename)
+            ws = wb[wb.get_sheet_names()[0]]
+            for line in ws.iter_rows():
+                result.append([])
+                for cell in line:
+                    if cell.value is not None:
+                        result[-1].append(cell.value)
+
+
         # remove separator and header take unit value
         result_eval = []
-        for row in result[2:]:
+        for row in result[header_lines:]:
             # uniform unit and convert string to value
 
-            result_eval.append([unit.convertion_to_base(eval(row[frequency_LO_index].replace(",", ".")),
+            result_eval.append([unit.convertion_to_base(row[frequency_LO_index],
                                                         unit.return_unit(row[unit_LO_index])),
                                 unit.Hz,
-                                eval(row[power_LO_index].replace(",", ".")),
+                                eval_if(row[power_LO_index]),
                                 row[is_LO_calibrated_index],
-                                unit.convertion_to_base(eval(row[frequency_RF_index].replace(",", ".")),
+                                unit.convertion_to_base(row[frequency_RF_index],
                                                         unit.return_unit(row[unit_RF_index])),
                                 unit.Hz,
-                                eval(row[power_RF_index].replace(",", ".")),
+                                eval_if(row[power_RF_index]),
                                 row[is_RF_calibrated_index],
-                                unit.convertion_to_base(eval(row[frequency_IF_index].replace(",", ".")),
+                                unit.convertion_to_base(row[frequency_IF_index],
                                                         unit.return_unit(row[unit_IF_index])),
                                 unit.Hz,
-                                eval(row[power_IF_index].replace(",", ".")),
+                                eval_if(row[power_IF_index]),
                                 row[is_IF_calibrated_index],
-                                eval(row[n_LO_index].replace(",", ".")),
-                                eval(row[m_RF_index].replace(",", "."))])
+                                eval_if(row[n_LO_index]),
+                                eval_if(row[m_RF_index])])
 
         return result_eval, unit.Hz, os.path.dirname(filename)
     except:
@@ -163,14 +179,17 @@ def splitSpuriusCfiletablevalueDict(data_file_name, graph_type, table_value, sor
         table_result = table_value
 
     if savefile:
-        filepointer = open(data_file_name.split(".")[0] + "_" + graph_type + "_" + return_now_postfix() + ".csv", "wb")
+        filename = data_file_name.split(".")[0] + "_" + graph_type + "_" + return_now_postfix()
+        filepointer = open(filename + ".csv", "wb")
         create_csv(filepointer, csv_file_header, [], table_result)
         filepointer.close()
+        create_xlsx(filename + ".xlsx", csv_file_header, [], table_result)
 
     group_result = [[table_result[0][:]]]
     last_tupla = tuple([table_result[0][index] for index in group_level_01])
     # last_tupla = (table_result[0][n_LO_index], table_result[0][m_RF_index], table_result[0][frequency_LO_index], table_result[0][power_LO_index])
     for row in table_result[1:]:  # first row in group_result yet
+        graph_type = str(graph_type)
         if graph_type == "SD" and row[power_LO_index] == SD_LO_Level and row[power_RF_index] == SD_RF_Level and row[
             power_IF_index] > SD_IF_Min_Level:
             if row[frequency_LO_index] == SD_LO_Frequency:
@@ -218,6 +237,7 @@ def order_and_group_data(data_file_name,
     """
     data = dict{(n, m, Freq_LO, Level_LO, Level_RF): [Freq_unit_LO, Calib_LO, Freq_RF, Freq_unit_RF, Calib_RF, Freq_IF, Freq_unit_IF, Level_IF, Calib_IF, -(Level_RF - Level_IF)]}
     """
+    graph_type = str(graph_type)
     if graph_type in graph_types.values() + ["IP1"]:
         file_table_result, unit_value, data_file_directory = openSpuriusfile(data_file_name)
     elif graph_type in generic_graph_types.values():
