@@ -51,7 +51,8 @@ class XYPlotGraphPanelClass(PlotGraphPanelClass):
     Tab for Plot XY Graph ex. IP1, Spurius, ...
     """
 
-    def __init__(self, parent, animated=False, z_axes=False, input_file_wildcard="CSV files (*.csv)|*.csv|Excel file (*.xlsx)|*.xlsx"):
+    def __init__(self, parent, animated=False, z_axes=False,
+                 input_file_wildcard="CSV files (*.csv)|*.csv|Excel file (*.xlsx)|*.xlsx"):
 
         self.x_index = 0
         self.y_index = 0
@@ -472,7 +473,6 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
             error_message("Impossible to build spline", "Spline Error")
         except PointNotFound:
             error_message("IP1 point not found", "IP1 error")
-
 
 
 class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):

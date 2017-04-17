@@ -150,8 +150,8 @@ def plot_spurius_graph(data_file_name,
         plot_this = False
         graph_type = str(graph_type)
         if (graph_type == "RF" or graph_type == "LO") and (
-                row_grouped[0][n_LO_index] == 1 or row_grouped[0][n_LO_index] == -1) and (
-                row_grouped[0][m_RF_index] == 1 or row_grouped[0][m_RF_index] == -1):
+                        row_grouped[0][n_LO_index] == 1 or row_grouped[0][n_LO_index] == -1) and (
+                        row_grouped[0][m_RF_index] == 1 or row_grouped[0][m_RF_index] == -1):
             plot_this = True
         elif graph_type == "SP" and row_grouped[0][n_LO_index] != 1 and row_grouped[0][n_LO_index] != -1 and \
                         row_grouped[0][m_RF_index] != 1 and row_grouped[0][m_RF_index] != -1 and row_grouped[0][

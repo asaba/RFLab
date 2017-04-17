@@ -190,7 +190,8 @@ def calculateIP1(table_value_ip1,
         raise SplineError("Spline Error")
     t_ip1 = x_curve_ip1
     s_linear_ip1 = [p_linear_ip1(x) for x in
-                    np.append(t_ip1,[graph_x.max])]  # aggiungo un punto alla retta per disegnarla oltre la fine della curva
+                    np.append(t_ip1,
+                              [graph_x.max])]  # aggiungo un punto alla retta per disegnarla oltre la fine della curva
 
     t_ip3 = None
     p_linear_ip3 = None
@@ -212,7 +213,6 @@ def calculateIP1(table_value_ip1,
                 if abs(table_value_ip3[i][power_RF_index] - start_power) <= 15:
                     power_linear_last_index_ip3 = i
 
-
         x_curve_ip3 = np.array(power_input_curve_ip3)
         y_curve_ip3 = np.array(power_output_curve_ip3)
         coefficient_linear_ip3 = np.polyfit(x_curve_ip3[start_power_index:power_linear_last_index_ip3],
@@ -220,7 +220,7 @@ def calculateIP1(table_value_ip1,
         p_linear_ip3 = np.poly1d(coefficient_linear_ip3)
         spl_ip3 = UnivariateSpline(x_curve_ip3, y_curve_ip3, s=0)
         t_ip3 = x_curve_ip3
-        s_linear_ip3 = [p_linear_ip3(x) for x in np.append(t_ip3,[graph_x.max])]
+        s_linear_ip3 = [p_linear_ip3(x) for x in np.append(t_ip3, [graph_x.max])]
 
     line_ani = None
 
@@ -271,7 +271,7 @@ def calculateIP1(table_value_ip1,
     if ip1_x is None:
         raise PointNotFound("IP1 not not found")
     else:
-        #plot IP1 point
+        # plot IP1 point
         ip1, = ax.plot([ip1_x], [ip1_y], "ro")
         plt.text(ip1_x + 0.2, ip1_y - 2, "{:.3f} dBm".format(ip1_x), **font_style["annotation"])
     retta_ip1, = ax.plot(line_data_ip1[0], line_data_ip1[1], "g--")

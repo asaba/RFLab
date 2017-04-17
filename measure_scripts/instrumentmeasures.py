@@ -69,7 +69,7 @@ def readFSV_marker(FSV,
                    calibration_IF_function,
                    calibration_IF_function_unit):
     # set central frequency
-    command = "FREQ:CENT " + str(central_frequency) +  unit.return_unit_str(central_frequency_unit)
+    command = "FREQ:CENT " + str(central_frequency) + unit.return_unit_str(central_frequency_unit)
     FSV.write(command)
     # wait for center frequency
     time.sleep(FSV_delay)

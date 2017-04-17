@@ -294,6 +294,7 @@ def create_xlsx(filename, header, values_headers, values):
 
     wb.save(filename)
 
+
 def open_csv_file(filepointer, header, values_headers):
     csvwriter = csv.writer(filepointer, dialect=csv.excel, quoting=csv.QUOTE_ALL)
     csvwriter.writerow(['sep=,'])
@@ -380,14 +381,17 @@ def return_max_min_from_data_table(data_table, x_index, y_index=None, z_index=No
         z_d_list.append(z_d)
     return max(x_u_list), min(x_d_list), max(y_u_list), min(y_d_list), max(z_u_list), min(z_d_list)
 
+
 def eval_if(variable):
     if type(variable) is str or type(variable) is unicode:
         return eval(variable.replace(",", "."))
     else:
         return variable
 
+
 class SplineError(Exception):
     pass
+
 
 class PointNotFound(Exception):
     pass

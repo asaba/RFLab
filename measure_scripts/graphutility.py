@@ -128,7 +128,6 @@ def openSpuriusfile(filename):
                     if cell.value is not None:
                         result[-1].append(cell.value)
 
-
         # remove separator and header take unit value
         result_eval = []
         for row in result[header_lines:]:

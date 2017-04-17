@@ -69,7 +69,7 @@ class touchstone():
         except (ValueError):
             raise (ValueError(
                 "filename does not have a s-parameter extention. It has  [%s] instead. please, correct the extension to of form: 'sNp', where N is any integer." % (
-                extention)))
+                    extention)))
 
         linenr = 0
         values = []

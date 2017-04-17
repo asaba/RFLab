@@ -12,7 +12,8 @@ from measure_scripts.USBInstruments import USB_PM5
 from measure_scripts.tscpy import instruments
 
 
-def browse_file(parent, text_control_file, dialog_text="Choose a file", wildcard="CSV files (*.csv)|*.csv|Excel file (*.xlsx)|*.xlsx", mode=wx.OPEN):
+def browse_file(parent, text_control_file, dialog_text="Choose a file",
+                wildcard="CSV files (*.csv)|*.csv|Excel file (*.xlsx)|*.xlsx", mode=wx.OPEN):
     defaultFile = ""
     try:
         defaultFile = text_control_file.GetValue()
