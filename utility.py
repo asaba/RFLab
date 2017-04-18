@@ -16,7 +16,7 @@ import os
 import datetime
 from numpy import arange
 
-VERSION = "5.5"
+VERSION = "5.6"
 
 inkscape_exec = "C:\\Program Files\\Inkscape\\inkscape.com"
 
