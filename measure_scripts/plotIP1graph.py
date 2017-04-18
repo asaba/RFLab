@@ -288,9 +288,12 @@ def calculateIP1(table_value_ip1,
 
     # line_ani = animation.FuncAnimation(fig, update_line, len(line_data_ip1[0]),  fargs=(line_data_ip1, retta_ip1, p_linear_ip1, curve_data_ip1, curve_ip1, spl_ip1, ip1, line_data_ip3, retta_ip3, p_linear_ip3, curve_data_ip3, curve_ip3, spl_ip3, ip3), interval=interval, blit=False, repeat=False)
     plt.show()
-    fig.savefig(os.path.join(data_file_directory, unit.return_human_readable_str(
+    save_file_name = os.path.join(data_file_directory, unit.return_human_readable_str(
         table_value_ip1[0][frequency_RF_index]) + "_Cable_Cal" + str(
-        calibrated_ip1) + "_" + return_now_postfix() + ".png"))
+        calibrated_ip1) + "_" + return_now_postfix())
+    fig.savefig(save_file_name + ".png")
+    fig.savefig(save_file_name + ".svg")
+    fig.savefig(save_file_name + ".eps")
     return IP1_x
 
 

@@ -127,6 +127,7 @@ def plot_XY_Single(fig1, table_value,
         save_file_name = os.path.join(data_file_directory, "Graph_" + graph_title)
         plt.savefig(save_file_name + ".png", dpi=200)
         plt.savefig(save_file_name + ".svg")
+        plt.savefig(save_file_name + ".eps")
     else:
         plt.show()
 

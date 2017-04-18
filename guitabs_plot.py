@@ -474,6 +474,17 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
         except PointNotFound:
             error_message("IP1 point not found", "IP1 error")
 
+        try:
+            last_svg = ""
+            result_folder = os.path.dirname(data_file_name)
+            for svg_file in buildfitsfileslist(result_folder):
+                last_svg = svg_file
+                execute = [inkscape_exec, "-f", svg_file, '-M', svg_file[:-4] + '.emf']
+                print("saving " + svg_file[:-4] + '.emf')
+                subprocess.call(execute)
+        except:
+            print("Error saving " + last_svg)
+
 
 class TabPanelSpuriusCPlotGraph(XYPlotGraphPanelClass):
     """
