@@ -13,6 +13,14 @@ import tscpy
 
 # create dummy class and objects for debugging
 
+class VSCD_class():
+    def write(self, command):
+        pass
+
+    def ask(self, command):
+        return ["1.1"]
+
+
 class SAB_class():
     def write(self, command):
         pass

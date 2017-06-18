@@ -500,6 +500,32 @@ class TabPanelTSC(InstrumentPanelClass):
         dlg.Destroy()
 
 
+class TabPanelVSCD(InstrumentPanelClass):
+    """
+    Tab for DownConverter VSCD
+    """
+
+    def __init__(self, parent):
+
+        InstrumentPanelClass.__init__(self, parent=parent)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.vscd_frequency_min, dummy, self.vscd_frequency_max, dummy, self.vscd_frequency_step, dummy, self.vscd_frequency_unit, dummy, self.sizer_vscd_frequency = return_min_max_step_labeled(
+            self, "Frequency", unit=False, single_unit=True)
+
+        self.vscd_level_min, dummy, self.vscd_level_max, dummy, self.vscd_level_step, dummy, dummy, dummy, self.sizer_vscd_level = return_min_max_step_labeled(
+                self, "Attenuation", unit=False)
+
+        sizer.Add(self.instrument_sizer, 0, wx.ALL, 5)
+        sizer.Add(self.instrument_test_sizer, 0, wx.ALL, 5)
+        sizer.Add(self.instrument_enable_status_sizer, 0, wx.ALL, 5)
+        ###
+        sizer.Add(self.sizer_vscd_frequency, 0, wx.ALL, 5)
+        sizer.Add(self.sizer_vscd_level, 0, wx.ALL, 5)
+
+        self.SetSizer(sizer)
+
+
 class TabPanelPowerMeter(InstrumentPanelClass):
     """
     Tab for Power Meter

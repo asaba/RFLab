@@ -293,7 +293,7 @@ def order_and_group_data(data_file_name,
         y_index = power_IF_index
         legend_index = [(power_LO_index, unit.dB, "", n_LO_index)]
     elif graph_type == "IP1":
-        sort_data = [n_LO_index, frequency_LO_index, power_LO_index]
+        sort_data = [m_RF_index, frequency_RF_index, power_RF_index]
         group_level_01 = [m_RF_index, frequency_RF_index]
         graph_group_index = [frequency_RF_index]
         x_index = power_RF_index

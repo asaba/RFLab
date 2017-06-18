@@ -7,7 +7,7 @@ Created on 29/dic/2015
 import wx, os
 from IPy import IP
 import pyvisa
-from measure_scripts.debug import SMB_class, FSV_class, NRP2_class, TSC_class, SAB_class, PM5_class
+from measure_scripts.debug import SMB_class, FSV_class, NRP2_class, TSC_class, SAB_class, PM5_class, VSCD_class
 from measure_scripts.USBInstruments import USB_PM5
 from measure_scripts.tscpy import instruments
 
@@ -32,7 +32,7 @@ def browse_file(parent, text_control_file, dialog_text="Choose a file",
 
 
 def create_instrument(ip, port, timeout, instr_type, TEST_MODE=False, instrument_class="SMB", enable_state=True):
-    # if in test mode or the instument is disable, create a dummy instrument object that responde of requenct for testing
+    # if in test mode or the instument is disable, create a dummy instrument object that responde of requenst for testing
     instrument_class = str(instrument_class)
     instr_type = str(instr_type)
     if TEST_MODE or enable_state == False:
@@ -46,6 +46,8 @@ def create_instrument(ip, port, timeout, instr_type, TEST_MODE=False, instrument
             instrument = TSC_class()
         elif instrument_class == "SAB":
             instrument = SAB_class()
+        elif instrument_class == "VSCD":
+            instrument = VSCD_class()
         instrument.enable_state = enable_state
         return instrument
     rm = pyvisa.ResourceManager()

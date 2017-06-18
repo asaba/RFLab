@@ -459,16 +459,23 @@ class TabPanelIP1PlotGraph(XYPlotGraphPanelClass):
 
 
         current_font_style = self.Parent.GrandParent.get_selected_settings()
-
+        calculate_all_IP1(data_file_name,
+                          graph_title,
+                          graph_x,
+                          graph_y,
+                          IF_Frequency_selected,
+                          graph_animated,
+                          font_style=current_font_style)
         try:
-            calculate_all_IP1(data_file_name,
-                              graph_title,
-                              graph_x,
-                              graph_y,
-                              IF_Frequency_selected,
-                              graph_animated,
-                              font_style=current_font_style)
-            # self.instrument_label.SetLabel(response)
+            pass
+            # calculate_all_IP1(data_file_name,
+            #                   graph_title,
+            #                   graph_x,
+            #                   graph_y,
+            #                   IF_Frequency_selected,
+            #                   graph_animated,
+            #                   font_style=current_font_style)
+            # # self.instrument_label.SetLabel(response)
         except SplineError:
             error_message("Impossible to build spline", "Spline Error")
         except PointNotFound:

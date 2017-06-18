@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  _tsc5120a.py
+#  VSCD.py
 #  Jul 29, 2015 17:26:37 EDT
 #  Copyright 2015
 #         
