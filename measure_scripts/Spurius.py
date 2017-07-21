@@ -43,6 +43,12 @@ synthetizer_RF_state = "ON"
 synthetizer_RF_frequency = Frequency_Range(3000, 4500, 500, unit.MHz)
 synthetizer_RF_frequency.to_base()
 synthetizer_RF_level = Generic_Range(-50, -25, 20)
+
+vscd_state = "ON"
+vscd_frequency = Frequency_Range(3000, 4500, 500, unit.MHz)
+vscd_frequency.to_base()
+vscd_level = Generic_Range(-50, -25, 20)
+
 FSV_delay = 1
 
 spectrum_analyzer_state = "ON"
@@ -108,13 +114,16 @@ def return_spurius_list(LO, RF, n_LO, m_RF, IF_low, IF_high):
     return result
 
 
-def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
+def measure_LNA_spurius(SMB_LO, SMB_RF, FSV, VSCD,
                         synthetizer_LO_state=synthetizer_LO_state,
                         synthetizer_LO_frequency=synthetizer_LO_frequency,
                         synthetizer_LO_level=synthetizer_LO_level,  # dBm
                         synthetizer_RF_state=synthetizer_RF_state,
                         synthetizer_RF_frequency=synthetizer_RF_frequency,
                         synthetizer_RF_level=synthetizer_RF_level,  # dBm
+                        downconverter_state=vscd_state,
+                        downconverter_frequency=vscd_frequency,
+                        downconverter_level=vscd_level,  # dBm
                         spectrum_analyzer_state=spectrum_analyzer_state,
                         spectrum_analyzer_sweep_points=spectrum_analyzer_sweep_points,
                         spectrum_analyzer_resolution_bandwidth=spectrum_analyzer_resolution_bandwidth,
@@ -246,7 +255,8 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
         current_lo_frequency = f_LO_value + unit.return_unit_str(unit.Hz)
         current_lo_frequency_human_readable = unit.return_human_readable_str(f_LO)
         command = "FREQ " + current_lo_frequency  # Ex. FREQ 500kHz
-        SMB_LO.write(command)
+        if synthetizer_LO_state:
+            SMB_LO.write(command)
 
         for l_LO in level_LO_range:  # power level loop
             # set SMB100A level for LO
@@ -260,9 +270,10 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
                     count += 1
                     continue
             command = "POW " + str(current_LO_level)
-            SMB_LO.write(command)
-            # turn on LO
-            SMB_LO.write("OUTP ON")
+            if synthetizer_LO_state:
+                SMB_LO.write(command)
+                # turn on LO
+                SMB_LO.write("OUTP ON")
 
             for l_RF in level_RF_range:  # power level loop
 
@@ -278,18 +289,26 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
                             count += 1
                             continue
                     command = "POW " + str(current_RF_level)
-                    SMB_RF.write(command)  # set level for RF
+                    if synthetizer_RF_state:
+                        SMB_RF.write(command)  # set level for RF
                     # set SMB100A frequency for RF
                     f_RF_value = str(f_RF)
                     current_rf_frequency = f_RF_value + unit.return_unit_str(unit.Hz)
                     current_rf_frequency_human_readable = unit.return_human_readable_str(f_RF)
                     command = "FREQ " + current_rf_frequency  # Ex. FREQ 500kHz
-                    SMB_RF.write(command)
+                    if synthetizer_RF_state:
+                        SMB_RF.write(command)
+
+                    # Set the downconverter frequency and attenuation
+                    if downconverter_state:
+                        VSCD.set_freq(f_RF_value)
+                        VSCD.set_rf_on()
 
                     # calculate spurius frequency
                     spurius_tmp = return_spurius_list(f_LO, f_RF, n_LO, m_RF, IF_low, IF_high)
-                    # turn on RF
-                    SMB_RF.write("OUTP ON")
+                    if synthetizer_RF_state:
+                        # turn on RF
+                        SMB_RF.write("OUTP ON")
                     spurius_markers = readFSV_marker_spurius(FSV,
                                                              FSV_delay,
                                                              spurius_tmp,
@@ -346,8 +365,12 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV,
             break
 
     # turn off LO and RF
-    SMB_LO.write("OUTP OFF")
-    SMB_RF.write("OUTP OFF")
+    if downconverter_state:
+        VSCD.set_rf_off()
+    if synthetizer_LO_state:
+        SMB_LO.write("OUTP OFF")
+    if synthetizer_RF_state:
+        SMB_RF.write("OUTP OFF")
 
     if m_RF.step == 0:
         harmonic_filename = result_file_name + "_TOTAL_HARMONIC_" + return_now_postfix()

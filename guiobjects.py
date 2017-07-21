@@ -181,7 +181,7 @@ def return_instrument(parent):
     Sizer_Timeout.Add(txt_Timeout, 0, wx.ALL, 5)
     label_instrtype = wx.StaticText(parent, wx.ID_ANY, "Type", size=(-1, -1))
     combobox_instrtype = wx.ComboBox(parent, -1, pos=(50, 170), size=(-1, -1), value="INSTR",
-                                     choices=["SOCKET", "INSTR", "TELNET"], style=wx.CB_READONLY)
+                                     choices=["SOCKET", "INSTR", "TELNET", "VSCD"], style=wx.CB_READONLY)
     Sizer_instrtype = wx.BoxSizer(wx.VERTICAL)
     Sizer_instrtype.Add(label_instrtype, 0, wx.ALL, 5)
     Sizer_instrtype.Add(combobox_instrtype, 0, wx.ALL, 5)

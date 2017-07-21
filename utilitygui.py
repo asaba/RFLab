@@ -10,6 +10,7 @@ import pyvisa
 from measure_scripts.debug import SMB_class, FSV_class, NRP2_class, TSC_class, SAB_class, PM5_class, VSCD_class
 from measure_scripts.USBInstruments import USB_PM5
 from measure_scripts.tscpy import instruments
+from measure_scripts.VSCD.VSCD import VSCD
 
 
 def browse_file(parent, text_control_file, dialog_text="Choose a file",
@@ -58,7 +59,10 @@ def create_instrument(ip, port, timeout, instr_type, TEST_MODE=False, instrument
     elif instr_type == "INSTR":
         instrument = rm.open_resource("TCPIP::{ip}::INSTR".format(ip=ip))
     elif instr_type == "TELNET":
-        instrument = instruments.TSC5120A(ip, port)
+        if instrument_class == "TSC5120A":
+            instrument = instruments.TSC5120A(ip, port)
+    elif instr_type == "VSCD":
+            instrument = VSCD(ip, port)
     instrument.timeout = timeout
     instrument.enable_state = enable_state
     return instrument
@@ -95,7 +99,10 @@ def check_instrument_comunication(instrument_IP, instrument_Port, instrument_Tim
     try:
         INST = create_instrument(instrument_IP, instrument_Port, instrument_Timeout, instrument_type)
         # self.instrument_label.SetLabel(INST.ask("*IDN?"))
-        return (1, INST.ask("*IDN?"))
+        if instrument_type == "VSCD":
+            return (1, INST.get_ID()[1])
+        else:
+            return (1, INST.ask("*IDN?"))
     except:
         # self.instrument_label.SetLabel("Comunication Error")
         return (0, "Comunication Error")
