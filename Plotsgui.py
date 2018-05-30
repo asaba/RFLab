@@ -77,9 +77,9 @@ class PlotsFrame(TaskFrame):
             self.superior_title_font_size_mi.append(
                 self.superior_title_font_size.AppendRadioItem(8800 + i, str(i), str(i)))
             # self.Bind(wx.EVT_MENU, self.OnCheckSetting, self.superior_title_font_size_mi[-1])
-        self.superior_title_font.AppendMenu(8700, "Size", self.superior_title_font_size)
-        self.superior_title.AppendMenu(8600, "Font", self.superior_title_font)
-        self.setupMenu.AppendMenu(8500, 'Superior Title', self.superior_title)
+        self.superior_title_font.Append(8700, "Size", self.superior_title_font_size)
+        self.superior_title.Append(8600, "Font", self.superior_title_font)
+        self.setupMenu.Append(8500, 'Superior Title', self.superior_title)
 
         self.title_font = wx.Menu()
         self.title_font_size = wx.Menu()
@@ -87,9 +87,9 @@ class PlotsFrame(TaskFrame):
         for i in fontsizerange:
             self.title_font_size_mi.append(self.title_font_size.AppendRadioItem(8400 + i, str(i), str(i)))
             # self.Bind(wx.EVT_MENU, self.OnCheckSetting, self.title_font_size_mi[-1])
-        self.title_font.AppendMenu(8300, "Size", self.title_font_size)
-        self.title.AppendMenu(8200, "Font", self.title_font)
-        self.setupMenu.AppendMenu(8100, 'Title', self.title)
+        self.title_font.Append(8300, "Size", self.title_font_size)
+        self.title.Append(8200, "Font", self.title_font)
+        self.setupMenu.Append(8100, 'Title', self.title)
 
         self.legend_title_font = wx.Menu()
         self.legend_title_font_size = wx.Menu()
@@ -97,9 +97,9 @@ class PlotsFrame(TaskFrame):
         for i in fontsizerange:
             self.legend_title_font_size_mi.append(self.legend_title_font_size.AppendRadioItem(8000 + i, str(i), str(i)))
             # self.Bind(wx.EVT_MENU, self.OnCheckSetting, self.legend_title_font_size_mi[-1])
-        self.legend_title_font.AppendMenu(7900, "Size", self.legend_title_font_size)
-        self.legend_title.AppendMenu(7800, "Font", self.legend_title_font)
-        self.setupMenu.AppendMenu(7700, 'Legend Title', self.legend_title)
+        self.legend_title_font.Append(7900, "Size", self.legend_title_font_size)
+        self.legend_title.Append(7800, "Font", self.legend_title_font)
+        self.setupMenu.Append(7700, 'Legend Title', self.legend_title)
 
         self.legend_lines_font = wx.Menu()
         self.legend_lines_font_size = wx.Menu()
@@ -107,9 +107,9 @@ class PlotsFrame(TaskFrame):
         for i in fontsizerange:
             self.legend_lines_font_size_mi.append(self.legend_lines_font_size.AppendRadioItem(7600 + i, str(i), str(i)))
             # self.Bind(wx.EVT_MENU, self.OnCheckSetting, self.legend_lines_font_size_mi[-1])
-        self.legend_lines_font.AppendMenu(7500, "Size", self.legend_lines_font_size)
-        self.legend_lines.AppendMenu(7400, "Font", self.legend_lines_font)
-        self.setupMenu.AppendMenu(7300, 'Legend Lines', self.legend_lines)
+        self.legend_lines_font.Append(7500, "Size", self.legend_lines_font_size)
+        self.legend_lines.Append(7400, "Font", self.legend_lines_font)
+        self.setupMenu.Append(7300, 'Legend Lines', self.legend_lines)
 
         self.axis_legend_font = wx.Menu()
         self.axis_legend_font_size = wx.Menu()
@@ -117,9 +117,9 @@ class PlotsFrame(TaskFrame):
         for i in fontsizerange:
             self.axis_legend_font_size_mi.append(self.axis_legend_font_size.AppendRadioItem(7200 + i, str(i), str(i)))
             # self.Bind(wx.EVT_MENU, self.OnCheckSetting, self.axis_legend_font_size_mi[-1])
-        self.axis_legend_font.AppendMenu(7100, "Size", self.axis_legend_font_size)
-        self.axis_legend.AppendMenu(7000, "Font", self.axis_legend_font)
-        self.setupMenu.AppendMenu(6900, 'Axis Legend', self.axis_legend)
+        self.axis_legend_font.Append(7100, "Size", self.axis_legend_font_size)
+        self.axis_legend.Append(7000, "Font", self.axis_legend_font)
+        self.setupMenu.Append(6900, 'Axis Legend', self.axis_legend)
 
         self.axis_ticks_font = wx.Menu()
         self.axis_ticks_font_size = wx.Menu()
@@ -127,9 +127,9 @@ class PlotsFrame(TaskFrame):
         for i in fontsizerange:
             self.axis_ticks_font_size_mi.append(self.axis_ticks_font_size.AppendRadioItem(6800 + i, str(i), str(i)))
             # self.Bind(wx.EVT_MENU, self.OnCheckSetting, self.axis_ticks_font_size_mi[-1])
-        self.axis_ticks_font.AppendMenu(6700, "Size", self.axis_ticks_font_size)
-        self.axis_ticks.AppendMenu(6600, "Font", self.axis_ticks_font)
-        self.setupMenu.AppendMenu(6500, 'Axis Ticks', self.axis_ticks)
+        self.axis_ticks_font.Append(6700, "Size", self.axis_ticks_font_size)
+        self.axis_ticks.Append(6600, "Font", self.axis_ticks_font)
+        self.setupMenu.Append(6500, 'Axis Ticks', self.axis_ticks)
 
         self.annotation_font = wx.Menu()
         self.annotation_font_size = wx.Menu()
@@ -137,9 +137,9 @@ class PlotsFrame(TaskFrame):
         for i in range(5, 20):
             self.annotation_font_size_mi.append(self.annotation_font_size.AppendRadioItem(6400 + i, str(i), str(i)))
             # self.Bind(wx.EVT_MENU, self.OnCheckSetting, self.annotation_font_size_mi[-1])
-        self.annotation_font.AppendMenu(6300, "Size", self.annotation_font_size)
-        self.annotation.AppendMenu(6200, "Font", self.annotation_font)
-        self.setupMenu.AppendMenu(6100, 'Points Text', self.annotation)
+        self.annotation_font.Append(6300, "Size", self.annotation_font_size)
+        self.annotation.Append(6200, "Font", self.annotation_font)
+        self.setupMenu.Append(6100, 'Points Text', self.annotation)
 
         self.menubar.Append(self.setupMenu, '&Settings')
         self.SetMenuBar(self.menubar)

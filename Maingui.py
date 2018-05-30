@@ -17,6 +17,7 @@ from Spuriusgui import SpuriusFrame
 from CalCablegui import CalCableFrame
 from copy_CalCablegui import CalCableFrame as CalCableFramePM
 from ContinousMeasuregui import CalContinousMeasureFrame
+from ContinousMeasurePMgui import CalContinousMeasurePMFrame
 from PlotAllanDevgui import PlotAllanDevFrame
 from PM5gui import CalPM5Frame
 from Plotsgui import PlotsFrame
@@ -57,6 +58,9 @@ class MainFrame(wx.Frame):
         self.btn_continous_measure = wx.Button(self.panel, 0, 'Countinous Measure')
         self.btn_continous_measure.Bind(wx.EVT_BUTTON, self.OnCalcContinousMeasure)
 
+        self.btn_continous_measure = wx.Button(self.panel, 0, 'Countinous Measure PM')
+        self.btn_continous_measure.Bind(wx.EVT_BUTTON, self.OnCalcContinousMeasurePM)
+
         self.btn_calc_adev = wx.Button(self.panel, 0, 'Calculate Allan Deviation')
         self.btn_calc_adev.Bind(wx.EVT_BUTTON, self.OnCalcAdev)
 
@@ -89,6 +93,11 @@ class MainFrame(wx.Frame):
         calcontinousmeasureapp = wx.App()
         frame = CalContinousMeasureFrame()
         calcontinousmeasureapp.MainLoop()
+
+    def OnCalcContinousMeasurePM(self, event):
+        calcontinousmeasurepmapp = wx.App()
+        frame = CalContinousMeasurePMFrame()
+        calcontinousmeasurepmapp.MainLoop()
 
     def OnCalCable(self, event):
         calcableapp = wx.App()

@@ -181,7 +181,7 @@ def return_instrument(parent):
     Sizer_Timeout.Add(txt_Timeout, 0, wx.ALL, 5)
     label_instrtype = wx.StaticText(parent, wx.ID_ANY, "Type", size=(-1, -1))
     combobox_instrtype = wx.ComboBox(parent, -1, pos=(50, 170), size=(-1, -1), value="INSTR",
-                                     choices=["SOCKET", "INSTR", "TELNET"], style=wx.CB_READONLY)
+                                     choices=["SOCKET", "INSTR", "TELNET", "VSCD"], style=wx.CB_READONLY)
     Sizer_instrtype = wx.BoxSizer(wx.VERTICAL)
     Sizer_instrtype.Add(label_instrtype, 0, wx.ALL, 5)
     Sizer_instrtype.Add(combobox_instrtype, 0, wx.ALL, 5)
@@ -308,7 +308,7 @@ def return_checkbox_labeled(parent, label):
     return cb, Sizer
 
 
-def return_spinctrl(parent, label):
+def return_spinctrl(parent, label, max_value=10):
     """
     return sizer
     ----------------------------
@@ -320,7 +320,7 @@ def return_spinctrl(parent, label):
     """
     label = wx.StaticText(parent, wx.ID_ANY, label, size=(150, -1))
     sc = wx.SpinCtrl(parent, -1, '', size=(60, -1))
-    sc.SetRange(0, 10)
+    sc.SetRange(0, max_value)
     sc.SetValue(1)
     Sizer = wx.BoxSizer(wx.HORIZONTAL)
     Sizer.Add(label, 0, wx.ALL, 5)

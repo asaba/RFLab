@@ -24,7 +24,7 @@ class SetupPanelClass(wx.Panel):
         self.result_file_name_button.Bind(wx.EVT_BUTTON, self.File_browser_Out)
 
     def File_browser_Out(self, event):
-        browse_file(self, self.result_file_name, wildcard="*", mode=wx.SAVE)
+        browse_file(self, self.result_file_name, wildcard="*", mode=wx.FD_SAVE)
         # dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*", wx.SAVE)
         # if dlg.ShowModal() == wx.ID_OK:
         #    path = dlg.GetPath()
@@ -48,6 +48,20 @@ class TabPanelContinousVoltageSetup(SetupPanelClass):
 
         self.SetSizer(sizer)
 
+
+class TabPanelContinousPowerMeterSetup(SetupPanelClass):
+    """
+    Tab for Continous Voltage Measure
+    """
+
+    def __init__(self, parent):
+        SetupPanelClass.__init__(self, parent=parent)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        # Calibration Cable parameter
+
+        sizer.Add(self.sizer_result_file_name, 0, wx.ALL, 5)
+
+        self.SetSizer(sizer)
 
 class TabPanelCalDummyCableSetup(SetupPanelClass):
     """

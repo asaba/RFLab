@@ -83,68 +83,28 @@ result_file_name = "C:\\Users\\Labele\\Desktop\\Spurius\\LO_cal"
 # result_file_name = "D:\\Users\\Andrea\\Documents\\Lavoro\\2015\\INAF\\MisureLNA\\test_cable"
 # Freqeunza strat , stop step
 
-def measure_calibration_cable(SMB=SMB_RF,
-                              NRP2=NRP2,
-                              SAB=SAB,
-                              synthetizer_frequency=synthetizer_frequency,
-                              synthetizer_fix_power=synthetizer_fix_power,  # dBm
-                              power_meter_make_zero=power_meter_make_zero,
-                              power_meter_make_zero_delay=power_meter_make_zero_delay,
+def continous_measure_PM(NRP2=NRP2,
                               power_meter_misure_number=power_meter_misure_number,
                               power_meter_misure_delay=power_meter_misure_delay,  # milliseconds
-                              SAB_switch_01_delay=SAB_switch_01_delay,
-                              SAB_switch_02_delay=SAB_switch_02_delay,
                               result_file_name=result_file_name,
-                              dummy_cable_power_level=0,
-                              create_dummy_cable=False,
                               createprogressdialog=None
                               ):
     dialog = createprogressdialog
     values = []  # variable for results
-
-    # reset the synthetizer SMB100A
-    SMB.write("*rst")
-
-    # imposta la modalit� di funzionamento del SMB100A
-    SMB.write("FREQ:MODE FIX")
-    SMB.write("POW:MODE FIX")
-    command = "POW " + str(synthetizer_fix_power)
-    SMB.write(command)
-
-    frequency_range = synthetizer_frequency.return_range()
-
-    maxcount = len(frequency_range)
     count = 0
-
     continue_progress = (True, True)
-    for f in frequency_range:  # frequency loop
-        # set SMB100A frequency
-        f_value = str(f)
-        current_frequency = f_value + unit.return_unit_str(unit.Hz)
-        current_frequency_human_readable = unit.return_human_readable_str(f)
-        command = "FREQ " + current_frequency  # Ex. FREQ 500kHz
-        SMB.write(command)
-        SMB.write("OUTP ON")
-        time.sleep(2)
-        data_now = str(datetime.datetime.now())
-        if create_dummy_cable:
-            values.append([f_value, unit.return_unit_str(unit.Hz)] + [str(dummy_cable_power_level) for x in
-                                                                      range(power_meter_misure_number)] + [data_now])
-        else:
-            values.append([f_value, unit.return_unit_str(unit.Hz)] + readNRP2(SAB, NRP2, power_meter_misure_number,
-                                                                              power_meter_misure_delay, f, unit.Hz,
-                                                                              SAB_switch_01_delay, make_zero=True) + [
-                              data_now])
-        # turn off RF
-        SMB.write("OUTP OFF")
 
+    NRP2.write("SYSTem:SPEed FAST")
+    for n in range(0, power_meter_misure_number):  # number of reading
+        data_now = str(datetime.datetime.now())
+        values.append(readNRP2(None, NRP2, 1, power_meter_misure_delay, 0, unit.Hz, SAB_switch_delay=0, make_zero=False) + [data_now])
         count += 1
 
         if not createprogressdialog is None:
             import wx
-            wx.MicroSleep(500)
-            message = "{lo_freq}".format(lo_freq=current_frequency_human_readable)
-            newvalue = int(float(count) / maxcount * 100)
+            #wx.MicroSleep(1)
+            message = "Read {count}".format(count=count)
+            newvalue = int(float(count) / power_meter_misure_number * 100)
             if newvalue >= 100:
                 createprogressdialog = False
                 # dialog.Update(newvalue, message)
@@ -152,27 +112,16 @@ def measure_calibration_cable(SMB=SMB_RF,
                 dialog.Close()
             else:
                 continue_progress = dialog.Update(newvalue, message)
-        if not continue_progress[0]:
-            dialog.Destroy()
-            break
-        if f == frequency_range[-1]:
-            # safety turn Off
-            # dialog.Update(100, "Measure completed)
-            dialog.Destroy()
+            if not continue_progress[0]:
+                dialog.Destroy()
+                break
 
-    # turn off RF
-    SMB.write("OUTP OFF")
-
-    # Output [Frequenza, output power meter(Loss), time]
 
     print("Misure completed\n")
 
     # build header for data table on file
-    header = ["Frequency", "Unit"]
+    header = ["value(dB)", "Time"]
     values_headers = []
-    for v in range(0, power_meter_misure_number):
-        values_headers.append("Loss value(dB)")
-    values_headers.append("Time")
     # save data on file
     savefile_path = result_file_name + "_" + return_now_postfix() + ".csv"
     try:

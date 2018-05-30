@@ -539,11 +539,11 @@ class TabPanelPowerMeter(InstrumentPanelClass):
         # self.power_meter_state, self.sizer_power_meter_state = return_checkbox_labeled(self, "State")
 
         # power_meter_misure_number = 1
-        self.power_meter_misure_number, self.sizer_power_meter_misure_number = return_spinctrl(self, "Measures")
+        self.power_meter_misure_number, self.sizer_power_meter_misure_number = return_spinctrl(self, "Measures", max_value = 4000000)
 
         # power_meter_misure_delay = 1 #seconds
         self.power_meter_misure_delay, dummy, dummy, self.sizer_power_meter_misure_delay, dummy, dummy = return_textbox_labeled(
-            self, "Measure delay (s)")
+            self, "Measure delay (ms)")
 
         self.power_meter_make_zero, self.sizer_power_meter_make_zero = return_checkbox_labeled(self, "Make Zero")
 

@@ -10,7 +10,7 @@ from taskframe import TaskFrame
 
 import wx
 import os
-from guitabs_instruments import TabPanelFSV, TabPanelSMB
+from guitabs_instruments import TabPanelFSV, TabPanelSMB, TabPanelVSCD
 from guitabs_setup import TabPanelSpuriusSetup
 from measure_scripts.Spurius import unit, measure_LNA_spurius, SMB_LO, SMB_RF, NRP2, FSV
 from utilitygui import check_value_is_valid_file, check_value_min_max, check_value_not_none, resultError, resultOK, \
@@ -49,6 +49,9 @@ class NotebookDemo(wx.Notebook):
 
         self.tabFSV = TabPanelFSV(self)
         self.AddPage(self.tabFSV, "Spectrum Analyser")
+
+        self.tabVSCD = TabPanelVSCD(self)
+        self.AddPage(self.tabVSCD, "Down Converter")
 
         self.tabSpuriusSetting = TabPanelSpuriusSetup(self)
         self.AddPage(self.tabSpuriusSetting, "Spurius Calculation")
@@ -115,6 +118,18 @@ class SpuriusFrame(TaskFrame):
                   "tabFSV.FSV_delay",
                   "tabFSV.spectrum_analyzer_central_frequency",
                   "tabFSV.spectrum_analyzer_central_frequency_unit",
+                  "tabVSCD.instrument_enable_status",
+                  "tabVSCD.instrument_txt_IP",
+                  "tabVSCD.instrument_txt_Port",
+                  "tabVSCD.instrument_txt_Timeout",
+                  "tabVSCD.combobox_instrtype",
+                  "tabVSCD.vscd_frequency_min",
+                  "tabVSCD.vscd_frequency_max",
+                  "tabVSCD.vscd_frequency_step",
+                  "tabVSCD.vscd_frequency_unit",
+                  "tabVSCD.vscd_level_min",
+                  "tabVSCD.vscd_level_max",
+                  "tabVSCD.vscd_level_step",
                   "tabSpuriusSetting.m_min_RF",
                   "tabSpuriusSetting.m_max_RF",
                   "tabSpuriusSetting.m_step_RF",
@@ -294,6 +309,85 @@ class SpuriusFrame(TaskFrame):
             synthetizer_RF_frequency.to_base()
             synthetizer_RF_level = Generic_Range(0, 0, 1)
 
+        vscd_IP = self.notebook.tabVSCD.instrument_txt_IP.GetValue()
+        if check_value_is_IP(vscd_IP, "VSCD IP") == 0:
+            return None
+
+        vscd_Port = self.notebook.tabVSCD.instrument_txt_Port.GetValue()
+        if check_value_min_max(vscd_Port, "VSCD Port", minimum=0) == 0:
+            return None
+
+        vscd_Timeout = self.notebook.tabVSCD.instrument_txt_Timeout.GetValue()
+        if check_value_min_max(vscd_Timeout, "VSCD Timeout", minimum=0) == 0:
+            return None
+
+        vscd_instrType = self.notebook.tabVSCD.combobox_instrtype.GetValue()
+
+        vscd_state = self.notebook.tabVSCD.instrument_enable_status.GetValue()
+
+        # synthetizer_LO_frequency_min_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_min_unit.GetValue())
+        # if check_value_not_none(synthetizer_LO_frequency_min_unit, "Minimum LO Frequency Unit") == 0:
+        #    return None
+
+        if vscd_state:
+
+            vscd_frequency_min = self.notebook.tabVSCD.vscd_frequency_min.GetValue()
+            if check_value_min_max(vscd_frequency_min, "VSCD Frequency", minimum=0) == 0:
+                return None
+            else:
+                vscd_frequency_min = eval(self.notebook.tabVSCD.vscd_frequency_min.GetValue())
+
+            # synthetizer_LO_frequency_max_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_max_unit.GetValue())
+            # if check_value_not_none(synthetizer_LO_frequency_max_unit, "Maximum LO Frequency Unit") == 0:
+            #    return None
+
+            vscd_frequency_max = self.notebook.tabVSCD.vscd_frequency_max.GetValue()
+            if check_value_min_max(vscd_frequency_max, "VSCD Frequency", minimum=0) == 0:
+                return None
+            else:
+                vscd_frequency_max = eval(self.notebook.tabVSCD.vscd_frequency_max.GetValue())
+
+            # synthetizer_LO_frequency_step_unit = unit.return_unit(self.notebook.tabLO.synthetizer_frequency_step_unit.GetValue())
+            # if check_value_not_none(synthetizer_LO_frequency_step_unit, "LO Step Frequency Unit") == 0:
+            #    return None
+
+            vscd_frequency_unit = unit.return_unit(self.notebook.tabVSCD.vscd_frequency_unit.GetValue())
+            if check_value_not_none(vscd_frequency_unit, "VSCD Frequency Unit") == 0:
+                return None
+
+            vscd_frequency_step = self.notebook.tabVSCD.vscd_frequency_step.GetValue()
+            if check_value_min_max(vscd_frequency_step, "VSCD Step Frequency", minimum=0) == 0:
+                return None
+            else:
+                vscd_frequency_step = eval(self.notebook.tabVSCD.vscd_frequency_step.GetValue())
+
+            try:
+                vscd_level_min = eval(self.notebook.tabVSCD.vscd_level_min.GetValue())
+            except:
+                vscd_level_min = 0
+
+            try:
+                vscd_level_max = eval(self.notebook.tabVSCD.vscd_level_max.GetValue())
+            except:
+                vscd_level_max = 0
+
+            vscd_level_step = self.notebook.tabVSCD.vscd_level_step.GetValue()
+            if check_value_min_max(vscd_level_step, "VSCD Level Step", minimum=0) == 0:
+                return None
+            else:
+                vscd_level_step = eval(self.notebook.tabVSCD.vscd_level_step.GetValue())
+
+            vscd_frequency = Frequency_Range(vscd_frequency_min, vscd_frequency_max,
+                                                       vscd_frequency_step, vscd_frequency_unit)
+            vscd_frequency.to_base()
+            vscd_level = Generic_Range(vscd_level_min, vscd_level_max,
+                                                 vscd_level_step)
+        else:
+            vscd_frequency = Frequency_Range(0, 0, 1, unit.Hz)
+            vscd_frequency.to_base()
+            vscd_level = Generic_Range(0, 0, 1)
+
+
         spectrum_analyzer_IP = self.notebook.tabFSV.instrument_txt_IP.GetValue()
         if check_value_is_IP(spectrum_analyzer_IP, "LO Synthetizer IP") == 0:
             return None
@@ -376,6 +470,8 @@ class SpuriusFrame(TaskFrame):
             threshold_power = self.notebook.tabFSV.threshold_power.GetValue()  # dB
             if check_value_not_none(threshold_power, "Threshold Power Level") == 0:
                 return None
+            else:
+                threshold_power = eval(self.notebook.tabFSV.threshold_power.GetValue())
 
             spectrum_analyzer_frequency_marker_unit = unit.return_unit(
                 self.notebook.tabFSV.spectrum_analyzer_frequency_marker_unit.GetValue())
@@ -461,6 +557,16 @@ class SpuriusFrame(TaskFrame):
             return 0
 
         try:
+            VSCD = create_instrument(vscd_IP, vscd_Port, eval(vscd_Timeout),
+                                       vscd_instrType, TEST_MODE=self.runmodeitem.IsChecked(),
+                                       enable_state=vscd_state)
+        except:
+            dlg = wx.MessageDialog(None, "Downconverter comunication error", 'Error Downconverter',
+                                   wx.OK | wx.ICON_ERROR)
+            dlg.ShowModal()
+            return 0
+
+        try:
             FSV = create_instrument(spectrum_analyzer_IP, spectrum_analyzer_Port, eval(spectrum_analyzer_Timeout),
                                     spectrum_analyzer_instrType, TEST_MODE=self.runmodeitem.IsChecked(),
                                     instrument_class="FSV", enable_state=spectrum_analyzer_state)
@@ -484,47 +590,52 @@ class SpuriusFrame(TaskFrame):
 
         self.savesettings(result_file_name)
 
-        spurius_filename = measure_LNA_spurius(SMB_LO,
-                                               SMB_RF,
-                                               FSV,
-                                               synthetizer_LO_state,
-                                               synthetizer_LO_frequency,
-                                               synthetizer_LO_level,
-                                               synthetizer_RF_state,
-                                               synthetizer_RF_frequency,
-                                               synthetizer_RF_level,
-                                               spectrum_analyzer_state,
-                                               spectrum_analyzer_sweep_points,
-                                               spectrum_analyzer_resolution_bandwidth,
-                                               spectrum_analyzer_resolution_bandwidth_unit,
-                                               spectrum_analyzer_video_bandwidth,
-                                               spectrum_analyzer_video_bandwidth_unit,
-                                               spectrum_analyzer_frequency_span,
-                                               spectrum_analyzer_frequency_span_unit,
-                                               # spectrum_analyzer_attenuation,
-                                               gainAmplifier,
-                                               spectrum_analyzer_IF_atten_enable,
-                                               spectrum_analyzer_IF_atten,
-                                               spectrum_analyzer_IF_relative_level,
-                                               spectrum_analyzer_IF_relative_level_enable,
-                                               threshold_power,
-                                               spectrum_analyzer_frequency_marker_unit,
-                                               FSV_delay,
-                                               m_RF,
-                                               n_LO,
-                                               IF_low,
-                                               IF_low_unit,
-                                               IF_high,
-                                               IF_high_unit,
-                                               spurius_IF_unit,
-                                               calibration_file_LO,
-                                               calibration_file_LO_enable,
-                                               calibration_file_RF,
-                                               calibration_file_RF_enable,
-                                               calibration_file_IF,
-                                               calibration_file_IF_enable,
-                                               result_file_name,
-                                               createprogressdialog=dialog)
+        spurius_filename = measure_LNA_spurius(
+            SMB_LO=SMB_LO,
+            SMB_RF=SMB_RF,
+            FSV=FSV,
+            VSCD=VSCD,
+            synthetizer_LO_state=synthetizer_LO_state,
+            synthetizer_LO_frequency=synthetizer_LO_frequency,
+            synthetizer_LO_level=synthetizer_LO_level,  # dBm
+            synthetizer_RF_state=synthetizer_RF_state,
+            synthetizer_RF_frequency=synthetizer_RF_frequency,
+            synthetizer_RF_level=synthetizer_RF_level,  # dBm
+            downconverter_state=vscd_state,
+            downconverter_frequency=vscd_frequency,
+            downconverter_level=vscd_level,  # dBm
+            spectrum_analyzer_state=spectrum_analyzer_state,
+            spectrum_analyzer_sweep_points=spectrum_analyzer_sweep_points,
+            spectrum_analyzer_resolution_bandwidth=spectrum_analyzer_resolution_bandwidth,
+            spectrum_analyzer_resolution_bandwidth_unit=spectrum_analyzer_resolution_bandwidth_unit,
+            spectrum_analyzer_video_bandwidth=spectrum_analyzer_video_bandwidth,
+            spectrum_analyzer_video_bandwidth_unit=spectrum_analyzer_video_bandwidth_unit,
+            spectrum_analyzer_frequency_span=spectrum_analyzer_frequency_span,
+            spectrum_analyzer_frequency_span_unit=spectrum_analyzer_frequency_span_unit,
+            # spectrum_analyzer_attenuation = spectrum_analyzer_attenuation,
+            gainAmplifier=gainAmplifier,  # dB
+            spectrum_analyzer_IF_atten_enable=spectrum_analyzer_IF_atten_enable,
+            spectrum_analyzer_IF_atten=spectrum_analyzer_IF_atten,
+            spectrum_analyzer_IF_relative_level=spectrum_analyzer_IF_relative_level,
+            spectrum_analyzer_IF_relative_level_enable=spectrum_analyzer_IF_relative_level_enable,
+            threshold_power=threshold_power,  # dB
+            spectrum_analyzer_frequency_marker_unit=spectrum_analyzer_frequency_marker_unit,
+            FSV_delay=FSV_delay,
+            m_RF=m_RF,
+            n_LO=n_LO,
+            IF_low=IF_low,
+            IF_low_unit=IF_low_unit,
+            IF_high=IF_high,
+            IF_high_unit=IF_high_unit,
+            spurius_IF_unit=spurius_IF_unit,
+            calibration_file_LO=calibration_file_LO,
+            calibration_file_LO_enable=calibration_file_LO_enable,
+            calibration_file_RF=calibration_file_RF,
+            calibration_file_RF_enable=calibration_file_RF_enable,
+            calibration_file_IF=calibration_file_IF,
+            calibration_file_IF_enable=calibration_file_IF_enable,
+            result_file_name=result_file_name,
+            createprogressdialog=False)
 
         dialog.Destroy()
 
