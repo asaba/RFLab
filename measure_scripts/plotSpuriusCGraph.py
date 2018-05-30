@@ -282,8 +282,11 @@ def plot_3d_distribution(fig,
                          graph_z,
                          data_file_directory,
                          font_style):
-    bar_with = 5e+7  # Hz
+    #bar_with = 5e+6  # Hz
     bar_with_unit = unit.Hz
+
+    #calculate bar_with from graph_x
+    bar_with = (graph_x.max - graph_x.min)/10.0
 
     ax = fig.add_subplot(111, projection='3d')
 
@@ -304,7 +307,8 @@ def plot_3d_distribution(fig,
         freq_result = []
         level_result = []
         for f_index in range(len(freq)):
-            if freq[f_index] >= graph_x.min and freq[f_index] <= graph_x.max:
+            print("n {}, m {}, Frequency {}, Level {}".format(r[n_LO_index], r[m_RF_index], freq[f_index], level[f_index]+graph_z.min))
+            if freq[f_index] >= unit.convertion_from_base(graph_x.min, graph_x.unit) and freq[f_index] <= unit.convertion_from_base(graph_x.max, graph_x.unit):
                 freq_result.append(freq[f_index])
                 level_result.append(level[f_index])
         color_index += 1
@@ -418,10 +422,10 @@ def plot_spurius_Single(fig, table_value,
         if not graph_title:
             graph_sup_title = "Spurious Distribution"
         filter_1 = True
-        graph_title = "LO " + unit.return_human_readable_str(
-            table_value[0][0][frequency_LO_index]) + " " + unit.return_human_readable_str(
-            table_value[0][0][power_LO_index], unit.dBm) + " - RF " + unit.return_human_readable_str(
-            table_value[0][0][power_RF_index], unit.dBm)
+        graph_title = "LO {LO_freq} {LO_unit} - RF {RF_power}".format(
+            LO_freq=unit.return_human_readable_str(table_value[0][0][frequency_LO_index]),
+            LO_unit=unit.return_human_readable_str(table_value[0][0][power_LO_index], unit.dBm),
+            RF_power=unit.return_human_readable_str(table_value[0][0][power_RF_index], unit.dBm))
         legend_title = "Power LO"
 
     # split by RF_level or LO_level

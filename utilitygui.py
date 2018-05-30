@@ -14,7 +14,7 @@ from measure_scripts.VSCD.VSCD import VSCD
 
 
 def browse_file(parent, text_control_file, dialog_text="Choose a file",
-                wildcard="CSV files (*.csv)|*.csv|Excel file (*.xlsx)|*.xlsx", mode=wx.OPEN):
+                wildcard="CSV files (*.csv)|*.csv|Excel file (*.xlsx)|*.xlsx", mode=wx.FD_OPEN):
     defaultFile = ""
     try:
         defaultFile = text_control_file.GetValue()
@@ -26,7 +26,7 @@ def browse_file(parent, text_control_file, dialog_text="Choose a file",
         # mypath = os.path.basename(path)
         text_control_file.SetValue(path)
     else:
-        if os.path.exists(defaultFile) or mode == wx.SAVE:
+        if os.path.exists(defaultFile) or mode == wx.FD_SAVE:
             text_control_file.SetValue(defaultFile)
         else:
             text_control_file.SetValue("")

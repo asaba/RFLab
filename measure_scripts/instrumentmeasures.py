@@ -34,6 +34,7 @@ def readPM5(PM5, misure_number, misure_delay):
 def readNRP2(SAB, NRP2, misure_number, misure_delay, calibration_frequency, calibration_frequency_unit,
              SAB_switch_delay, make_zero=False):
     result_values = []
+
     for i in range(0, misure_number):
 
         if make_zero:
@@ -49,8 +50,11 @@ def readNRP2(SAB, NRP2, misure_number, misure_delay, calibration_frequency, cali
             # switch on cable
             SAB.write("SWT1 2")
             time.sleep(SAB_switch_delay)
-        time.sleep(misure_delay)
-        command = "MEAS:SCAL:POW:AVG?"
+        #time.sleep(misure_delay/1000.)
+        #command = "SENS:AVER:COUN 1"
+        #result = NRP2.write(command)
+        #command = "TRAC:MEAS:POW:MAX?"
+        command = "READ?"
         result = NRP2.ask(command)
         if type(result) is list:
             x = result[0]

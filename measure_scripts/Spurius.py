@@ -71,7 +71,7 @@ threshold_power = 30  # dB
 # power meter
 power_meter_state = "OFF"
 power_meter_misure_number = 1
-power_meter_misure_delay = 1  # seconds
+power_meter_misure_delay = 1000  # milliseconds
 
 # spurius calculation variables
 m_RF = Generic_Range(-3, 0, 1)
@@ -138,7 +138,7 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV, VSCD,
                         spectrum_analyzer_IF_atten=spectrum_analyzer_IF_atten,
                         spectrum_analyzer_IF_relative_level=spectrum_analyzer_IF_relative_level_enable,
                         spectrum_analyzer_IF_relative_level_enable=spectrum_analyzer_IF_relative_level_enable,
-                        threshold_power=threshold_power,  # dB
+                        threshold_power=0,  # dB
                         spectrum_analyzer_frequency_marker_unit=spectrum_analyzer_frequency_marker_unit,
                         FSV_delay=FSV_delay,
                         m_RF=m_RF,
@@ -156,13 +156,13 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV, VSCD,
                         calibration_file_IF_enable=calibration_file_IF_enable,
                         result_file_name=result_file_name,
                         createprogressdialog=False):
-    dialog = createprogressdialog
-    # if createprogressdialog:
-    #    import wx
-    #    
-    #    app = wx.App()
-    #    dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
-    #            style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME | wx.PD_AUTO_HIDE)
+    #dialog = createprogressdialog
+    if createprogressdialog:
+       import wx
+
+       app = wx.App()
+       dialog = wx.ProgressDialog("Progress", "Time remaining", maximum = 100,
+               style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME | wx.PD_AUTO_HIDE)
 
 
     values = []  # variable for results
@@ -318,20 +318,20 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV, VSCD,
                                                              calibration_IF_function_unit=calibration_function_IF_unit)
                     count += 1
 
-                    if not createprogressdialog is None:
-                        import wx
-                        wx.MicroSleep(500)
-                        message = "LO {lo_freq} {lo_pow}dB - RF  {rf_freq} {rf_pow}dB".format(
-                            lo_freq=current_lo_frequency_human_readable, lo_pow=str(current_LO_level),
-                            rf_freq=current_rf_frequency_human_readable, rf_pow=str(current_RF_level))
-                        newvalue = min([int(count / maxcount * 100), 100])
-                        if newvalue == 100:
-                            createprogressdialog = False
-                            # dialog.Update(newvalue, message)
-                            # wx.MicroSleep(500)
-                            dialog.Close()
-                        else:
-                            continue_progress = dialog.Update(newvalue, message)
+                    # if not createprogressdialog is None:
+                    #     import wx
+                    #     wx.MicroSleep(500)
+                    #     message = "LO {lo_freq} {lo_pow}dB - RF  {rf_freq} {rf_pow}dB".format(
+                    #         lo_freq=current_lo_frequency_human_readable, lo_pow=str(current_LO_level),
+                    #         rf_freq=current_rf_frequency_human_readable, rf_pow=str(current_RF_level))
+                    #     newvalue = min([int(count / maxcount * 100), 100])
+                    #     if newvalue == 100:
+                    #         createprogressdialog = False
+                    #         dialog.Update(newvalue, message)
+                    #         wx.MicroSleep(500)
+                    #         dialog.Close()
+                    #     else:
+                    #         continue_progress = dialog.Update(newvalue, message)
 
                     # load value for each spurius frequency
                     for s in spurius_markers:
@@ -347,16 +347,16 @@ def measure_LNA_spurius(SMB_LO, SMB_RF, FSV, VSCD,
                         spurius_filename = os.path.join(partial_file_path, "_".join(["R"] + values[0][0:-2]))
                         save_spurius(spurius_filename, values)
 
-                    if not continue_progress[0]:
-                        dialog.Destroy()
-                        break
-                    if f_LO == frequency_LO_range[-1] and l_LO == level_LO_range[-1] and l_RF == level_RF_range[
-                        -1] and f_RF == frequency_RF_range[-1]:
-                        # safety turn Off
-                        # dialog.Update(100, "Measure completed)
-                        dialog.Destroy()
-                        # SMB_LO.write("OUTP OFF")
-                        # SMB_RF.write("OUTP OFF")
+                    # if not continue_progress[0]:
+                    #     dialog.Destroy()
+                    #     break
+                    # if f_LO == frequency_LO_range[-1] and l_LO == level_LO_range[-1] and l_RF == level_RF_range[
+                    #     -1] and f_RF == frequency_RF_range[-1]:
+                    #     # safety turn Off
+                    #     # dialog.Update(100, "Measure completed)
+                    #     dialog.Destroy()
+                    #     # SMB_LO.write("OUTP OFF")
+                    #     # SMB_RF.write("OUTP OFF")
                 if not continue_progress[0]:
                     break
             if not continue_progress[0]:

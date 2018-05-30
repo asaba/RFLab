@@ -51,7 +51,7 @@ class TaskFrame(wx.Frame):
         self.Show()
 
     def OnLoadSettings(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.OPEN)
+        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
             # mypath = os.path.basename(path)
@@ -82,7 +82,7 @@ class TaskFrame(wx.Frame):
         f.close()
 
     def OnSaveSettings(self, event):
-        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.SAVE)
+        dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), "", "*.cfg", wx.FD_SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             f = dlg.GetPath()
             # f = open(path, "w")

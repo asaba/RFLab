@@ -470,6 +470,8 @@ class SpuriusFrame(TaskFrame):
             threshold_power = self.notebook.tabFSV.threshold_power.GetValue()  # dB
             if check_value_not_none(threshold_power, "Threshold Power Level") == 0:
                 return None
+            else:
+                threshold_power = eval(self.notebook.tabFSV.threshold_power.GetValue())
 
             spectrum_analyzer_frequency_marker_unit = unit.return_unit(
                 self.notebook.tabFSV.spectrum_analyzer_frequency_marker_unit.GetValue())
